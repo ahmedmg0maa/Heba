@@ -80,3 +80,10 @@
 - **Reports aggregate in the app layer** (12-month window, paid orders only) instead of SQL views — datasets are human-scale; revisit with materialized views if volume demands.
 - **Snapshots store the full aggregate JSON** in report_snapshots so historical numbers survive later schema changes.
 - **`track()` is fire-and-forget** with a sessionStorage session id; RLS allows anon INSERT and admin-only SELECT. It must never throw or block UI.
+
+## 2026-07-07 — V1.4.0
+- **One whitelisted `adminSetField` action** covers all publish/approve toggles — (table, field) pairs are hard-coded; no generic table access from the client, ever.
+- **`adminList()` generic reader** collapsed 15 admin list pages into thin declarative tables (read-side only; RLS still applies on top).
+- **Feature flags flow server→client**: (public) layout fetches flags and passes to PublicHeader; nav items with an off flag disappear (§10). vip_program stays off until the program page exists.
+- **Roles are owner-gated twice** (action checks `role === 'owner'`; RLS "owner manages" policy backs it).
+- **Curriculum builder is append-based** (auto sort = count+1); drag-reorder deferred to post-V2 backlog.

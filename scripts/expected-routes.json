@@ -40,11 +40,27 @@
   "admin": [
     "/admin",
     "/admin/overview",
-    "/admin/payments",
+    "/admin/products",
+    "/admin/books",
+    "/admin/courses",
+    "/admin/courses/[id]/curriculum",
+    "/admin/workshops",
+    "/admin/bookings",
     "/admin/orders",
+    "/admin/payments",
+    "/admin/users",
     "/admin/coupons",
     "/admin/offers",
-    "/admin/reports"
+    "/admin/pages",
+    "/admin/articles",
+    "/admin/media",
+    "/admin/reviews",
+    "/admin/reports",
+    "/admin/settings",
+    "/admin/roles",
+    "/admin/audit-logs",
+    "/admin/security",
+    "/admin/system"
   ],
   "checkout": ["/checkout/[productType]/[slug]"]
 }

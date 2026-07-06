@@ -7,20 +7,22 @@ import { cn } from '@/lib/cn'
 import { Button } from '@/components/ui/Button'
 import { BrandLogo } from './BrandLogo'
 
-const nav = [
+const allNav = [
   { href: '/', label: 'الرئيسية' },
   { href: '/courses', label: 'الدورات' },
   { href: '/books', label: 'الكتب' },
-  { href: '/workshops', label: 'ورش العمل' },
+  { href: '/workshops', label: 'ورش العمل', flag: 'workshops' },
   { href: '/services', label: 'الخدمات' },
   { href: '/articles', label: 'المقالات' },
   { href: '/about', label: 'عن هبة' },
 ]
 
 // Luxury RTL header — logo at inline-start (right), nav center, utilities at inline-end (left).
-export function PublicHeader() {
+// Items tied to a feature flag disappear when the flag is off (§10).
+export function PublicHeader({ flags = {} }: { flags?: Record<string, boolean> }) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
+  const nav = allNav.filter((item) => !item.flag || flags[item.flag] !== false)
 
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-ivory/90 backdrop-blur-md">

@@ -1,5 +1,5 @@
 # PROJECT STATE
-Last session: 2026-07-07 | Current phase: V1.4.0 | Status: in-progress
+Last session: 2026-07-07 | Current phase: V1.5.0 | Status: in-progress
 ## Completed phases
 - V0.1.0 ✅ foundation: Next.js 16 + TS + Tailwind v4, RTL root, Arabic fonts, brand tokens, audit scripts, docs, check:deploy green
 - V0.2.0 ✅ brand system: 10 ui primitives (src/components/ui/ + index barrel), BrandLogo SVG substitute, PublicHeader/PublicFooter, DashboardShell/AdminShell, (public) route group wired
@@ -14,19 +14,18 @@ Last session: 2026-07-07 | Current phase: V1.4.0 | Status: in-progress
 - V1.1.0 ✅ commerce completion: expire_stale_orders() (migration 011 + pg_cron notes), bundle child-grant expansion, /admin/orders lifecycle (status filters, cancel/refund w/ notify+audit, refund revokes content_access), inline proof re-upload for rejected payments
 - V1.2.0 ✅ offers/coupons: /admin/coupons + /admin/offers CRUD w/ activate toggles + redemption counts, coupon redemption recorded at approval, offer-aware server-side pricing (resolveActiveOffer/applyOffer in checkout page AND createOrder), offer label at checkout. Note: discovery-card offer badges still via compareAtPrice; live offer badges on cards → V1.6.0 polish
 - V1.3.0 ✅ reports: /admin/reports (revenue by month + by product type, per-course enrollments/avg-progress/completions, bookings by status), report_snapshots save+list, track() analytics helper wired into checkout (order_created, proof_submitted) + newsletter (subscribed)
+- V1.4.0 ✅ CMS + full admin coverage: all 23 §5 admin routes live — products/books/courses/workshops publish toggles, curriculum builder (add module/lesson), bookings status controls w/ notify, users list, articles create+publish, reviews approve/feature/delete, pages SEO editor, media registry, settings editor + feature-flag toggles (flags drive public nav), roles grant/revoke (owner-only), audit-logs viewer, security posture page, system status
 ## Current phase tasks
-- [ ] V1.4.0 CMS controls (§10) ← RESUME HERE
-- [ ] /admin/pages: SEO title/description per page + publish toggle (pages table CRUD-lite)
-- [ ] /admin/articles: list + create/edit (title/slug/excerpt/content/publish)
-- [ ] /admin/settings: site_settings editor (payment keys + order expiry + social links)
-- [ ] /admin/reviews: approve/feature/delete queue
-- [ ] Feature flags: /admin/settings section toggling feature_flags; PublicHeader hides ورش العمل when workshops flag disabled; vip_program → waitlist page pattern
-- [ ] Remaining admin routes as functional stubs with real tables where trivial: /admin/products, /admin/books, /admin/courses(+curriculum), /admin/workshops, /admin/bookings, /admin/users, /admin/media, /admin/roles, /admin/audit-logs, /admin/security, /admin/system
+- [ ] V1.5.0 security hardening ← RESUME HERE
+- [ ] Rate limiting: simple in-memory/db-backed throttle on auth-sensitive server actions (proof upload, coupon validation, contact form)
+- [ ] RLS review pass: verify every table's policies against §7 (esp. UPDATE policies missing WITH CHECK)
+- [ ] Signed URL expiry audit (video 1h, resources/proofs 10m — confirm)
+- [ ] docs/SECURITY_REPORT.md (§16 format)
 - [ ] Gate + commit
 ## Next 3 actions (exact, concrete)
-1. Build /admin/articles + /admin/reviews + /admin/settings (settings incl. feature flags) with actions in src/lib/actions/cms.ts.
-2. Build remaining admin list pages (products/books/courses/workshops/bookings/users/media/roles/audit-logs/security/system) — real Supabase tables + EmptyStates, CRUD where cheap.
-3. Wire feature flags into public nav; gate; commit `V1.4.0: CMS + admin coverage`.
+1. Add src/lib/rate-limit.ts (token bucket keyed by user id) + apply in validateCoupon, submitPaymentProof, contact insert (client-side debounce is not enough).
+2. Review migrations 002–010 for policy gaps (orders admin update WITH CHECK, payments update, etc.) → migration 012_rls_hardening.sql if gaps found.
+3. Write docs/SECURITY_REPORT.md; gate; commit `V1.5.0: security hardening`.
 ## Blockers / needs user input
 - Brand assets missing in /public/brand (logo, portrait, florals, photos) — using branded SVG/CSS substitutes meanwhile.
 - The 4 reference screenshots (S1–S4) were not attached; building from §2 written specs. Please attach them before V1.6.0 polish pass.
