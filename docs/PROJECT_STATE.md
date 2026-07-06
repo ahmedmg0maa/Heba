@@ -1,20 +1,20 @@
 # PROJECT STATE
-Last session: 2026-07-06 | Current phase: V0.3.0 | Status: in-progress
+Last session: 2026-07-06 | Current phase: V0.5.0 | Status: in-progress
 ## Completed phases
 - V0.1.0 ✅ foundation: Next.js 16 + TS + Tailwind v4, RTL root, Arabic fonts, brand tokens, audit scripts, docs, check:deploy green
 - V0.2.0 ✅ brand system: 10 ui primitives (src/components/ui/ + index barrel), BrandLogo SVG substitute, PublicHeader/PublicFooter, DashboardShell/AdminShell, (public) route group wired
+- V0.3.0 ✅ Supabase: migrations 001–010 (all §6 domains + RLS + storage), auth pages, middleware guards, guarded seed, SUPABASE_SETUP.md
+- V0.4.0 ✅ homepage: hero (split, portrait+floral SVG substitutes), trust strip, 4 service cards, live offer countdown, featured articles, testimonials carousel, newsletter form — Supabase-backed with editorial fallbacks; visually verified in browser
 ## Current phase tasks
-- [ ] Install @supabase/supabase-js + @supabase/ssr; create src/lib/supabase/{client,server,middleware}.ts ← RESUME HERE
-- [ ] Write supabase/migrations/*.sql for all §6 tables (ordered: users/auth → commerce → LMS → books → booking → workshops → CMS → reports)
-- [ ] RLS policies per §7 + storage buckets SQL
-- [ ] Auth pages: /auth/login, /auth/register, /auth/reset-password (inside (public) group)
-- [ ] middleware.ts guarding /dashboard/* (auth) and /admin/* (role)
-- [ ] Seed script (SEED_DEMO=true, realistic Arabic demo data)
-- [ ] Update scripts/expected-routes.json with auth routes; gate + commit
+- [ ] Discovery pages (S2 quality): /courses, /books, /workshops, /services, /booking ← RESUME HERE
+- [ ] Detail pages: /courses/[slug], /books/[slug], /workshops/[slug], /articles + /articles/[slug]
+- [ ] Static/editorial pages: /about, /start-here, /contact, /faq, /privacy, /terms, /refund, /disclaimer, /not-found
+- [ ] Data layer: src/lib/data/{catalog,articles}.ts with fallbacks like home.ts
+- [ ] Update expected-routes.json; gate + commit
 ## Next 3 actions (exact, concrete)
-1. `pnpm add @supabase/supabase-js @supabase/ssr`; write src/lib/supabase helpers (browser client, server client with cookies, middleware session refresh).
-2. Write migrations 001–00N per §6 order + RLS + buckets; write supabase/seed.sql behind SEED_DEMO.
-3. Build auth pages + middleware.ts; add routes to manifest; run `pnpm check:deploy`; commit `V0.3.0: Supabase schema, RLS, auth, guards, seed`.
+1. Build src/lib/data/catalog.ts (products/courses/books/workshops/services queries + fallbacks) and shared discovery components (ProductCard, CategoryStrip, ComparisonPanel, CTARibbon).
+2. Build /courses (S2: hero, category strip w/ counts, featured cards w/ badge+rating+lesson count, why-us comparison, offer ribbon w/ countdown, testimonials, deep-teal CTA ribbon) then reuse for /books, /workshops, /services, /booking + detail pages.
+3. Static pages from one shared LegalPage/ProsePage component; update manifest; `pnpm check:deploy`; commit `V0.5.0: discovery + detail + editorial pages`.
 ## Blockers / needs user input
 - Brand assets missing in /public/brand (logo, portrait, florals, photos) — using branded SVG/CSS substitutes meanwhile.
 - The 4 reference screenshots (S1–S4) were not attached; building from §2 written specs. Please attach them before V1.6.0 polish pass.
