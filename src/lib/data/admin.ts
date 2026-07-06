@@ -242,6 +242,80 @@ export async function getAdminOrders(status?: string, limit = 100): Promise<Admi
   }
 }
 
+export type AdminCoupon = {
+  id: string
+  code: string
+  kind: string
+  value: number
+  maxUses: number | null
+  maxUsesPerUser: number
+  endsAt: string | null
+  isActive: boolean
+  redemptions: number
+}
+
+export async function getAdminCoupons(): Promise<AdminCoupon[]> {
+  if (!hasEnv()) return []
+  try {
+    const supabase = await getServerClient()
+    const { data } = await supabase
+      .from('coupons')
+      .select('id, code, kind, value, max_uses, max_uses_per_user, ends_at, is_active, coupon_redemptions(id)')
+      .order('created_at', { ascending: false })
+    return (data ?? []).map((c) => ({
+      id: c.id,
+      code: c.code,
+      kind: c.kind,
+      value: Number(c.value),
+      maxUses: c.max_uses,
+      maxUsesPerUser: c.max_uses_per_user,
+      endsAt: c.ends_at,
+      isActive: c.is_active,
+      redemptions: (c.coupon_redemptions ?? []).length,
+    }))
+  } catch {
+    return []
+  }
+}
+
+export type AdminOffer = {
+  id: string
+  kind: string
+  title: string
+  badgeText: string | null
+  discountKind: string | null
+  discountValue: number | null
+  startsAt: string
+  endsAt: string | null
+  isActive: boolean
+  targetTypes: string[]
+}
+
+export async function getAdminOffers(): Promise<AdminOffer[]> {
+  if (!hasEnv()) return []
+  try {
+    const supabase = await getServerClient()
+    const { data } = await supabase
+      .from('offers')
+      .select('id, kind, title, badge_text, discount_kind, discount_value, starts_at, ends_at, is_active, offer_targets(product_type, product_id)')
+      .order('created_at', { ascending: false })
+    return (data ?? []).map((o) => ({
+      id: o.id,
+      kind: o.kind,
+      title: o.title,
+      badgeText: o.badge_text,
+      discountKind: o.discount_kind,
+      discountValue: o.discount_value ? Number(o.discount_value) : null,
+      startsAt: o.starts_at,
+      endsAt: o.ends_at,
+      isActive: o.is_active,
+      targetTypes: (o.offer_targets ?? []).map((t) => t.product_type ?? 'منتج محدد').filter(Boolean),
+    }))
+  } catch {
+    return []
+  }
+}
+
 export async function getPendingPaymentsCount(): Promise<number> {
   if (!hasEnv()) return 0
   try {

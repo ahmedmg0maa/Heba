@@ -1,7 +1,7 @@
 'use server'
 
 import { getServerClient, getServiceClient } from '@/lib/supabase/server'
-import { getPaymentSettings } from '@/lib/data/checkout'
+import { getPaymentSettings, resolveActiveOffer, applyOffer } from '@/lib/data/checkout'
 
 type ActionResult<T> = { ok: true; data: T } | { ok: false; error: string }
 
@@ -93,12 +93,16 @@ export async function createOrder(input: {
   // Server-trusted price lookup — never trust client totals.
   const { data: product } = await supabase
     .from('products')
-    .select('id, title, price, currency, is_published')
+    .select('id, type, title, price, currency, is_published')
     .eq('id', input.productId)
     .maybeSingle()
   if (!product || !product.is_published) return { ok: false, error: 'هذا المنتج غير متاح.' }
 
-  const price = Number(product.price)
+  // Same offer resolution the checkout page used — recomputed here so the client can't tamper.
+  const listPrice = Number(product.price)
+  const offer = await resolveActiveOffer(product.id, product.type)
+  const price = applyOffer(listPrice, offer)
+
   let discount = 0
   let couponId: string | null = null
   if (input.couponCode) {
@@ -117,11 +121,12 @@ export async function createOrder(input: {
     .insert({
       user_id: user.id,
       status: 'pending_payment',
-      subtotal: price,
-      discount,
+      subtotal: listPrice,
+      discount: listPrice - price + discount, // offer discount + coupon discount
       total,
       currency: product.currency,
       coupon_id: couponId,
+      offer_id: offer?.id ?? null,
       expires_at: expiresAt,
     })
     .select('id')

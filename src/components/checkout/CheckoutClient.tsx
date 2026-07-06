@@ -151,6 +151,11 @@ export function CheckoutClient({ product, settings }: { product: CheckoutProduct
             <div>
               <p className="text-xs font-semibold tracking-wide text-antique-gold">{product.subtitle}</p>
               <h1 className="mt-1 text-2xl font-bold text-deep-teal">{product.title}</h1>
+              {product.offerLabel && (
+                <span className="mt-2 inline-block rounded-full bg-burgundy/10 px-3 py-1 text-xs font-bold text-burgundy">
+                  {product.offerLabel}
+                </span>
+              )}
             </div>
             <div className="text-end">
               <p className="tnum text-2xl font-bold text-burgundy">{formatPrice(total)}</p>

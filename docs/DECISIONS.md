@@ -69,3 +69,9 @@
 - **Bundle grants expand at approval time**: approvePayment walks product_bundles children so each child grants its own domain row (enrollment/book_access/registration).
 - **Refund revokes `content_access` by order_id**; domain rows (enrollments, book_access) are left for manual review — revoking a half-finished course automatically felt wrong for a human-scale operation.
 - **Rejected payments offer re-upload inline** on /dashboard/payments (order returns to pending_payment per §8), gated by the order's expiry window.
+
+## 2026-07-07 — V1.2.0
+- **Offer resolution is one shared server helper** (`resolveActiveOffer` + `applyOffer`): checkout page display and `createOrder` both call it, so the client can never present a price the server wouldn't recompute. Best offer = largest percent, then largest fixed; untargeted offers apply to everything.
+- **Coupon redemptions are recorded at payment approval, not order creation** — an unpaid abandoned order never burns a use.
+- **Order rows now separate list price (`subtotal`) from combined offer+coupon `discount`** for accurate revenue reporting.
+- **Coupon/offer admin CRUD uses the service client after a per-action admin check** (coupons/offers writes are admin-gated under RLS; forms are Arabic-first with datetime-local windows).

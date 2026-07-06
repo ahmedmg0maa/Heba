@@ -74,11 +74,12 @@ export async function approvePayment(paymentId: string): Promise<ActionResult> {
   const service = getServiceClient()
   const { data: payment } = await service
     .from('payments')
-    .select('id, order_id, user_id, status, amount')
+    .select('id, order_id, user_id, status, amount, orders!inner(coupon_id)')
     .eq('id', paymentId)
     .maybeSingle()
   if (!payment) return { ok: false, error: 'الدفعة غير موجودة.' }
   if (payment.status !== 'pending') return { ok: false, error: 'هذه الدفعة رُوجعت بالفعل.' }
+  const paymentOrder = Array.isArray(payment.orders) ? payment.orders[0] : payment.orders
 
   const { data: items } = await service
     .from('order_items')
@@ -153,6 +154,15 @@ export async function approvePayment(paymentId: string): Promise<ActionResult> {
           { onConflict: 'workshop_id,user_id' },
         )
     }
+  }
+
+  // The coupon "use" becomes real only when the order is actually paid.
+  if (paymentOrder?.coupon_id) {
+    await service.from('coupon_redemptions').insert({
+      coupon_id: paymentOrder.coupon_id,
+      user_id: payment.user_id,
+      order_id: payment.order_id,
+    })
   }
 
   await notify(

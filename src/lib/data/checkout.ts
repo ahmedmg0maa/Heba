@@ -10,9 +10,64 @@ export type CheckoutProduct = {
   slug: string
   title: string
   subtitle: string
-  price: number
+  price: number // effective price after any active offer
   compareAtPrice: number | null
   currency: string
+  offerLabel: string | null // e.g. "خصم ٣٠٪ — عرض الإطلاق"
+}
+
+export type ActiveOffer = {
+  id: string
+  title: string
+  badgeText: string | null
+  discountKind: 'percent' | 'fixed'
+  discountValue: number
+}
+
+// Find the best active offer targeting this product (by id, type, or global target row).
+export async function resolveActiveOffer(productId: string, productType: string): Promise<ActiveOffer | null> {
+  try {
+    const supabase = await getServerClient()
+    const nowIso = new Date().toISOString()
+    const { data: offers } = await supabase
+      .from('offers')
+      .select('id, title, badge_text, discount_kind, discount_value, offer_targets(product_id, product_type)')
+      .eq('is_active', true)
+      .lte('starts_at', nowIso)
+      .or(`ends_at.is.null,ends_at.gt.${nowIso}`)
+    if (!offers) return null
+
+    const matching = offers.filter((o) => {
+      if (!o.discount_kind || !o.discount_value) return false
+      const targets = o.offer_targets ?? []
+      if (targets.length === 0) return true // untargeted → applies to everything
+      return targets.some((t) => t.product_id === productId || t.product_type === productType)
+    })
+    if (matching.length === 0) return null
+
+    // Best offer = biggest percent first, then biggest fixed.
+    matching.sort((a, b) => {
+      if (a.discount_kind === b.discount_kind) return Number(b.discount_value) - Number(a.discount_value)
+      return a.discount_kind === 'percent' ? -1 : 1
+    })
+    const best = matching[0]
+    return {
+      id: best.id,
+      title: best.title,
+      badgeText: best.badge_text,
+      discountKind: best.discount_kind as 'percent' | 'fixed',
+      discountValue: Number(best.discount_value),
+    }
+  } catch {
+    return null
+  }
+}
+
+export function applyOffer(price: number, offer: ActiveOffer | null): number {
+  if (!offer) return price
+  const discounted =
+    offer.discountKind === 'percent' ? price * (1 - offer.discountValue / 100) : price - offer.discountValue
+  return Math.max(0, Math.round(discounted * 100) / 100)
 }
 
 export type PaymentSettings = {
@@ -53,7 +108,7 @@ export async function getPaymentSettings(): Promise<PaymentSettings> {
 }
 
 async function fallbackProduct(type: ProductType, slug: string): Promise<CheckoutProduct | null> {
-  const base = { id: null, type, slug, currency: 'EGP' }
+  const base = { id: null, type, slug, currency: 'EGP', offerLabel: null }
   if (type === 'course') {
     const c = (await listCourses()).find((x) => x.slug === slug)
     return c ? { ...base, title: c.title, subtitle: c.subtitle, price: c.price, compareAtPrice: c.compareAtPrice } : null
@@ -87,15 +142,20 @@ export async function getCheckoutProduct(type: string, slug: string): Promise<Ch
       .eq('is_published', true)
       .maybeSingle()
     if (!data) return fallbackProduct(t, slug)
+    const listPrice = Number(data.price)
+    const offer = await resolveActiveOffer(data.id, t)
+    const effective = applyOffer(listPrice, offer)
     return {
       id: data.id,
       type: t,
       slug: data.slug,
       title: data.title,
       subtitle: data.subtitle ?? '',
-      price: Number(data.price),
-      compareAtPrice: data.compare_at_price ? Number(data.compare_at_price) : null,
+      price: effective,
+      // show the list price struck through when an offer applies
+      compareAtPrice: offer && effective < listPrice ? listPrice : data.compare_at_price ? Number(data.compare_at_price) : null,
       currency: data.currency,
+      offerLabel: offer ? (offer.badgeText ? `${offer.badgeText} — ${offer.title}` : offer.title) : null,
     }
   } catch {
     return fallbackProduct(t, slug)

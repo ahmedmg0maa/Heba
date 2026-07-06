@@ -1,0 +1,99 @@
+import type { Metadata } from 'next'
+import { getAdminOffers } from '@/lib/data/admin'
+import { formatPrice, isPast } from '@/lib/format'
+import { Card, CardTitle } from '@/components/ui/Card'
+import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table'
+import { Badge } from '@/components/ui/Badge'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { OfferForm, ActiveToggle } from '@/components/admin/MarketingForms'
+
+export const metadata: Metadata = { title: 'العروض — الإدارة' }
+
+const dateFmt = new Intl.DateTimeFormat('ar-EG', { day: 'numeric', month: 'short' })
+
+const kindLabels: Record<string, string> = {
+  flash_sale: 'تخفيض سريع',
+  countdown: 'عدّاد تنازلي',
+  seasonal: 'موسمية',
+  limited_seats: 'مقاعد محدودة',
+  bundle: 'حزمة',
+  coupon_campaign: 'حملة كوبونات',
+}
+
+const targetLabels: Record<string, string> = {
+  course: 'الدورات',
+  book: 'الكتب',
+  workshop: 'الورش',
+  session: 'الجلسات',
+}
+
+export default async function AdminOffersPage() {
+  const offers = await getAdminOffers()
+
+  return (
+    <div className="mx-auto max-w-5xl space-y-8">
+      <header>
+        <h1 className="text-3xl font-bold text-deep-teal">العروض</h1>
+        <p className="mt-1 text-text-soft">
+          حملات الخصم تظهر تلقائيًا في الرئيسية وصفحات الاكتشاف وصفحة الدفع طوال نافذتها الزمنية.
+        </p>
+      </header>
+
+      <Card className="p-8">
+        <CardTitle className="mb-6">عرض جديد</CardTitle>
+        <OfferForm />
+      </Card>
+
+      {offers.length === 0 ? (
+        <EmptyState title="لا عروض بعد" description="أطلقي أول حملة من النموذج أعلاه — بعدّاد تنازلي وشارة تظهر على المنتجات." />
+      ) : (
+        <Table>
+          <THead>
+            <tr>
+              <TH>العرض</TH>
+              <TH>النوع</TH>
+              <TH>الخصم</TH>
+              <TH>يستهدف</TH>
+              <TH>النافذة</TH>
+              <TH>الحالة</TH>
+              <TH>الإجراء</TH>
+            </tr>
+          </THead>
+          <TBody>
+            {offers.map((o) => {
+              const ended = isPast(o.endsAt)
+              return (
+                <TR key={o.id}>
+                  <TD>
+                    <p className="font-semibold text-deep-teal">{o.title}</p>
+                    {o.badgeText && <p className="text-xs text-antique-gold">{o.badgeText}</p>}
+                  </TD>
+                  <TD>{kindLabels[o.kind] ?? o.kind}</TD>
+                  <TD>
+                    {o.discountValue
+                      ? o.discountKind === 'percent'
+                        ? `${o.discountValue.toLocaleString('ar-EG')}٪`
+                        : formatPrice(o.discountValue)
+                      : '—'}
+                  </TD>
+                  <TD>{o.targetTypes.length > 0 ? o.targetTypes.map((t) => targetLabels[t] ?? t).join('، ') : 'الكل'}</TD>
+                  <TD>
+                    {dateFmt.format(new Date(o.startsAt))} — {o.endsAt ? dateFmt.format(new Date(o.endsAt)) : 'مفتوح'}
+                  </TD>
+                  <TD>
+                    <Badge tone={o.isActive && !ended ? 'success' : 'sand'}>
+                      {ended ? 'انتهى' : o.isActive ? 'فعّال' : 'موقوف'}
+                    </Badge>
+                  </TD>
+                  <TD>
+                    <ActiveToggle id={o.id} active={o.isActive} kind="offer" />
+                  </TD>
+                </TR>
+              )
+            })}
+          </TBody>
+        </Table>
+      )}
+    </div>
+  )
+}

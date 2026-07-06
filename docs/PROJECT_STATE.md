@@ -1,5 +1,5 @@
 # PROJECT STATE
-Last session: 2026-07-07 | Current phase: V1.1.0 | Status: in-progress
+Last session: 2026-07-07 | Current phase: V1.3.0 | Status: in-progress
 ## Completed phases
 - V0.1.0 ✅ foundation: Next.js 16 + TS + Tailwind v4, RTL root, Arabic fonts, brand tokens, audit scripts, docs, check:deploy green
 - V0.2.0 ✅ brand system: 10 ui primitives (src/components/ui/ + index barrel), BrandLogo SVG substitute, PublicHeader/PublicFooter, DashboardShell/AdminShell, (public) route group wired
@@ -11,17 +11,18 @@ Last session: 2026-07-07 | Current phase: V1.1.0 | Status: in-progress
 - V0.8.0 ✅ LMS player: /dashboard/courses/[slug]/learn — video shell w/ signed-URL playback (enrollment/preview-gated), curriculum accordion w/ per-module x/y + checkmarks, mark-complete w/ percent recompute, prev/next, notes CRUD, resources signed downloads, progress ring, not-enrolled state, demo mode
 - V0.9.0 ✅ admin foundation: requireAdmin layout gate + sidebar badges, /admin/overview (KPI cards w/ sparkline, 6-month revenue SVG chart, bookings donut, approvals preview, recent customers, today schedule), /admin/payments functional queue (proof signed-URL preview, approve → paid + access grants by product type + enrollment/book_access/registration + notify + audit; reject → required reason + order back to pending_payment + notify + audit)
 - V1.0.0 ✅ MVP gate: README, frozen-lockfile verified, full check:deploy green, tagged v1.0.0
+- V1.1.0 ✅ commerce completion: expire_stale_orders() (migration 011 + pg_cron notes), bundle child-grant expansion, /admin/orders lifecycle (status filters, cancel/refund w/ notify+audit, refund revokes content_access), inline proof re-upload for rejected payments
+- V1.2.0 ✅ offers/coupons: /admin/coupons + /admin/offers CRUD w/ activate toggles + redemption counts, coupon redemption recorded at approval, offer-aware server-side pricing (resolveActiveOffer/applyOffer in checkout page AND createOrder), offer label at checkout. Note: discovery-card offer badges still via compareAtPrice; live offer badges on cards → V1.6.0 polish
 ## Current phase tasks
-- [ ] V1.1.0 commerce completion ← RESUME HERE
-- [ ] Migration 011: `expire_stale_orders()` SQL function + pg_cron instructions (KNOWN_ISSUES #3)
-- [ ] /admin/orders: full lifecycle table (filter by status, view items, cancel/refund actions w/ audit+notify)
-- [ ] Bundle access: approvePayment expands product_bundles children into grants
-- [ ] Re-upload proof: /dashboard/payments lets user re-submit for rejected payment (order back at pending_payment)
+- [ ] V1.3.0 reports ← RESUME HERE
+- [ ] /admin/reports: revenue report (by month, by product type), enrollment report (per course), bookings report (by status/period)
+- [ ] report_snapshots: "احفظي لقطة" action storing current aggregates; list of saved snapshots
+- [ ] analytics_events: track() helper (client, fire-and-forget insert) wired on checkout steps + newsletter signup
 - [ ] Gate + commit
 ## Next 3 actions (exact, concrete)
-1. Write supabase/migrations/011_order_expiry.sql (function + optional pg_cron schedule comment) and expand approvePayment for bundles.
-2. Build /admin/orders page + cancelOrder/refundOrder actions; add to manifest.
-3. Add re-upload flow on /dashboard/payments (ResubmitProof client component reusing submitPaymentProof); gate; commit `V1.1.0: commerce completion`.
+1. Build src/lib/data/reports.ts (aggregates from orders/enrollments/bookings) + saveSnapshot action.
+2. Build /admin/reports page (sections + tables + save-snapshot button + snapshots list); add route to manifest.
+3. Add src/lib/analytics.ts track() + calls in CheckoutClient (order_created, proof_submitted) and Newsletter (subscribed); gate; commit `V1.3.0: reports + analytics`.
 ## Blockers / needs user input
 - Brand assets missing in /public/brand (logo, portrait, florals, photos) — using branded SVG/CSS substitutes meanwhile.
 - The 4 reference screenshots (S1–S4) were not attached; building from §2 written specs. Please attach them before V1.6.0 polish pass.
