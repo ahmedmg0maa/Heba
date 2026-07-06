@@ -24,7 +24,7 @@
     "/auth/register",
     "/auth/reset-password"
   ],
-  "customer": [],
+  "customer": ["/dashboard/payments"],
   "admin": [],
-  "checkout": []
+  "checkout": ["/checkout/[productType]/[slug]"]
 }

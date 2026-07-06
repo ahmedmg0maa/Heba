@@ -37,3 +37,10 @@
 - **Product covers are branded gradient+glyph compositions** per kind (course/book/workshop/session) via one `ProductCard`; book detail renders a typographic cover. All swap targets for real photography.
 - **Legal pages share `ProsePage`**; contact form inserts into `contact_messages` under the anon insert policy.
 - **`/checkout/:path*` added to middleware matcher** — checkout requires login (order rows are user-owned under RLS).
+
+## 2026-07-06 — V0.6.0
+- **Checkout is one client stepper (summary/coupon/method → instructions/proof → confirmation)** backed by three server actions in `src/lib/actions/checkout.ts`. Prices and coupon math are always recomputed server-side; client totals are display-only.
+- **Coupon validation uses the service client** (coupons have no public SELECT) after an auth check; enforces active/window/global-limit/per-user-limit.
+- **`submitPaymentProof` verifies ownership + `pending_payment` + expiry under the user's RLS context first**, then uses the service client only for the storage upload and the `awaiting_review` transition (status changes are admin-gated under RLS by design). File constraints: image types only, ≤5MB, stored at `payment-proofs/<uid>/<orderId>/`.
+- **Order expiry is enforced at read/submit time** (expired orders reject proof uploads and display as منتهي). A scheduled job to flip DB status comes in V1.1.0 — tracked in KNOWN_ISSUES #3.
+- **Format helpers moved to client-safe `src/lib/format.ts`** — data-layer modules import server-only APIs and must never be imported by client components.
