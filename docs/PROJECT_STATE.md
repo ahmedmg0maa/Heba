@@ -1,21 +1,24 @@
 # PROJECT STATE
-Last session: 2026-07-06 | Current phase: V0.6.0 | Status: in-progress
+Last session: 2026-07-07 | Current phase: V0.8.0 | Status: in-progress
 ## Completed phases
 - V0.1.0 ✅ foundation: Next.js 16 + TS + Tailwind v4, RTL root, Arabic fonts, brand tokens, audit scripts, docs, check:deploy green
 - V0.2.0 ✅ brand system: 10 ui primitives (src/components/ui/ + index barrel), BrandLogo SVG substitute, PublicHeader/PublicFooter, DashboardShell/AdminShell, (public) route group wired
 - V0.3.0 ✅ Supabase: migrations 001–010 (all §6 domains + RLS + storage), auth pages, middleware guards, guarded seed, SUPABASE_SETUP.md
 - V0.4.0 ✅ homepage: hero (split, portrait+floral SVG substitutes), trust strip, 4 service cards, live offer countdown, featured articles, testimonials carousel, newsletter form — Supabase-backed with editorial fallbacks; visually verified in browser
 - V0.5.0 ✅ discovery: /courses (S2 full: category strip w/ counts, cards w/ badge+rating+lessons, comparison panel, offer countdown, testimonials, CTA ribbon), /books, /workshops, /services, /booking, detail pages (course curriculum accordion, book cover art, workshop countdown+seats), /articles + [slug], editorial (about/start-here/faq/contact form→contact_messages), legal ×4 via shared ProsePage, custom 404 — 22 public routes in manifest
+- V0.6.0 ✅ checkout: stepper (summary/coupon/method → instructions/proof upload → confirmation), server actions with server-trusted pricing + service-client coupon validation, payment-proofs upload, awaiting_review transition, audit logs, /dashboard/payments timeline
+- V0.7.0 ✅ customer dashboard: 10 routes (home w/ greeting+continue-learning+upcoming session+stats, courses w/ progress bars, books, workshops, bookings, orders table, payments timeline, notifications w/ mark-read, profile form, settings w/ password change) — all with real-data queries + polished empty states
 ## Current phase tasks
-- [ ] Checkout §8: /checkout/[productType]/[slug] — product summary, price+offer, coupon field, payment method choice (instapay/wallet/bank from site_settings), create order pending_payment ← RESUME HERE
-- [ ] Payment instructions screen + proof upload to payment-proofs bucket → order awaiting_review
-- [ ] Server actions: createOrder, applyCoupon (server-side validation), submitProof; audit_logs writes
-- [ ] /dashboard/payments status timeline (user side); order auto-expiry after 72h (site_settings) — expiry check on read + note for cron
+- [ ] LMS player V0.8.0 (§11, S4): /dashboard/courses/[slug]/learn ← RESUME HERE
+- [ ] Data: getLearnData(slug) — course + modules + lessons + my lesson_progress + notes + resources; access check via course_enrollments
+- [ ] Signed-URL playback: server action getLessonVideoUrl(lessonId) — enrollment check then service-client createSignedUrl (course-videos bucket)
+- [ ] Player UI: video shell, curriculum accordion sidebar (per-module x/y), mark-complete, prev/next, notes CRUD, resources downloads, progress ring
+- [ ] Progress writes: markLessonComplete server action updates lesson_progress + recomputes course_progress.percent
 - [ ] Gate + commit
 ## Next 3 actions (exact, concrete)
-1. Build src/lib/actions/checkout.ts (server actions: createOrder+items, validateCoupon, submitPaymentProof) with RLS-compatible inserts and audit logging.
-2. Build /checkout/[productType]/[slug]/page.tsx (auth-guarded by middleware) with steps: summary → method → instructions (from site_settings payment_* keys) → proof upload (client) → confirmation.
-3. Minimal /dashboard/payments page with status timeline; add checkout+payments routes to manifest; `pnpm check:deploy`; commit `V0.6.0: checkout + manual payment flow`.
+1. Build src/lib/data/learn.ts + src/lib/actions/learn.ts (getLearnData, getLessonVideoUrl, markLessonComplete, saveNote/deleteNote).
+2. Build LearnClient (client component: player shell + curriculum accordion + notes panel + resources) at /dashboard/courses/[slug]/learn (route uses its own full-width layout, sidebar per S4).
+3. Add route to manifest; `pnpm check:deploy`; commit `V0.8.0: LMS player`.
 ## Blockers / needs user input
 - Brand assets missing in /public/brand (logo, portrait, florals, photos) — using branded SVG/CSS substitutes meanwhile.
 - The 4 reference screenshots (S1–S4) were not attached; building from §2 written specs. Please attach them before V1.6.0 polish pass.

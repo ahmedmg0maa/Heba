@@ -12,3 +12,12 @@ export function formatDuration(minutes: number) {
 }
 
 export const weekdayNames = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت']
+
+// Time comparisons kept out of component bodies (react compiler purity rule).
+export function isPast(iso: string | null | undefined): boolean {
+  return Boolean(iso) && new Date(iso as string).getTime() < Date.now()
+}
+
+export function isFuture(iso: string | null | undefined): boolean {
+  return Boolean(iso) && new Date(iso as string).getTime() > Date.now()
+}

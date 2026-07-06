@@ -24,7 +24,18 @@
     "/auth/register",
     "/auth/reset-password"
   ],
-  "customer": ["/dashboard/payments"],
+  "customer": [
+    "/dashboard",
+    "/dashboard/courses",
+    "/dashboard/books",
+    "/dashboard/workshops",
+    "/dashboard/bookings",
+    "/dashboard/orders",
+    "/dashboard/payments",
+    "/dashboard/profile",
+    "/dashboard/notifications",
+    "/dashboard/settings"
+  ],
   "admin": [],
   "checkout": ["/checkout/[productType]/[slug]"]
 }

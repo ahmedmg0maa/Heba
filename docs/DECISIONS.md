@@ -44,3 +44,9 @@
 - **`submitPaymentProof` verifies ownership + `pending_payment` + expiry under the user's RLS context first**, then uses the service client only for the storage upload and the `awaiting_review` transition (status changes are admin-gated under RLS by design). File constraints: image types only, ≤5MB, stored at `payment-proofs/<uid>/<orderId>/`.
 - **Order expiry is enforced at read/submit time** (expired orders reject proof uploads and display as منتهي). A scheduled job to flip DB status comes in V1.1.0 — tracked in KNOWN_ISSUES #3.
 - **Format helpers moved to client-safe `src/lib/format.ts`** — data-layer modules import server-only APIs and must never be imported by client components.
+
+## 2026-07-07 — V0.7.0
+- **`withUser()` wrapper in dashboard data layer** — one place handles env-missing/unauthenticated/query-error fallbacks for all customer queries.
+- **`isPast`/`isFuture` helpers in `src/lib/format.ts`** — React compiler forbids `Date.now()` in component bodies; time comparisons live outside render.
+- **Account server actions use the user's RLS context only** (no service client): profiles update + notifications mark-read + `auth.updateUser` password change are all self-scoped operations.
+- **Email change and account deletion are deliberately manual** (contact-based) until a verified-email-change flow lands post-MVP.
