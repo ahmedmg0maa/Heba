@@ -1,0 +1,7 @@
+{
+  "comment": "Routes that must exist as src/app/**/page.tsx. Grown per phase; audit:routes fails on any missing entry.",
+  "public": ["/"],
+  "customer": [],
+  "admin": [],
+  "checkout": []
+}

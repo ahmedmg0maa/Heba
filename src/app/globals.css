@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+@theme {
+  /* Brand palette — mirror of src/styles/tokens.ts */
+  --color-ivory: #F7F2EA;
+  --color-soft-white: #FFFDF8;
+  --color-sand: #D8D0BE;
+  --color-taupe: #9C9484;
+  --color-khaki: #A79C82;
+  --color-deep-teal: #0E3440;
+  --color-teal-hover: #123F4C;
+  --color-burgundy: #7A1F2B;
+  --color-burgundy-soft: #B45A64;
+  --color-cobalt: #2F6FA8;
+  --color-antique-gold: #B59A65;
+  --color-muted-gold: #D5C49E;
+  --color-ink: #1F1E1C;
+  --color-text-soft: #6E675D;
+  --color-line: #E6DDCF;
+
+  /* Typography */
+  --font-heading: var(--font-amiri), serif;
+  --font-decorative: var(--font-aref-ruqaa), serif;
+  --font-body: var(--font-plex-arabic), var(--font-cairo), sans-serif;
+
+  /* Elevation */
+  --shadow-card: 0 1px 3px rgb(31 30 28 / 0.06), 0 6px 24px rgb(31 30 28 / 0.05);
+  --shadow-card-hover: 0 2px 6px rgb(31 30 28 / 0.08), 0 12px 36px rgb(31 30 28 / 0.09);
+  --shadow-sidebar: -4px 0 24px rgb(14 52 64 / 0.12);
+}
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-ivory);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+
+/* Tabular figures for dashboard numerals */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+::selection {
+  background-color: var(--color-muted-gold);
+  color: var(--color-ink);
+}
