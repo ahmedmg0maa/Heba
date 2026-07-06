@@ -30,3 +30,10 @@
 - **Rolling 7-day countdown for the fallback offer is computed in the data layer**, not in component render (React compiler forbids impure calls like Date.now during render).
 - **Portrait/floral are branded inline-SVG compositions** (arched frame + silhouette + gold leaves), not gray boxes — swap targets for real assets (KNOWN_ISSUES #1).
 - **`revalidate = 300` on the homepage** — ISR keeps offers/testimonials fresh without per-request DB reads.
+
+## 2026-07-06 — V0.5.0
+- **One catalog data layer** (`src/lib/data/catalog.ts`) with typed mappers + Arabic editorial fallbacks mirroring seed.sql — every discovery/detail page works with or without Supabase env.
+- **Curriculum/FAQ accordions use native `<details>/<summary>`** — zero JS, accessible, RTL-correct.
+- **Product covers are branded gradient+glyph compositions** per kind (course/book/workshop/session) via one `ProductCard`; book detail renders a typographic cover. All swap targets for real photography.
+- **Legal pages share `ProsePage`**; contact form inserts into `contact_messages` under the anon insert policy.
+- **`/checkout/:path*` added to middleware matcher** — checkout requires login (order rows are user-owned under RLS).
