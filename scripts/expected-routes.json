@@ -27,6 +27,7 @@
   "customer": [
     "/dashboard",
     "/dashboard/courses",
+    "/dashboard/courses/[slug]/learn",
     "/dashboard/books",
     "/dashboard/workshops",
     "/dashboard/bookings",

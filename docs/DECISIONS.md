@@ -50,3 +50,9 @@
 - **`isPast`/`isFuture` helpers in `src/lib/format.ts`** — React compiler forbids `Date.now()` in component bodies; time comparisons live outside render.
 - **Account server actions use the user's RLS context only** (no service client): profiles update + notifications mark-read + `auth.updateUser` password change are all self-scoped operations.
 - **Email change and account deletion are deliberately manual** (contact-based) until a verified-email-change flow lands post-MVP.
+
+## 2026-07-07 — V0.8.0
+- **Lesson access is checked server-side per request** (`checkLessonAccess`): preview lessons open to any signed-in user; others require a `course_enrollments` row. Signed URLs: 1h for videos, 10min for resources.
+- **Course percent recomputed from scratch on every toggle** (completed count / total) rather than incremental — idempotent under retries and immune to drift.
+- **Player works in demo mode** (no env): curriculum from catalog fallbacks, local-only completion/notes, clear "وضع العرض" badge — never a broken screen.
+- **Dark-mode toggle (S4) deferred to V1.6.0 polish** — needs a theme strategy across all three shells at once.
