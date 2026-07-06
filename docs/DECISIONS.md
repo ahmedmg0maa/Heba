@@ -56,3 +56,10 @@
 - **Course percent recomputed from scratch on every toggle** (completed count / total) rather than incremental — idempotent under retries and immune to drift.
 - **Player works in demo mode** (no env): curriculum from catalog fallbacks, local-only completion/notes, clear "وضع العرض" badge — never a broken screen.
 - **Dark-mode toggle (S4) deferred to V1.6.0 polish** — needs a theme strategy across all three shells at once.
+
+## 2026-07-07 — V0.9.0
+- **Defense in depth for /admin:** middleware role lookup + `requireAdmin()` in the layout + per-action `requireAdminUser()` inside every admin server action (client can never be trusted).
+- **Approve flow grants domain access rows** (course_enrollments / book_access / workshop_registrations) in addition to `content_access` — the LMS and library read their own tables, not the generic grant.
+- **Reject requires a reason (min 3 chars)** — it is shown verbatim to the customer in her notification and payment timeline (§8).
+- **Charts are hand-rolled SVG** (line+area, donut, sparkline) in brand tokens; donut segments precomputed via reduce (React compiler forbids render-time mutation).
+- **Admin demo mode:** without env, requireAdmin lets the UI render with zeroed KPIs and honest empty states — no fake numbers, per honesty rules (§17).

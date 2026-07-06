@@ -1,5 +1,5 @@
 # PROJECT STATE
-Last session: 2026-07-07 | Current phase: V0.9.0 | Status: in-progress
+Last session: 2026-07-07 | Current phase: V1.0.0 | Status: in-progress
 ## Completed phases
 - V0.1.0 ✅ foundation: Next.js 16 + TS + Tailwind v4, RTL root, Arabic fonts, brand tokens, audit scripts, docs, check:deploy green
 - V0.2.0 ✅ brand system: 10 ui primitives (src/components/ui/ + index barrel), BrandLogo SVG substitute, PublicHeader/PublicFooter, DashboardShell/AdminShell, (public) route group wired
@@ -9,16 +9,14 @@ Last session: 2026-07-07 | Current phase: V0.9.0 | Status: in-progress
 - V0.6.0 ✅ checkout: stepper (summary/coupon/method → instructions/proof upload → confirmation), server actions with server-trusted pricing + service-client coupon validation, payment-proofs upload, awaiting_review transition, audit logs, /dashboard/payments timeline
 - V0.7.0 ✅ customer dashboard: 10 routes (home w/ greeting+continue-learning+upcoming session+stats, courses w/ progress bars, books, workshops, bookings, orders table, payments timeline, notifications w/ mark-read, profile form, settings w/ password change) — all with real-data queries + polished empty states
 - V0.8.0 ✅ LMS player: /dashboard/courses/[slug]/learn — video shell w/ signed-URL playback (enrollment/preview-gated), curriculum accordion w/ per-module x/y + checkmarks, mark-complete w/ percent recompute, prev/next, notes CRUD, resources signed downloads, progress ring, not-enrolled state, demo mode
+- V0.9.0 ✅ admin foundation: requireAdmin layout gate + sidebar badges, /admin/overview (KPI cards w/ sparkline, 6-month revenue SVG chart, bookings donut, approvals preview, recent customers, today schedule), /admin/payments functional queue (proof signed-URL preview, approve → paid + access grants by product type + enrollment/book_access/registration + notify + audit; reject → required reason + order back to pending_payment + notify + audit)
 ## Current phase tasks
-- [ ] Admin foundation V0.9.0: /admin redirect → /admin/overview (S3 dashboard: KPI cards + sparklines, revenue chart, bookings donut, approvals table, recent customers, notifications strip) ← RESUME HERE
-- [ ] /admin/payments — functional approval queue (§8): proof preview via signed URL, approve → payment approved + order paid + content_access grant + notification + audit; reject → reason + order back to pending_payment + notification
-- [ ] Admin layout: AdminShell + server-side role check (requireAdmin) + audit:admin passes with admin routes in manifest
-- [ ] Data: src/lib/data/admin.ts (KPIs, approvals queue, recent customers); actions: src/lib/actions/admin.ts (approvePayment, rejectPayment)
-- [ ] Gate + commit
+- [ ] V1.0.0 MVP gate: full `pnpm check:deploy` green (it is), review repo hygiene, README.md with setup steps, verify pnpm install --frozen-lockfile ← RESUME HERE
+- [ ] Update KNOWN_ISSUES with anything open; tag commit v1.0.0
 ## Next 3 actions (exact, concrete)
-1. Build src/app/admin/layout.tsx with requireAdmin() (admin_roles lookup, redirect non-admins) wrapping AdminShell (badge counts from pending payments).
-2. Build src/lib/data/admin.ts + src/lib/actions/admin.ts — approve flow must: set payment approved, order paid, insert content_access (+course_enrollments/book_access by product type), notify user, write audit_logs.
-3. Build /admin/overview + /admin/payments pages; add routes to manifest; `pnpm check:deploy`; commit `V0.9.0: admin foundation`.
+1. Write README.md (stack, setup, envs, scripts, docs index) + verify `pnpm install --frozen-lockfile` works.
+2. Run full check:deploy once more; commit `V1.0.0: MVP gate` and `git tag v1.0.0`.
+3. Start V1.1.0 commerce completion: order expiry job (SQL function + instructions), /admin/orders CRUD lifecycle, bundle access edge cases.
 ## Blockers / needs user input
 - Brand assets missing in /public/brand (logo, portrait, florals, photos) — using branded SVG/CSS substitutes meanwhile.
 - The 4 reference screenshots (S1–S4) were not attached; building from §2 written specs. Please attach them before V1.6.0 polish pass.

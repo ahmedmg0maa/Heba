@@ -37,6 +37,6 @@
     "/dashboard/notifications",
     "/dashboard/settings"
   ],
-  "admin": [],
+  "admin": ["/admin", "/admin/overview", "/admin/payments"],
   "checkout": ["/checkout/[productType]/[slug]"]
 }
