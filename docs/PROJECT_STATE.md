@@ -1,5 +1,5 @@
 # PROJECT STATE
-Last session: 2026-07-07 | Current phase: V1.5.0 | Status: in-progress
+Last session: 2026-07-07 | Current phase: V1.6.0 | Status: in-progress
 ## Completed phases
 - V0.1.0 ✅ foundation: Next.js 16 + TS + Tailwind v4, RTL root, Arabic fonts, brand tokens, audit scripts, docs, check:deploy green
 - V0.2.0 ✅ brand system: 10 ui primitives (src/components/ui/ + index barrel), BrandLogo SVG substitute, PublicHeader/PublicFooter, DashboardShell/AdminShell, (public) route group wired
@@ -15,17 +15,17 @@ Last session: 2026-07-07 | Current phase: V1.5.0 | Status: in-progress
 - V1.2.0 ✅ offers/coupons: /admin/coupons + /admin/offers CRUD w/ activate toggles + redemption counts, coupon redemption recorded at approval, offer-aware server-side pricing (resolveActiveOffer/applyOffer in checkout page AND createOrder), offer label at checkout. Note: discovery-card offer badges still via compareAtPrice; live offer badges on cards → V1.6.0 polish
 - V1.3.0 ✅ reports: /admin/reports (revenue by month + by product type, per-course enrollments/avg-progress/completions, bookings by status), report_snapshots save+list, track() analytics helper wired into checkout (order_created, proof_submitted) + newsletter (subscribed)
 - V1.4.0 ✅ CMS + full admin coverage: all 23 §5 admin routes live — products/books/courses/workshops publish toggles, curriculum builder (add module/lesson), bookings status controls w/ notify, users list, articles create+publish, reviews approve/feature/delete, pages SEO editor, media registry, settings editor + feature-flag toggles (flags drive public nav), roles grant/revoke (owner-only), audit-logs viewer, security posture page, system status
+- V1.5.0 ✅ security hardening: rate limits (coupon 10/5min, proof 5/10min), migration 012 (payments amount = order total, orders total consistency, notification-update trigger guard, anon payload size caps), docs/SECURITY_REPORT.md
 ## Current phase tasks
-- [ ] V1.5.0 security hardening ← RESUME HERE
-- [ ] Rate limiting: simple in-memory/db-backed throttle on auth-sensitive server actions (proof upload, coupon validation, contact form)
-- [ ] RLS review pass: verify every table's policies against §7 (esp. UPDATE policies missing WITH CHECK)
-- [ ] Signed URL expiry audit (video 1h, resources/proofs 10m — confirm)
-- [ ] docs/SECURITY_REPORT.md (§16 format)
+- [ ] V1.6.0 visual polish pass ← RESUME HERE (screenshots S1–S4 still not provided — polish against §2 written specs; KNOWN_ISSUES #2)
+- [ ] Browser pass over key routes (/, /courses, course detail, checkout, /dashboard, learn, /admin/overview) — fix visual gaps, spacing, RTL details
+- [ ] Micro-interactions: hover/transition consistency across cards/buttons/links
+- [ ] Learner dashboard S4 extras: learning streak day-dots on /dashboard (from lesson_progress timestamps), achievements feed placeholder→real (certificates + completions)
 - [ ] Gate + commit
 ## Next 3 actions (exact, concrete)
-1. Add src/lib/rate-limit.ts (token bucket keyed by user id) + apply in validateCoupon, submitPaymentProof, contact insert (client-side debounce is not enough).
-2. Review migrations 002–010 for policy gaps (orders admin update WITH CHECK, payments update, etc.) → migration 012_rls_hardening.sql if gaps found.
-3. Write docs/SECURITY_REPORT.md; gate; commit `V1.5.0: security hardening`.
+1. Start preview server; screenshot /, /courses, /courses/[slug], /auth/login, /dashboard, learn page, /admin/overview at 1440px; fix top visual issues found.
+2. Add streak dots + achievements list to /dashboard (data from lesson_progress/certificates, empty-state safe).
+3. Gate; commit `V1.6.0: visual polish`.
 ## Blockers / needs user input
 - Brand assets missing in /public/brand (logo, portrait, florals, photos) — using branded SVG/CSS substitutes meanwhile.
 - The 4 reference screenshots (S1–S4) were not attached; building from §2 written specs. Please attach them before V1.6.0 polish pass.

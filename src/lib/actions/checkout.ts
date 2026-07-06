@@ -2,6 +2,7 @@
 
 import { getServerClient, getServiceClient } from '@/lib/supabase/server'
 import { getPaymentSettings, resolveActiveOffer, applyOffer } from '@/lib/data/checkout'
+import { rateLimit, RATE_LIMIT_MSG } from '@/lib/rate-limit'
 
 type ActionResult<T> = { ok: true; data: T } | { ok: false; error: string }
 
@@ -38,6 +39,10 @@ export async function validateCoupon(code: string, productId: string, price: num
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) return { ok: false, error: 'سجّلي دخولك أولًا.' }
+
+  // 10 coupon attempts per 5 minutes per user — codes are not guessable in bulk.
+  const rl = rateLimit(`coupon:${user.id}`, 10, 5 * 60_000)
+  if (!rl.allowed) return { ok: false, error: RATE_LIMIT_MSG }
 
   // Coupons are not readable under RLS by design — validate with the service client.
   const service = getServiceClient()
@@ -159,6 +164,10 @@ export async function submitPaymentProof(formData: FormData): Promise<ActionResu
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) return { ok: false, error: 'سجّلي دخولك أولًا.' }
+
+  // 5 proof uploads per 10 minutes per user
+  const rl = rateLimit(`proof:${user.id}`, 5, 10 * 60_000)
+  if (!rl.allowed) return { ok: false, error: RATE_LIMIT_MSG }
 
   const orderId = String(formData.get('orderId') ?? '')
   const method = String(formData.get('method') ?? '') as 'instapay' | 'wallet' | 'bank_transfer'

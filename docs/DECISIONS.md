@@ -87,3 +87,8 @@
 - **Feature flags flow server→client**: (public) layout fetches flags and passes to PublicHeader; nav items with an off flag disappear (§10). vip_program stays off until the program page exists.
 - **Roles are owner-gated twice** (action checks `role === 'owner'`; RLS "owner manages" policy backs it).
 - **Curriculum builder is append-based** (auto sort = count+1); drag-reorder deferred to post-V2 backlog.
+
+## 2026-07-07 — V1.5.0
+- **Rate limiting is in-memory sliding-window** (per instance) — right-sized for a human-scale platform; documented upgrade path (Upstash/pg) in SECURITY_REPORT.md.
+- **`payments.amount` must equal `orders.total` at INSERT (RLS subquery)** — the admin approval queue displays payments.amount, so a falsified amount was the one real integrity gap found in review.
+- **Notification content is trigger-guarded** — users may only flip `read_at`; RLS can't restrict columns so a BEFORE UPDATE trigger raises on any other change.
