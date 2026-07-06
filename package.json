@@ -19,9 +19,12 @@
     "audit:admin": "node scripts/audit-admin.mjs",
     "audit:db": "node scripts/audit-db.mjs",
     "audit:launch": "node scripts/audit-launch.mjs",
+    "db:seed": "node scripts/seed.mjs",
     "check:deploy": "pnpm type-check && pnpm lint && pnpm build && pnpm audit:routes && pnpm audit:ux && pnpm audit:colors && pnpm audit:security && pnpm audit:admin && pnpm audit:db && pnpm audit:launch"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.12.0",
+    "@supabase/supabase-js": "^2.110.0",
     "next": "16.2.10",
     "react": "19.2.4",
     "react-dom": "19.2.4"

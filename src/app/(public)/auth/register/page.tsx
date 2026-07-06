@@ -1,0 +1,83 @@
+'use client'
+
+import { useState } from 'react'
+import { getBrowserClient } from '@/lib/supabase/client'
+import { AuthShell, AuthLink } from '@/components/auth/AuthShell'
+import { FormField } from '@/components/ui/FormField'
+import { Button } from '@/components/ui/Button'
+
+export default function RegisterPage() {
+  const [error, setError] = useState<string | null>(null)
+  const [done, setDone] = useState(false)
+  const [loading, setLoading] = useState(false)
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+    const form = new FormData(e.currentTarget)
+    const password = String(form.get('password'))
+    if (password.length < 8) {
+      setError('كلمة المرور يجب ألا تقل عن ٨ أحرف.')
+      setLoading(false)
+      return
+    }
+    const { error } = await getBrowserClient().auth.signUp({
+      email: String(form.get('email')),
+      password,
+      options: {
+        data: { full_name: String(form.get('full_name')) },
+        emailRedirectTo: `${window.location.origin}/auth/login`,
+      },
+    })
+    if (error) {
+      setError('تعذّر إنشاء الحساب. ربما البريد مستخدم من قبل — جرّبي تسجيل الدخول.')
+      setLoading(false)
+      return
+    }
+    setDone(true)
+  }
+
+  return (
+    <AuthShell
+      title="أنشئي حسابك"
+      lead="خطوة واحدة تفصلك عن مكتبتك ودوراتك."
+      footer={
+        <>
+          لديك حساب بالفعل؟ <AuthLink href="/auth/login">سجّلي دخولك</AuthLink>
+        </>
+      }
+    >
+      {done ? (
+        <div className="space-y-3 text-center">
+          <h2 className="text-xl font-bold text-deep-teal">تحققي من بريدك الإلكتروني</h2>
+          <p className="leading-relaxed text-text-soft">
+            أرسلنا لك رابط تفعيل الحساب. افتحي الرسالة واضغطي على الرابط لإكمال التسجيل.
+          </p>
+        </div>
+      ) : (
+        <form onSubmit={onSubmit} className="space-y-5">
+          <FormField label="الاسم الكامل" name="full_name" autoComplete="name" required />
+          <FormField label="البريد الإلكتروني" name="email" type="email" autoComplete="email" required dir="ltr" />
+          <FormField
+            label="كلمة المرور"
+            name="password"
+            type="password"
+            autoComplete="new-password"
+            hint="٨ أحرف على الأقل"
+            required
+            dir="ltr"
+          />
+          {error && (
+            <p className="rounded-xl bg-burgundy/10 px-4 py-3 text-sm font-medium text-burgundy" role="alert">
+              {error}
+            </p>
+          )}
+          <Button type="submit" disabled={loading} className="w-full">
+            {loading ? 'جارٍ الإنشاء…' : 'إنشاء الحساب'}
+          </Button>
+        </form>
+      )}
+    </AuthShell>
+  )
+}
