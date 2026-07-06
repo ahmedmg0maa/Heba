@@ -75,3 +75,8 @@
 - **Coupon redemptions are recorded at payment approval, not order creation** — an unpaid abandoned order never burns a use.
 - **Order rows now separate list price (`subtotal`) from combined offer+coupon `discount`** for accurate revenue reporting.
 - **Coupon/offer admin CRUD uses the service client after a per-action admin check** (coupons/offers writes are admin-gated under RLS; forms are Arabic-first with datetime-local windows).
+
+## 2026-07-07 — V1.3.0
+- **Reports aggregate in the app layer** (12-month window, paid orders only) instead of SQL views — datasets are human-scale; revisit with materialized views if volume demands.
+- **Snapshots store the full aggregate JSON** in report_snapshots so historical numbers survive later schema changes.
+- **`track()` is fire-and-forget** with a sessionStorage session id; RLS allows anon INSERT and admin-only SELECT. It must never throw or block UI.

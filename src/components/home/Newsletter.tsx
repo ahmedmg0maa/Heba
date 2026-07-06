@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { getBrowserClient } from '@/lib/supabase/client'
+import { track } from '@/lib/analytics'
 import { Button } from '@/components/ui/Button'
 
 export function Newsletter() {
@@ -16,6 +17,7 @@ export function Newsletter() {
       // duplicate email (unique violation) still means "you're subscribed"
       if (error && error.code !== '23505') throw error
       setState('done')
+      track('newsletter_subscribed')
     } catch {
       setState('error')
     }

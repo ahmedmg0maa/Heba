@@ -10,6 +10,7 @@ import { FormField } from '@/components/ui/FormField'
 import { formatPrice } from '@/lib/format'
 import type { CheckoutProduct, PaymentSettings } from '@/lib/data/checkout'
 import { createOrder, submitPaymentProof, validateCoupon, type CreatedOrder } from '@/lib/actions/checkout'
+import { track } from '@/lib/analytics'
 
 type Method = 'instapay' | 'wallet' | 'bank_transfer'
 
@@ -93,6 +94,7 @@ export function CheckoutClient({ product, settings }: { product: CheckoutProduct
       const hoursLeft = Math.round((new Date(res.data.expiresAt).getTime() - Date.now()) / 3_600_000)
       setOrder({ ...res.data, hoursLeft })
       setStep(2)
+      track('order_created', { product: product.slug, type: product.type, method, total: res.data.total })
     } else {
       setError(res.error)
     }
@@ -108,8 +110,10 @@ export function CheckoutClient({ product, settings }: { product: CheckoutProduct
     formData.set('orderId', order.orderId)
     formData.set('method', method)
     const res = await submitPaymentProof(formData)
-    if (res.ok) setStep(3)
-    else setError(res.error)
+    if (res.ok) {
+      setStep(3)
+      track('proof_submitted', { product: product.slug, method })
+    } else setError(res.error)
     setBusy(false)
   }
 

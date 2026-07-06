@@ -43,7 +43,8 @@
     "/admin/payments",
     "/admin/orders",
     "/admin/coupons",
-    "/admin/offers"
+    "/admin/offers",
+    "/admin/reports"
   ],
   "checkout": ["/checkout/[productType]/[slug]"]
 }
