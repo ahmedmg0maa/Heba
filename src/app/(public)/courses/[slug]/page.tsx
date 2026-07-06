@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getCourse, formatPrice, formatDuration } from '@/lib/data/catalog'
+import { lessonsLabel } from '@/lib/format'
 import { Section } from '@/components/ui/Section'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -29,7 +30,7 @@ export default async function CourseDetailPage({ params }: Props) {
   if (!course) notFound()
 
   const includes = [
-    `${course.lessonsCount.toLocaleString('ar-EG')} درسًا بالفيديو`,
+    `${lessonsLabel(course.lessonsCount)} بالفيديو`,
     formatDuration(course.durationMinutes),
     'كراسات عمل قابلة للتحميل',
     'وصول مدى الحياة مع التحديثات',

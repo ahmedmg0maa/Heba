@@ -92,3 +92,9 @@
 - **Rate limiting is in-memory sliding-window** (per instance) — right-sized for a human-scale platform; documented upgrade path (Upstash/pg) in SECURITY_REPORT.md.
 - **`payments.amount` must equal `orders.total` at INSERT (RLS subquery)** — the admin approval queue displays payments.amount, so a falsified amount was the one real integrity gap found in review.
 - **Notification content is trigger-guarded** — users may only flip `read_at`; RLS can't restrict columns so a BEFORE UPDATE trigger raises on any other change.
+
+## 2026-07-07 — V1.6.0
+- **Middleware passes through when Supabase env is missing** — demo mode was returning 500 on every guarded route (caught in the browser pass); pages already handle their own demo/empty states.
+- **`lessonsLabel()` handles Arabic count grammar** (درس واحد/درسان/دروس/درسًا) — applied on discovery, detail, and dashboard.
+- **Countdown digits now Arabic-Indic** via toLocaleString(minimumIntegerDigits) for numeral consistency with the rest of the UI.
+- **Streak = consecutive active days from lesson_progress.completed_at** (30-day lookback, today-or-yesterday anchored); achievements derive from certificates + course_progress thresholds (50%/100%).

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { getMyCourses } from '@/lib/data/dashboard'
-import { formatDuration } from '@/lib/format'
+import { formatDuration, lessonsLabel } from '@/lib/format'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -31,7 +31,7 @@ export default async function MyCoursesPage() {
               <div className="flex-1">
                 <h2 className="text-xl font-bold text-deep-teal">{c.title}</h2>
                 <p className="tnum mt-1 text-sm text-taupe">
-                  {c.lessonsCount.toLocaleString('ar-EG')} درسًا · {formatDuration(c.durationMinutes)}
+                  {lessonsLabel(c.lessonsCount)} · {formatDuration(c.durationMinutes)}
                 </p>
                 <div className="mt-4 max-w-md">
                   <div className="mb-1 flex justify-between text-sm">

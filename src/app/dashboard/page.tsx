@@ -6,6 +6,8 @@ import {
   getMyBooks,
   getMyBookings,
   getMyNotifications,
+  getMyStreak,
+  getMyAchievements,
 } from '@/lib/data/dashboard'
 import { isFuture } from '@/lib/format'
 import { StatCard } from '@/components/ui/StatCard'
@@ -19,12 +21,14 @@ export const metadata: Metadata = { title: 'لوحتي' }
 const dateFmt = new Intl.DateTimeFormat('ar-EG', { weekday: 'long', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' })
 
 export default async function DashboardHome() {
-  const [profile, courses, books, bookings, notifications] = await Promise.all([
+  const [profile, courses, books, bookings, notifications, streak, achievements] = await Promise.all([
     getMyProfile(),
     getMyCourses(),
     getMyBooks(),
     getMyBookings(),
     getMyNotifications(),
+    getMyStreak(),
+    getMyAchievements(),
   ])
 
   const firstName = profile?.fullName?.split(' ')[0] || 'صديقتي'
@@ -45,6 +49,31 @@ export default async function DashboardHome() {
         <StatCard label="كتبي" value={books.length.toLocaleString('ar-EG')} accent="burgundy" />
         <StatCard label="إشعارات جديدة" value={unread.toLocaleString('ar-EG')} accent="gold" />
       </div>
+
+      {/* Learning streak (S4) */}
+      <Card className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+        <div>
+          <h2 className="font-bold text-deep-teal">سلسلة التعلّم</h2>
+          <p className="mt-1 text-sm text-text-soft">
+            {streak.count > 0
+              ? `${streak.count.toLocaleString('ar-EG')} ${streak.count === 1 ? 'يوم' : 'أيام'} متتالية — استمري 🔥`
+              : 'أكملي درسًا اليوم لتبدئي سلسلتك'}
+          </p>
+        </div>
+        <div className="flex items-center gap-2" role="img" aria-label={`نشاط آخر ٧ أيام: ${streak.days.filter(Boolean).length} أيام نشطة`}>
+          {streak.days.map((active, i) => (
+            <span
+              key={i}
+              className={
+                active
+                  ? 'h-3.5 w-3.5 rounded-full bg-antique-gold shadow-card'
+                  : 'h-3.5 w-3.5 rounded-full border border-sand bg-transparent'
+              }
+              aria-hidden
+            />
+          ))}
+        </div>
+      </Card>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
@@ -105,6 +134,30 @@ export default async function DashboardHome() {
           )}
         </Card>
       </div>
+
+      {/* Achievements feed (S4) */}
+      <Card>
+        <h2 className="mb-4 font-bold text-deep-teal">إنجازاتك</h2>
+        {achievements.length === 0 ? (
+          <p className="py-4 text-sm text-taupe">
+            كل درس تكملينه وكل دورة تتمينها تتحول إلى إنجاز يُحتفى به هنا.
+          </p>
+        ) : (
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {achievements.map((a, i) => (
+              <li key={a.label + i} className="flex items-center gap-3 rounded-xl bg-ivory/60 px-4 py-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-antique-gold/15 text-lg" aria-hidden>
+                  {a.label.slice(-2)}
+                </span>
+                <div>
+                  <p className="text-sm font-bold text-deep-teal">{a.label}</p>
+                  <p className="text-xs text-text-soft">{a.detail}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
     </div>
   )
 }

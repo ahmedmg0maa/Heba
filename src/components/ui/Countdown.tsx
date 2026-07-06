@@ -61,7 +61,9 @@ export function Countdown({ target, className, tone = 'light', onExpire, expired
     <div dir="ltr" className={cn('flex items-center justify-center gap-2', className)} role="timer" aria-live="off">
       {(['days', 'hours', 'minutes', 'seconds'] as const).map((k) => (
         <div key={k} className={cn('flex min-w-16 flex-col items-center rounded-xl border px-3 py-2 shadow-card', cell)}>
-          <span className="tnum text-2xl font-bold">{time ? String(time[k]).padStart(2, '0') : '--'}</span>
+          <span className="tnum text-2xl font-bold">
+            {time ? time[k].toLocaleString('ar-EG', { minimumIntegerDigits: 2 }) : '--'}
+          </span>
           <span className="text-xs opacity-70">{labels[k]}</span>
         </div>
       ))}

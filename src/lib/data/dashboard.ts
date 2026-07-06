@@ -193,6 +193,65 @@ export async function getMyOrders(): Promise<MyOrder[]> {
   })
 }
 
+export type MyStreak = { days: boolean[]; count: number } // days: last 7, oldest first
+
+export async function getMyStreak(): Promise<MyStreak> {
+  return withUser<MyStreak>({ days: [false, false, false, false, false, false, false], count: 0 }, async (supabase, userId) => {
+    const since = new Date()
+    since.setHours(0, 0, 0, 0)
+    since.setDate(since.getDate() - 30)
+    const { data } = await supabase
+      .from('lesson_progress')
+      .select('completed_at')
+      .eq('user_id', userId)
+      .not('completed_at', 'is', null)
+      .gte('completed_at', since.toISOString())
+
+    const activeDays = new Set(
+      (data ?? []).map((p) => new Date(p.completed_at as string).toDateString()),
+    )
+    const days: boolean[] = []
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date()
+      d.setDate(d.getDate() - i)
+      days.push(activeDays.has(d.toDateString()))
+    }
+    // streak = consecutive active days ending today (or yesterday)
+    let count = 0
+    for (let i = 0; i <= 30; i++) {
+      const d = new Date()
+      d.setDate(d.getDate() - i)
+      if (activeDays.has(d.toDateString())) count++
+      else if (i > 0) break
+    }
+    return { days, count }
+  })
+}
+
+export type MyAchievement = { label: string; detail: string; earnedAt: string | null }
+
+export async function getMyAchievements(): Promise<MyAchievement[]> {
+  return withUser<MyAchievement[]>([], async (supabase, userId) => {
+    const [{ data: certs }, { data: progress }] = await Promise.all([
+      supabase.from('certificates').select('serial, issued_at, courses!inner(title)').eq('user_id', userId),
+      supabase.from('course_progress').select('percent, updated_at, courses!inner(title)').eq('user_id', userId),
+    ])
+    const achievements: MyAchievement[] = []
+    for (const c of certs ?? []) {
+      const course = Array.isArray(c.courses) ? c.courses[0] : c.courses
+      achievements.push({ label: 'شهادة إتمام 🎓', detail: course?.title ?? '', earnedAt: c.issued_at })
+    }
+    for (const p of progress ?? []) {
+      const course = Array.isArray(p.courses) ? p.courses[0] : p.courses
+      if (Number(p.percent) >= 100)
+        achievements.push({ label: 'أتممتِ الدورة ✨', detail: course?.title ?? '', earnedAt: p.updated_at })
+      else if (Number(p.percent) >= 50)
+        achievements.push({ label: 'تجاوزتِ المنتصف 💪', detail: course?.title ?? '', earnedAt: null })
+    }
+    return achievements.slice(0, 6)
+  })
+}
+
 export async function getMyNotifications(): Promise<MyNotification[]> {
   return withUser<MyNotification[]>([], async (supabase, userId) => {
     const { data } = await supabase

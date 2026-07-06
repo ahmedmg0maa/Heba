@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { listCourses, listBooks, listWorkshops, listServices, formatDuration } from '@/lib/data/catalog'
+import { lessonsLabel } from '@/lib/format'
 import { getHomeData } from '@/lib/data/home'
 import { PageHero } from '@/components/catalog/PageHero'
 import { CategoryStrip } from '@/components/catalog/CategoryStrip'
@@ -76,7 +77,7 @@ export default async function CoursesPage() {
               coverKind="course"
               badge={c.compareAtPrice ? { label: 'عرض خاص', tone: 'burgundy' } : undefined}
               rating={{ value: c.rating, count: c.ratingCount }}
-              meta={[`${c.lessonsCount.toLocaleString('ar-EG')} درسًا`, formatDuration(c.durationMinutes), 'وصول مدى الحياة']}
+              meta={[lessonsLabel(c.lessonsCount), formatDuration(c.durationMinutes), 'وصول مدى الحياة']}
             />
           ))}
         </div>
