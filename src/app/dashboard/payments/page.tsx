@@ -4,6 +4,8 @@ import { formatPrice } from '@/lib/data/catalog'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { ResubmitProof } from '@/components/dashboard/ResubmitProof'
+import { isPast } from '@/lib/format'
 import { cn } from '@/lib/cn'
 
 export const metadata: Metadata = { title: 'مدفوعاتي' }
@@ -97,6 +99,9 @@ export default async function PaymentsPage() {
                 {statusBadge(p)}
               </div>
               <Timeline p={p} />
+              {p.status === 'rejected' && p.orderStatus === 'pending_payment' && !isPast(p.orderExpiresAt) && (
+                <ResubmitProof orderId={p.orderId} method={p.method} />
+              )}
             </Card>
           ))}
         </div>

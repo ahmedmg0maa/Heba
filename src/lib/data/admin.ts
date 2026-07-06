@@ -195,6 +195,53 @@ export async function getTodaySchedule(): Promise<ScheduleItem[]> {
   }
 }
 
+export type AdminOrder = {
+  id: string
+  customerName: string
+  customerEmail: string
+  status: string
+  total: number
+  createdAt: string
+  productTitles: string[]
+}
+
+export async function getAdminOrders(status?: string, limit = 100): Promise<AdminOrder[]> {
+  if (!hasEnv()) return []
+  try {
+    const supabase = await getServerClient()
+    let query = supabase
+      .from('orders')
+      .select('id, user_id, status, total, created_at, order_items(products(title))')
+      .order('created_at', { ascending: false })
+      .limit(limit)
+    if (status) query = query.eq('status', status)
+    const { data } = await query
+    if (!data || data.length === 0) return []
+
+    const userIds = [...new Set(data.map((o) => o.user_id))]
+    const { data: profiles } = await supabase.from('profiles').select('id, full_name, email').in('id', userIds)
+    const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]))
+
+    return data.map((o) => {
+      const items = (o.order_items ?? []) as { products: { title: string } | { title: string }[] | null }[]
+      const profile = profileMap.get(o.user_id)
+      return {
+        id: o.id,
+        customerName: profile?.full_name || 'عميلة',
+        customerEmail: profile?.email || '',
+        status: o.status,
+        total: Number(o.total),
+        createdAt: o.created_at,
+        productTitles: items
+          .map((i) => (Array.isArray(i.products) ? i.products[0]?.title : i.products?.title))
+          .filter((t): t is string => Boolean(t)),
+      }
+    })
+  } catch {
+    return []
+  }
+}
+
 export async function getPendingPaymentsCount(): Promise<number> {
   if (!hasEnv()) return 0
   try {

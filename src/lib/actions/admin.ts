@@ -101,10 +101,25 @@ export async function approvePayment(paymentId: string): Promise<ActionResult> {
   if (orderErr) return { ok: false, error: GENERIC }
 
   // Grant access per item, including domain-specific access rows.
+  // Bundles expand into their children so each child grants its own domain access.
+  const grantTargets: { id: string; type: string }[] = []
   for (const item of items ?? []) {
     const product = Array.isArray(item.products) ? item.products[0] : item.products
     if (!product) continue
+    grantTargets.push({ id: product.id, type: product.type })
+    if (product.type === 'bundle') {
+      const { data: children } = await service
+        .from('product_bundles')
+        .select('child_product_id, products!product_bundles_child_product_id_fkey(id, type)')
+        .eq('bundle_product_id', product.id)
+      for (const child of children ?? []) {
+        const cp = Array.isArray(child.products) ? child.products[0] : child.products
+        if (cp) grantTargets.push({ id: cp.id, type: cp.type })
+      }
+    }
+  }
 
+  for (const product of grantTargets) {
     await service.from('content_access').upsert(
       {
         user_id: payment.user_id,
@@ -153,6 +168,51 @@ export async function approvePayment(paymentId: string): Promise<ActionResult> {
   })
 
   revalidatePath('/admin/payments')
+  revalidatePath('/admin/overview')
+  return { ok: true, data: null }
+}
+
+export async function updateOrderStatus(
+  orderId: string,
+  status: 'cancelled' | 'refunded' | 'expired',
+  reason?: string,
+): Promise<ActionResult> {
+  if (!hasEnv()) return { ok: false, error: NO_ENV }
+  const admin = await requireAdminUser()
+  if (!admin) return { ok: false, error: NOT_ADMIN }
+
+  const service = getServiceClient()
+  const { data: order } = await service
+    .from('orders')
+    .select('id, user_id, status')
+    .eq('id', orderId)
+    .maybeSingle()
+  if (!order) return { ok: false, error: 'الطلب غير موجود.' }
+  const allowed: Record<string, string[]> = {
+    cancelled: ['pending_payment', 'awaiting_review'],
+    expired: ['pending_payment'],
+    refunded: ['paid'],
+  }
+  if (!allowed[status].includes(order.status))
+    return { ok: false, error: `لا يمكن نقل طلب حالته «${order.status}» إلى «${status}».` }
+
+  const { error } = await service.from('orders').update({ status }).eq('id', orderId)
+  if (error) return { ok: false, error: GENERIC }
+
+  if (status === 'refunded') {
+    // Revoke generic access granted by this order (domain rows are reviewed manually).
+    await service.from('content_access').delete().eq('order_id', orderId)
+  }
+
+  const labels: Record<typeof status, { title: string; body: string }> = {
+    cancelled: { title: 'أُلغي طلبك', body: reason ? `السبب: ${reason}` : 'راسلينا لو كان لديك استفسار.' },
+    refunded: { title: 'تم استرداد قيمة طلبك', body: 'يصل المبلغ بنفس وسيلة الدفع خلال ٥–٧ أيام عمل.' },
+    expired: { title: 'انتهت صلاحية طلبك', body: 'يمكنك إنشاء طلب جديد في أي وقت.' },
+  }
+  await notify(order.user_id, labels[status].title, labels[status].body, 'warning', '/dashboard/orders')
+  await audit(admin.user.id, `order.${status}`, 'order', orderId, { previous: order.status, reason: reason ?? null })
+
+  revalidatePath('/admin/orders')
   revalidatePath('/admin/overview')
   return { ok: true, data: null }
 }

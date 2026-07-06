@@ -63,3 +63,9 @@
 - **Reject requires a reason (min 3 chars)** — it is shown verbatim to the customer in her notification and payment timeline (§8).
 - **Charts are hand-rolled SVG** (line+area, donut, sparkline) in brand tokens; donut segments precomputed via reduce (React compiler forbids render-time mutation).
 - **Admin demo mode:** without env, requireAdmin lets the UI render with zeroed KPIs and honest empty states — no fake numbers, per honesty rules (§17).
+
+## 2026-07-07 — V1.1.0
+- **`expire_stale_orders()` is a SECURITY DEFINER SQL function** (migration 011) with pg_cron scheduling instructions in the file — expiry now flips DB rows and writes audit logs, closing KNOWN_ISSUES #3.
+- **Bundle grants expand at approval time**: approvePayment walks product_bundles children so each child grants its own domain row (enrollment/book_access/registration).
+- **Refund revokes `content_access` by order_id**; domain rows (enrollments, book_access) are left for manual review — revoking a half-finished course automatically felt wrong for a human-scale operation.
+- **Rejected payments offer re-upload inline** on /dashboard/payments (order returns to pending_payment per §8), gated by the order's expiry window.
