@@ -3,7 +3,9 @@ import { walk, read, report } from './lib.mjs'
 // Fails on placeholder/lazy UI markers. Allowed: premium waitlist states,
 // professional empty states (<EmptyState/>), feature-flagged disabled pages.
 const forbidden = [
-  /placeholder(?!-shown)/i, // CSS :placeholder-shown utility is fine
+  // "placeholder" as content/naming is forbidden; the input attribute (placeholder=),
+  // Tailwind variant (placeholder:), and CSS ::placeholder / :placeholder-shown are legitimate.
+  /placeholder(?![:=‐-]|-shown)/i,
   /\bTODO\b/,
   /lorem ipsum/i,
   /قريبًا\.{0,3}<\/(div|p|span)>/, // bare "coming soon" text blocks
