@@ -53,13 +53,13 @@ function sections(badges: Badges): SidebarSection[] {
 
 export function AdminShell({ children, badges = {} }: { children: React.ReactNode; badges?: Badges }) {
   return (
-    <div className="flex min-h-screen bg-ivory">
+    <div className="flex min-h-screen flex-col bg-ivory lg:flex-row">
       <Sidebar
         brand={<BrandLogo tone="light" href="/admin/overview" />}
         sections={sections(badges)}
         footer={<p className="text-xs text-soft-white/50">لوحة الإدارة</p>}
       />
-      <main className="min-w-0 flex-1 px-6 py-8 lg:px-10">{children}</main>
+      <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-10">{children}</main>
     </div>
   )
 }
