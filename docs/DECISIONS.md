@@ -111,3 +111,9 @@
 - **Live vs demo semantics separated:** editorial fallbacks now trigger ONLY on missing env or query error. A live-but-empty catalog shows honest empty states; unknown checkout products 404; payment methods without configured accounts are hidden (bank hidden until `payment_bank` is set); hero's invented stats replaced with factual descriptors.
 - **Live RLS validated end-to-end** with a throwaway user: profile trigger, order-total integrity (tampered insert → 42501), coupon invisibility — then cleaned up.
 - **pg_cron scheduled via migration 014** (idempotent re-schedule) — order expiry now runs hourly on the live DB.
+
+## 2026-07-10 — V1.9.0
+- **Two-tier error boundaries:** branded `error.tsx` (with digest + retry) inside the layout, self-contained inline-styled `global-error.tsx` as last resort (it replaces the root layout so it can't rely on Tailwind).
+- **One PageSpinner drives all three route-group loading.tsx files.**
+- **robots.ts blocks /dashboard, /admin, /checkout, /auth; sitemap.ts includes live catalog slugs** and degrades to static routes without env.
+- **middleware.ts → proxy.ts (default export `proxy`)** — Next 16 convention; deprecation warning gone (KNOWN_ISSUES #4 closed).

@@ -26,12 +26,23 @@ const cairo = Cairo({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   title: {
     default: "هبة الشريف — منصة التعلّم والتطوير",
     template: "%s | هبة الشريف",
   },
   description:
     "منصة هبة الشريف: دورات، كتب، ورش عمل، وجلسات فردية لرحلة تطوّر واعية.",
+  openGraph: {
+    type: "website",
+    locale: "ar_EG",
+    siteName: "هبة الشريف",
+    title: "هبة الشريف — منصة التعلّم والتطوير",
+    description: "دورات، كتب، ورش عمل، وجلسات فردية لرحلة تطوّر واعية.",
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
 };
 
 export default function RootLayout({

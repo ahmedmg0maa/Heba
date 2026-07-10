@@ -1,5 +1,5 @@
 # PROJECT STATE
-Last session: 2026-07-10 | Current phase: V1.8.0 | Status: in-progress
+Last session: 2026-07-10 | Current phase: V2.0.0 | Status: in-progress
 ## Completed phases
 - V0.1.0 ✅ foundation: Next.js 16 + TS + Tailwind v4, RTL root, Arabic fonts, brand tokens, audit scripts, docs, check:deploy green
 - V0.2.0 ✅ brand system: 10 ui primitives (src/components/ui/ + index barrel), BrandLogo SVG substitute, PublicHeader/PublicFooter, DashboardShell/AdminShell, (public) route group wired
@@ -25,14 +25,18 @@ Last session: 2026-07-10 | Current phase: V1.8.0 | Status: in-progress
 - [x] Live-mode semantics: empty catalog → honest empty states (fallbacks now only for no-env/error), unknown checkout product → 404, unconfigured payment methods hidden (bank hidden — only instapay+wallet configured), hero fabricated stats replaced with honest descriptors, booking hides empty availability
 - [x] Live RLS validated with temp user (profile trigger ✓, valid order ✓, tampered total rejected 42501 ✓, coupons invisible ✓, cleaned up)
 - [x] Restored .env.example (was renamed to .env by user; .gitignore now !.env.example)
-- [ ] DEPLOYMENT.md + VERCEL_DEPLOYMENT.md; update SUPABASE_SETUP.md (CLI push flow, owner auto-grant, legacy schema note) ← RESUME HERE
-- [ ] Enable pg_cron for expire_stale_orders (or document manual step); check Supabase Auth settings (email confirm, Site URL)
-- [ ] Gate + commit
+- [x] DEPLOYMENT.md + VERCEL_DEPLOYMENT.md + SUPABASE_SETUP.md refresh; pg_cron scheduled live (migration 014)
+- V1.8.0 ✅ staging: live Supabase integrated, legacy preserved+ported, deployment docs, expiry cron live
+- V1.9.0 ✅ production hardening: error.tsx + global-error.tsx boundaries, loading.tsx ×3 groups (PageSpinner), robots.ts + sitemap.ts (dynamic slugs), metadataBase + OpenGraph/Twitter meta, middleware→proxy rename (Next 16 deprecation gone)
+## Current phase tasks (V2.0.0 final release)
+- [ ] Remaining §16 docs: TEST_REPORT.md, ROUTE_QA_REPORT.md, ADMIN_GUIDE.md, CUSTOMER_GUIDE.md, VISUAL_SYSTEM.md, FINAL_DELIVERY_REPORT.md ← RESUME HERE
+- [ ] §15 acceptance verification (no placeholders/broken routes/exposed keys/package-lock; frozen-lockfile + check:deploy pass)
+- [ ] Tag v2.0.0
 ## Next 3 actions (exact, concrete)
-1. Write docs/DEPLOYMENT.md + docs/VERCEL_DEPLOYMENT.md; refresh docs/SUPABASE_SETUP.md (project is now live — document owner auto-grant + legacy schema).
-2. Try scheduling expire_stale_orders via CLI (postgres extension pg_cron) or add to deployment checklist.
-3. Gate; commit `V1.8.0: staging — live Supabase + deployment docs`.
+1. Write the six remaining docs (each: what was built, what passed, what remains, commands, limitations).
+2. Run acceptance checklist + full check:deploy once more.
+3. Commit `V2.0.0: final release` + git tag v2.0.0.
 ## Blockers / needs user input
-- Brand assets missing in /public/brand (logo, portrait, florals, photos) — using branded SVG/CSS substitutes meanwhile.
-- The 4 reference screenshots (S1–S4) were not attached; building from §2 written specs. Please attach them before V1.6.0 polish pass.
-- Supabase project credentials (URL + anon key + service role) needed to run V0.3.0 against a live project — schema/migrations/auth UI proceed without them; end-to-end auth testing blocked until provided.
+- Brand assets missing in /public/brand (logo, portrait, florals, photos) — branded SVG/CSS substitutes in place (KNOWN_ISSUES #1).
+- Reference screenshots S1–S4 never provided — built/verified against §2 written specs (KNOWN_ISSUES #2).
+- Post-launch (owner actions): sign up with heba0elsherif@gmail.com (auto-owner), set Site URL + email confirmation in Supabase Auth, add payment_bank in /admin/settings if bank transfers wanted, push repo to GitHub + import to Vercel per docs/VERCEL_DEPLOYMENT.md.
