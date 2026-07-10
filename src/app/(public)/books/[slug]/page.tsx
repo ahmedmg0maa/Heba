@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { CTARibbon } from '@/components/catalog/CTARibbon'
+import { MobileBuyBar } from '@/components/catalog/MobileBuyBar'
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -78,6 +79,12 @@ export default async function BookDetailPage({ params }: Props) {
         lead="دوراتنا التدريبية تأخذك من القراءة إلى التطبيق."
         ctaLabel="تصفّحي الدورات"
         ctaHref="/courses"
+      />
+      <MobileBuyBar
+        price={book.price}
+        compareAtPrice={book.compareAtPrice}
+        ctaLabel="احصلي على نسختك"
+        ctaHref={`/checkout/book/${book.slug}`}
       />
     </main>
   )

@@ -36,34 +36,59 @@ export default async function MyOrdersPage() {
           actionHref="/courses"
         />
       ) : (
-        <Table>
-          <THead>
-            <tr>
-              <TH>المنتج</TH>
-              <TH>التاريخ</TH>
-              <TH>الإجمالي</TH>
-              <TH>الحالة</TH>
-            </tr>
-          </THead>
-          <TBody>
+        <>
+          {/* phones: stacked cards */}
+          <ul className="space-y-4 md:hidden">
             {orders.map((o) => {
               const expired = o.status === 'pending_payment' && isPast(o.expiresAt)
               const st = expired ? statusMap.expired : (statusMap[o.status] ?? statusMap.pending_payment)
               return (
-                <TR key={o.id}>
-                  <TD className="font-semibold text-deep-teal">
-                    {o.productTitles.length > 0 ? o.productTitles.join(' + ') : 'طلب شراء'}
-                  </TD>
-                  <TD>{dateFmt.format(new Date(o.createdAt))}</TD>
-                  <TD>{formatPrice(o.total)}</TD>
-                  <TD>
+                <li key={o.id} className="rounded-2xl border border-line bg-soft-white p-5 shadow-card">
+                  <div className="flex items-start justify-between gap-3">
+                    <h2 className="font-semibold text-deep-teal">
+                      {o.productTitles.length > 0 ? o.productTitles.join(' + ') : 'طلب شراء'}
+                    </h2>
                     <Badge tone={st.tone}>{st.label}</Badge>
-                  </TD>
-                </TR>
+                  </div>
+                  <p className="tnum mt-3 flex items-center justify-between border-t border-line/70 pt-3 text-sm">
+                    <span className="text-taupe">{dateFmt.format(new Date(o.createdAt))}</span>
+                    <span className="font-bold text-burgundy">{formatPrice(o.total)}</span>
+                  </p>
+                </li>
               )
             })}
-          </TBody>
-        </Table>
+          </ul>
+
+          {/* tablets and up: table */}
+          <Table className="hidden md:block">
+            <THead>
+              <tr>
+                <TH>المنتج</TH>
+                <TH>التاريخ</TH>
+                <TH>الإجمالي</TH>
+                <TH>الحالة</TH>
+              </tr>
+            </THead>
+            <TBody>
+              {orders.map((o) => {
+                const expired = o.status === 'pending_payment' && isPast(o.expiresAt)
+                const st = expired ? statusMap.expired : (statusMap[o.status] ?? statusMap.pending_payment)
+                return (
+                  <TR key={o.id}>
+                    <TD className="font-semibold text-deep-teal">
+                      {o.productTitles.length > 0 ? o.productTitles.join(' + ') : 'طلب شراء'}
+                    </TD>
+                    <TD>{dateFmt.format(new Date(o.createdAt))}</TD>
+                    <TD>{formatPrice(o.total)}</TD>
+                    <TD>
+                      <Badge tone={st.tone}>{st.label}</Badge>
+                    </TD>
+                  </TR>
+                )
+              })}
+            </TBody>
+          </Table>
+        </>
       )}
     </div>
   )

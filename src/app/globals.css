@@ -35,6 +35,38 @@
 
 html {
   scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Notch/home-indicator safe areas (viewport-fit=cover) */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Mobile drawer + backdrop motion (drawer anchors to inline-end = right in RTL) */
+@keyframes slide-in-end {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-drawer {
+  animation: slide-in-end 0.25s ease-out;
+}
+.animate-backdrop {
+  animation: fade-in 0.2s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-drawer,
+  .animate-backdrop {
+    animation: none;
+  }
 }
 
 body {

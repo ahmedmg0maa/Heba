@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Countdown } from '@/components/ui/Countdown'
 import { CTARibbon } from '@/components/catalog/CTARibbon'
+import { MobileBuyBar } from '@/components/catalog/MobileBuyBar'
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -86,6 +87,14 @@ export default async function WorkshopDetailPage({ params }: Props) {
         ctaLabel="تصفّحي الدورات"
         ctaHref="/courses"
       />
+      {!soldOut && (
+        <MobileBuyBar
+          price={w.price}
+          compareAtPrice={w.compareAtPrice}
+          ctaLabel="احجزي مقعدك"
+          ctaHref={`/checkout/workshop/${w.slug}`}
+        />
+      )}
     </main>
   )
 }

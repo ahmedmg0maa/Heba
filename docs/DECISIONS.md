@@ -117,3 +117,11 @@
 - **One PageSpinner drives all three route-group loading.tsx files.**
 - **robots.ts blocks /dashboard, /admin, /checkout, /auth; sitemap.ts includes live catalog slugs** and degrades to static routes without env.
 - **middleware.ts → proxy.ts (default export `proxy`)** — Next 16 convention; deprecation warning gone (KNOWN_ISSUES #4 closed).
+
+## 2026-07-10 — V2.1.0 (mobile UX pass, user-requested)
+- **App-style bottom tab bar** (`BottomNav`, 5 tabs) on the customer dashboard below `lg` — the sidebar drawer remains for the full menu; admin keeps drawer-only (too many sections for tabs).
+- **Sticky MobileBuyBar** on course/book/workshop detail pages: price + CTA fixed at the bottom with a spacer so content/footer never hide behind it; hidden when sold out.
+- **iOS/Android polish:** `viewport-fit=cover` + `.pb-safe` safe-area utilities (notch/home-indicator), themeColor light/dark, `appleWebApp` meta, installable manifest + maskable-safe SVG icon (`app/icon.svg` doubles as favicon).
+- **Touch ergonomics:** buttons get min-heights (40–48px) + `active:scale` + `touch-manipulation`; tap-highlight removed; carousel dots wrapped in 40px hit areas; drawer/backdrop animated (reduced-motion respected).
+- **Orders list is cards on phones, table ≥md** — first application of the stacked-card pattern for data tables.
+- **Verified live on 375×812:** browser login with a temp user → dashboard with bottom nav ✓, profile form round-trips Arabic correctly ✓ (an earlier "??????" was my shell's curl encoding, not the app), checkout shows real session with only configured methods ✓. Temp user deleted.

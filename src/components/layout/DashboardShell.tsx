@@ -1,4 +1,5 @@
 import { Sidebar, type SidebarSection } from '@/components/ui/Sidebar'
+import { BottomNav } from '@/components/dashboard/BottomNav'
 import { BrandLogo } from './BrandLogo'
 
 const sections: SidebarSection[] = [
@@ -31,7 +32,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         sections={sections}
         footer={<p className="text-xs text-soft-white/50">مساحة المتعلّمة</p>}
       />
-      <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-10">{children}</main>
+      {/* pb-28 keeps content clear of the mobile bottom tab bar */}
+      <main className="min-w-0 flex-1 px-4 py-6 pb-28 sm:px-6 sm:py-8 lg:px-10 lg:pb-8">{children}</main>
+      <BottomNav />
     </div>
   )
 }

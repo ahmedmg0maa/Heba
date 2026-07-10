@@ -1,5 +1,5 @@
 # PROJECT STATE
-Last session: 2026-07-10 | Current phase: V2.0.0 | Status: done
+Last session: 2026-07-10 | Current phase: V2.1.0 | Status: done
 ## Completed phases
 - V0.1.0 ✅ foundation: Next.js 16 + TS + Tailwind v4, RTL root, Arabic fonts, brand tokens, audit scripts, docs, check:deploy green
 - V0.2.0 ✅ brand system: 10 ui primitives (src/components/ui/ + index barrel), BrandLogo SVG substitute, PublicHeader/PublicFooter, DashboardShell/AdminShell, (public) route group wired
@@ -30,6 +30,7 @@ Last session: 2026-07-10 | Current phase: V2.0.0 | Status: done
 - V1.9.0 ✅ production hardening: error.tsx + global-error.tsx boundaries, loading.tsx ×3 groups (PageSpinner), robots.ts + sitemap.ts (dynamic slugs), metadataBase + OpenGraph/Twitter meta, middleware→proxy rename (Next 16 deprecation gone)
 - V2.0.0 ✅ FINAL RELEASE: all §16 docs complete (TEST/ROUTE_QA/ADMIN_GUIDE/CUSTOMER_GUIDE/VISUAL_SYSTEM/SUPABASE_MIGRATIONS/FINAL_DELIVERY_REPORT), §15 acceptance verified (frozen-lockfile ✓, check:deploy ✓, no package-lock ✓), tagged v2.0.0
 ## Current phase tasks
+- V2.1.0 ✅ mobile UX pass (user-requested): bottom tab bar, sticky buy bar, safe areas + manifest + icon, touch targets, orders cards on phones — verified live at 375px with real login
 - (project complete — post-launch items are owner actions, see Blockers)
 ## Next 3 actions (exact, concrete)
 1. (owner) Push to GitHub → deploy per docs/VERCEL_DEPLOYMENT.md.

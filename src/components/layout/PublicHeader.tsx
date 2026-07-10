@@ -26,7 +26,7 @@ export function PublicHeader({ flags = {} }: { flags?: Record<string, boolean> }
 
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-ivory/90 backdrop-blur-md">
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-6 px-6">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:h-20 lg:gap-6">
         <BrandLogo />
 
         <nav className="hidden lg:block" aria-label="التنقل الرئيسي">

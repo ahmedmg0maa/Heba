@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Stars } from '@/components/catalog/Stars'
 import { CTARibbon } from '@/components/catalog/CTARibbon'
+import { MobileBuyBar } from '@/components/catalog/MobileBuyBar'
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -111,6 +112,12 @@ export default async function CourseDetailPage({ params }: Props) {
       <CTARibbon
         title="جاهزة تبدئين رحلتك؟"
         lead="انضمي اليوم واحصلي على وصول فوري مدى الحياة."
+        ctaLabel="التحقي بالدورة"
+        ctaHref={`/checkout/course/${course.slug}`}
+      />
+      <MobileBuyBar
+        price={course.price}
+        compareAtPrice={course.compareAtPrice}
         ctaLabel="التحقي بالدورة"
         ctaHref={`/checkout/course/${course.slug}`}
       />

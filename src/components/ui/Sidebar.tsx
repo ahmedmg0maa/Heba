@@ -96,9 +96,9 @@ export function Sidebar({ brand, sections, footer, className }: SidebarProps) {
             type="button"
             aria-label="إغلاق القائمة"
             onClick={() => setOpen(false)}
-            className="absolute inset-0 bg-ink/50 backdrop-blur-sm"
+            className="animate-backdrop absolute inset-0 bg-ink/50 backdrop-blur-sm"
           />
-          <div className="absolute inset-y-0 end-0 flex w-72 max-w-[85vw] flex-col overflow-y-auto bg-deep-teal text-soft-white shadow-sidebar">
+          <div className="animate-drawer pb-safe absolute inset-y-0 end-0 flex w-72 max-w-[85vw] flex-col overflow-y-auto bg-deep-teal text-soft-white shadow-sidebar">
             <div className="flex items-center justify-between border-b border-soft-white/10 px-5 py-5">
               {brand}
               <button

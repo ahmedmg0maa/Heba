@@ -61,11 +61,16 @@ export function Testimonials({ testimonials }: { testimonials: HomeTestimonial[]
                 aria-selected={i === index}
                 aria-label={`شهادة ${i + 1}`}
                 onClick={() => setIndex(i)}
-                className={cn(
-                  'h-2.5 rounded-full transition-all',
-                  i === index ? 'w-8 bg-deep-teal' : 'w-2.5 bg-sand hover:bg-taupe',
-                )}
-              />
+                className="flex h-10 w-10 touch-manipulation items-center justify-center"
+              >
+                <span
+                  className={cn(
+                    'h-2.5 rounded-full transition-all',
+                    i === index ? 'w-8 bg-deep-teal' : 'w-2.5 bg-sand',
+                  )}
+                  aria-hidden
+                />
+              </button>
             ))}
           </div>
         )}
