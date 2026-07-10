@@ -1,5 +1,5 @@
 # PROJECT STATE
-Last session: 2026-07-10 | Current phase: V2.0.0 | Status: in-progress
+Last session: 2026-07-10 | Current phase: V2.0.0 | Status: done
 ## Completed phases
 - V0.1.0 ✅ foundation: Next.js 16 + TS + Tailwind v4, RTL root, Arabic fonts, brand tokens, audit scripts, docs, check:deploy green
 - V0.2.0 ✅ brand system: 10 ui primitives (src/components/ui/ + index barrel), BrandLogo SVG substitute, PublicHeader/PublicFooter, DashboardShell/AdminShell, (public) route group wired
@@ -28,14 +28,13 @@ Last session: 2026-07-10 | Current phase: V2.0.0 | Status: in-progress
 - [x] DEPLOYMENT.md + VERCEL_DEPLOYMENT.md + SUPABASE_SETUP.md refresh; pg_cron scheduled live (migration 014)
 - V1.8.0 ✅ staging: live Supabase integrated, legacy preserved+ported, deployment docs, expiry cron live
 - V1.9.0 ✅ production hardening: error.tsx + global-error.tsx boundaries, loading.tsx ×3 groups (PageSpinner), robots.ts + sitemap.ts (dynamic slugs), metadataBase + OpenGraph/Twitter meta, middleware→proxy rename (Next 16 deprecation gone)
-## Current phase tasks (V2.0.0 final release)
-- [ ] Remaining §16 docs: TEST_REPORT.md, ROUTE_QA_REPORT.md, ADMIN_GUIDE.md, CUSTOMER_GUIDE.md, VISUAL_SYSTEM.md, FINAL_DELIVERY_REPORT.md ← RESUME HERE
-- [ ] §15 acceptance verification (no placeholders/broken routes/exposed keys/package-lock; frozen-lockfile + check:deploy pass)
-- [ ] Tag v2.0.0
+- V2.0.0 ✅ FINAL RELEASE: all §16 docs complete (TEST/ROUTE_QA/ADMIN_GUIDE/CUSTOMER_GUIDE/VISUAL_SYSTEM/SUPABASE_MIGRATIONS/FINAL_DELIVERY_REPORT), §15 acceptance verified (frozen-lockfile ✓, check:deploy ✓, no package-lock ✓), tagged v2.0.0
+## Current phase tasks
+- (project complete — post-launch items are owner actions, see Blockers)
 ## Next 3 actions (exact, concrete)
-1. Write the six remaining docs (each: what was built, what passed, what remains, commands, limitations).
-2. Run acceptance checklist + full check:deploy once more.
-3. Commit `V2.0.0: final release` + git tag v2.0.0.
+1. (owner) Push to GitHub → deploy per docs/VERCEL_DEPLOYMENT.md.
+2. (owner) Register heba0elsherif@gmail.com (auto-owner) + Supabase Auth settings per docs/DEPLOYMENT.md checklist.
+3. (next session, if requested) Post-V2 backlog: real brand assets swap-in, Playwright E2E suite, durable rate limiting, drag-reorder curriculum, email-change flow.
 ## Blockers / needs user input
 - Brand assets missing in /public/brand (logo, portrait, florals, photos) — branded SVG/CSS substitutes in place (KNOWN_ISSUES #1).
 - Reference screenshots S1–S4 never provided — built/verified against §2 written specs (KNOWN_ISSUES #2).
