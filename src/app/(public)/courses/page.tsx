@@ -10,6 +10,7 @@ import { CTARibbon } from '@/components/catalog/CTARibbon'
 import { OfferBlock } from '@/components/home/OfferBlock'
 import { Testimonials } from '@/components/home/Testimonials'
 import { Section } from '@/components/ui/Section'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 export const metadata: Metadata = {
   title: 'الدورات التدريبية',
@@ -64,6 +65,14 @@ export default async function CoursesPage() {
       />
 
       <Section eyebrow="اختاري رحلتك" title="الدورات المتاحة">
+        {courses.length === 0 && (
+          <EmptyState
+            title="الدورات قيد الإعداد"
+            description="نصمم الآن أولى دوراتنا التدريبية بعناية. سجّلي في الرسالة الأسبوعية ليصلك موعد الإطلاق أولًا — أو ابدئي بجلسة فردية."
+            actionLabel="احجزي جلسة فردية"
+            actionHref="/booking"
+          />
+        )}
         <div className="grid gap-8 md:grid-cols-2">
           {courses.map((c) => (
             <ProductCard

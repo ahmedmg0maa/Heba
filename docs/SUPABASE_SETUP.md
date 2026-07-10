@@ -1,5 +1,17 @@
 # SUPABASE SETUP
 
+> **Status:** the live project `HebaElSherif` (`azuvwkzpgtyxwxmvedmp`, eu-central-1) is fully provisioned —
+> migrations 000–014 applied, buckets created, hourly order-expiry cron scheduled, real
+> services/payment settings ported. The steps below document (re)provisioning from scratch.
+>
+> **Legacy schema note:** the project contained an earlier schema attempt with real rows.
+> Migration `000_relocate_legacy.sql` moved it untouched into the `legacy` schema and
+> `013_port_legacy_data.sql` ported the real data (services, payment/brand settings) into the
+> current schema. Drop the `legacy` schema only when certain it is no longer needed.
+>
+> **Owner bootstrap:** signing up with `heba0elsherif@gmail.com` grants the `owner` role
+> automatically (trigger in migration 013). §5 below is the manual alternative for other emails.
+
 ## 1. Create the project
 1. Create a project at https://supabase.com/dashboard (region close to Egypt, e.g. `eu-central-1`).
 2. Copy from Project Settings → API: `Project URL`, `anon` key, `service_role` key.
@@ -8,10 +20,12 @@
 ## 2. Apply migrations
 With the Supabase CLI linked to the project:
 ```bash
+supabase login            # once per machine
 supabase link --project-ref <ref>
-supabase db push          # applies supabase/migrations/ in order (001 → 010)
+supabase db push          # applies supabase/migrations/ in order (000 → 014)
 ```
 Or paste each file from `supabase/migrations/` into the SQL editor **in numeric order**.
+Migration 014 enables `pg_cron` and schedules `expire_stale_orders()` hourly.
 
 ## 3. Storage
 Migration `010_storage.sql` creates the buckets (`public-media`, `avatars`, `protected-books`,

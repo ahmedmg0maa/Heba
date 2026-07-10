@@ -220,7 +220,7 @@ export async function listCourses(): Promise<CatalogCourse[]> {
         'slug, title, description, level, duration_minutes, products!inner(subtitle, price, compare_at_price, is_published), course_modules(title, sort, course_lessons(title, duration_seconds, sort, is_preview))',
       )
       .eq('is_published', true)
-    if (!data || data.length === 0) return fallbackCourses
+    if (!data) return fallbackCourses
     return data.map((c) => {
       const product = Array.isArray(c.products) ? c.products[0] : c.products
       const modules = (c.course_modules ?? [])
@@ -264,7 +264,7 @@ export async function listBooks(): Promise<CatalogBook[]> {
       .from('books')
       .select('slug, title, description, pages_count, products!inner(subtitle, price, compare_at_price)')
       .eq('is_published', true)
-    if (!data || data.length === 0) return fallbackBooks
+    if (!data) return fallbackBooks
     return data.map((b) => {
       const product = Array.isArray(b.products) ? b.products[0] : b.products
       return {
@@ -298,7 +298,7 @@ export async function listWorkshops(): Promise<CatalogWorkshop[]> {
       )
       .eq('is_published', true)
       .order('starts_at', { ascending: true })
-    if (!data || data.length === 0) return fallbackWorkshops()
+    if (!data) return fallbackWorkshops()
     return data.map((w) => {
       const product = Array.isArray(w.products) ? w.products[0] : w.products
       return {
@@ -333,7 +333,7 @@ export async function listServices(): Promise<CatalogService[]> {
       .from('services')
       .select('slug, title, description, duration_minutes, price, products!inner(subtitle), availability_rules(weekday, start_time, end_time)')
       .eq('is_active', true)
-    if (!data || data.length === 0) return fallbackServices
+    if (!data) return fallbackServices
     return data.map((s) => {
       const product = Array.isArray(s.products) ? s.products[0] : s.products
       return {
@@ -364,7 +364,7 @@ export async function listArticles(): Promise<CatalogArticle[]> {
       .select('slug, title, excerpt, content, published_at')
       .eq('is_published', true)
       .order('published_at', { ascending: false })
-    if (!data || data.length === 0) return fallbackArticles
+    if (!data) return fallbackArticles
     return data.map((a) => ({
       slug: a.slug,
       title: a.title,

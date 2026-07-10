@@ -29,19 +29,14 @@ export function Hero() {
               ابدئي من هنا
             </Button>
           </div>
-          <dl className="mt-12 flex flex-wrap gap-x-10 gap-y-4">
-            {[
-              { value: '+١٢٠٠', label: 'متعلّمة في المجتمع' },
-              { value: '+٢٠', label: 'دورة وورشة عمل' },
-              { value: '٤٫٩/٥', label: 'متوسط التقييم' },
-            ].map((s) => (
-              <div key={s.label}>
-                <dt className="sr-only">{s.label}</dt>
-                <dd className="tnum text-2xl font-bold text-deep-teal">{s.value}</dd>
-                <dd className="text-sm text-taupe">{s.label}</dd>
-              </div>
+          <ul className="mt-12 flex flex-wrap gap-x-8 gap-y-3">
+            {['جلسات فردية ١:١', 'ورش عمل مباشرة', 'كتب ودورات رقمية'].map((label) => (
+              <li key={label} className="flex items-center gap-2 text-sm font-semibold text-deep-teal">
+                <span className="h-1.5 w-1.5 rounded-full bg-antique-gold" aria-hidden />
+                {label}
+              </li>
             ))}
-          </dl>
+          </ul>
         </div>
 
         {/* Portrait — inline end (left in RTL) */}

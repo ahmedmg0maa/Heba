@@ -4,6 +4,7 @@ import { PageHero } from '@/components/catalog/PageHero'
 import { ProductCard } from '@/components/catalog/ProductCard'
 import { CTARibbon } from '@/components/catalog/CTARibbon'
 import { Section } from '@/components/ui/Section'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 export const metadata: Metadata = {
   title: 'الكتب الرقمية',
@@ -24,6 +25,14 @@ export default async function BooksPage() {
       />
 
       <Section eyebrow="المكتبة" title="إصداراتنا">
+        {books.length === 0 && (
+          <EmptyState
+            title="المكتبة قيد التجهيز"
+            description="نراجع الآن أولى إصداراتنا الرقمية. اشتركي في الرسالة الأسبوعية ليصلك خبر صدورها فور جاهزيتها."
+            actionLabel="عودي للرئيسية"
+            actionHref="/"
+          />
+        )}
         <div className="mx-auto grid max-w-4xl gap-8 md:grid-cols-2">
           {books.map((b) => (
             <ProductCard

@@ -1,5 +1,5 @@
 # PROJECT STATE
-Last session: 2026-07-07 | Current phase: V1.7.0 | Status: in-progress
+Last session: 2026-07-10 | Current phase: V1.8.0 | Status: in-progress
 ## Completed phases
 - V0.1.0 ✅ foundation: Next.js 16 + TS + Tailwind v4, RTL root, Arabic fonts, brand tokens, audit scripts, docs, check:deploy green
 - V0.2.0 ✅ brand system: 10 ui primitives (src/components/ui/ + index barrel), BrandLogo SVG substitute, PublicHeader/PublicFooter, DashboardShell/AdminShell, (public) route group wired
@@ -17,16 +17,21 @@ Last session: 2026-07-07 | Current phase: V1.7.0 | Status: in-progress
 - V1.4.0 ✅ CMS + full admin coverage: all 23 §5 admin routes live — products/books/courses/workshops publish toggles, curriculum builder (add module/lesson), bookings status controls w/ notify, users list, articles create+publish, reviews approve/feature/delete, pages SEO editor, media registry, settings editor + feature-flag toggles (flags drive public nav), roles grant/revoke (owner-only), audit-logs viewer, security posture page, system status
 - V1.5.0 ✅ security hardening: rate limits (coupon 10/5min, proof 5/10min), migration 012 (payments amount = order total, orders total consistency, notification-update trigger guard, anon payload size caps), docs/SECURITY_REPORT.md
 - V1.6.0 ✅ visual polish: browser pass done — **fixed demo-mode 500 on all guarded routes (middleware now passes through without env)**, Arabic lesson pluralization (lessonsLabel), Arabic-Indic countdown digits, S4 streak day-dots + achievements feed on /dashboard. S1–S4 screenshots still not provided (KNOWN_ISSUES #2) — polished against §2 specs
-## Current phase tasks
-- [ ] V1.7.0 mobile QA ← RESUME HERE
-- [ ] Browser pass at 375/768/1024 over: /, /courses, /courses/[slug], /books, /workshops, /booking, /faq, /auth/login, /checkout, /dashboard, learn, /admin/overview, /admin/payments
-- [ ] Fix found issues (overflow, tap targets, sidebar behavior on mobile — Sidebar is fixed w-64: needs mobile drawer or top-bar fallback for dashboard/admin)
-- [ ] docs/MOBILE_QA_REPORT.md
+- V1.7.0 ✅ mobile QA: responsive sidebar (mobile top bar + RTL slide-over drawer, verified interactively), shells flex-col→lg:flex-row, programmatic overflow sweep 375/768/1024 across 26 routes — zero overflow, MOBILE_QA_REPORT.md
+## Current phase tasks (V1.8.0 staging)
+- [x] **LIVE SUPABASE CONNECTED** — user provided .env (project azuvwkzpgtyxwxmvedmp "HebaElSherif", eu-central-1); fixed URL (was dashboard URL → API URL)
+- [x] Found pre-existing legacy schema w/ REAL business data (2 sessions 1200/1500 ج.م, Instapay 01037141322, brand tagline) → migration 000 relocates legacy tables non-destructively to `legacy` schema; 013 ports the real data into our schema; owner role auto-grants to heba0elsherif@gmail.com on signup
+- [x] All 14 migrations pushed via supabase CLI (repaired legacy history 0001–0009 as reverted); buckets + flags + settings verified live
+- [x] Live-mode semantics: empty catalog → honest empty states (fallbacks now only for no-env/error), unknown checkout product → 404, unconfigured payment methods hidden (bank hidden — only instapay+wallet configured), hero fabricated stats replaced with honest descriptors, booking hides empty availability
+- [x] Live RLS validated with temp user (profile trigger ✓, valid order ✓, tampered total rejected 42501 ✓, coupons invisible ✓, cleaned up)
+- [x] Restored .env.example (was renamed to .env by user; .gitignore now !.env.example)
+- [ ] DEPLOYMENT.md + VERCEL_DEPLOYMENT.md; update SUPABASE_SETUP.md (CLI push flow, owner auto-grant, legacy schema note) ← RESUME HERE
+- [ ] Enable pg_cron for expire_stale_orders (or document manual step); check Supabase Auth settings (email confirm, Site URL)
 - [ ] Gate + commit
 ## Next 3 actions (exact, concrete)
-1. Make Sidebar responsive (hidden on <lg with a slide-over drawer + hamburger topbar in DashboardShell/AdminShell).
-2. Preview at 375px: walk the route list, fix overflow/spacing; then 768/1024 spot check.
-3. Write MOBILE_QA_REPORT.md; gate; commit `V1.7.0: mobile QA`.
+1. Write docs/DEPLOYMENT.md + docs/VERCEL_DEPLOYMENT.md; refresh docs/SUPABASE_SETUP.md (project is now live — document owner auto-grant + legacy schema).
+2. Try scheduling expire_stale_orders via CLI (postgres extension pg_cron) or add to deployment checklist.
+3. Gate; commit `V1.8.0: staging — live Supabase + deployment docs`.
 ## Blockers / needs user input
 - Brand assets missing in /public/brand (logo, portrait, florals, photos) — using branded SVG/CSS substitutes meanwhile.
 - The 4 reference screenshots (S1–S4) were not attached; building from §2 written specs. Please attach them before V1.6.0 polish pass.

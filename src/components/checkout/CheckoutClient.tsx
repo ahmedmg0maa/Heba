@@ -14,7 +14,7 @@ import { track } from '@/lib/analytics'
 
 type Method = 'instapay' | 'wallet' | 'bank_transfer'
 
-const methods: { id: Method; label: string; hint: string }[] = [
+const allMethods: { id: Method; label: string; hint: string }[] = [
   { id: 'instapay', label: 'إنستاباي', hint: 'تحويل فوري من أي بنك مصري' },
   { id: 'wallet', label: 'محفظة إلكترونية', hint: 'فودافون كاش وغيرها' },
   { id: 'bank_transfer', label: 'تحويل بنكي', hint: 'من حسابك البنكي مباشرة' },
@@ -53,8 +53,12 @@ function StepDots({ step }: { step: 1 | 2 | 3 }) {
 }
 
 export function CheckoutClient({ product, settings }: { product: CheckoutProduct; settings: PaymentSettings }) {
+  // only methods the admin actually configured are offered (§8 — accounts come from site_settings)
+  const methods = allMethods.filter((m) =>
+    m.id === 'instapay' ? Boolean(settings.instapay) : m.id === 'wallet' ? Boolean(settings.wallet) : Boolean(settings.bank),
+  )
   const [step, setStep] = useState<1 | 2 | 3>(1)
-  const [method, setMethod] = useState<Method>('instapay')
+  const [method, setMethod] = useState<Method>(methods[0]?.id ?? 'instapay')
   const [coupon, setCoupon] = useState<{ code: string; discount: number } | null>(null)
   const [couponMsg, setCouponMsg] = useState<string | null>(null)
   const [order, setOrder] = useState<(CreatedOrder & { hoursLeft: number }) | null>(null)
@@ -117,29 +121,29 @@ export function CheckoutClient({ product, settings }: { product: CheckoutProduct
     setBusy(false)
   }
 
-  const instructions: Record<Method, { title: string; rows: { label: string; value: string }[] }> = {
+  const instructions: Record<Method, { title: string; rows: { label: string; value: string | undefined }[] }> = {
     instapay: {
       title: 'حوّلي عبر إنستاباي',
       rows: [
-        { label: 'العنوان', value: settings.instapay.handle },
-        { label: 'باسم', value: settings.instapay.name },
+        { label: 'العنوان', value: settings.instapay?.handle },
+        { label: 'باسم', value: settings.instapay?.name },
         { label: 'المبلغ', value: formatPrice(order?.total ?? total) },
       ],
     },
     wallet: {
       title: 'حوّلي إلى المحفظة',
       rows: [
-        { label: 'الرقم', value: settings.wallet.number },
-        { label: 'المحفظة', value: settings.wallet.provider },
+        { label: 'الرقم', value: settings.wallet?.number },
+        { label: 'المحفظة', value: settings.wallet?.provider },
         { label: 'المبلغ', value: formatPrice(order?.total ?? total) },
       ],
     },
     bank_transfer: {
       title: 'حوّلي إلى الحساب البنكي',
       rows: [
-        { label: 'البنك', value: settings.bank.bank },
-        { label: 'IBAN', value: settings.bank.iban },
-        { label: 'باسم', value: settings.bank.name },
+        { label: 'البنك', value: settings.bank?.bank },
+        { label: 'IBAN', value: settings.bank?.iban },
+        { label: 'باسم', value: settings.bank?.name },
         { label: 'المبلغ', value: formatPrice(order?.total ?? total) },
       ],
     },
@@ -236,7 +240,7 @@ export function CheckoutClient({ product, settings }: { product: CheckoutProduct
           </div>
 
           <dl className="divide-y divide-line rounded-2xl border border-line bg-ivory/60">
-            {instructions[method].rows.map((row) => (
+            {instructions[method].rows.filter((row) => row.value).map((row) => (
               <div key={row.label} className="flex items-center justify-between gap-4 px-5 py-3.5">
                 <dt className="text-sm font-semibold text-taupe">{row.label}</dt>
                 <dd dir="ltr" className="tnum font-bold text-deep-teal">

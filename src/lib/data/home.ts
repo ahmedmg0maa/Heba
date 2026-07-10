@@ -100,7 +100,9 @@ export async function getHomeData(): Promise<HomeData> {
         .limit(6),
     ])
 
-    return withLiveFallbackOffer({
+    // Live database: empty results stay empty (sections hide themselves) —
+    // editorial fallbacks are for the no-env demo and error paths only.
+    return {
       offer: offerRes.data
         ? {
             title: offerRes.data.title,
@@ -108,25 +110,19 @@ export async function getHomeData(): Promise<HomeData> {
             badgeText: offerRes.data.badge_text ?? '',
             endsAt: offerRes.data.ends_at,
           }
-        : fallback.offer,
-      articles:
-        articlesRes.data && articlesRes.data.length > 0
-          ? articlesRes.data.map((a) => ({
-              slug: a.slug,
-              title: a.title,
-              excerpt: a.excerpt,
-              publishedAt: a.published_at,
-            }))
-          : fallback.articles,
-      testimonials:
-        reviewsRes.data && reviewsRes.data.length > 0
-          ? reviewsRes.data.map((r) => ({
-              displayName: r.display_name ?? 'متعلّمة',
-              rating: r.rating,
-              comment: r.comment,
-            }))
-          : fallback.testimonials,
-    })
+        : null,
+      articles: (articlesRes.data ?? []).map((a) => ({
+        slug: a.slug,
+        title: a.title,
+        excerpt: a.excerpt,
+        publishedAt: a.published_at,
+      })),
+      testimonials: (reviewsRes.data ?? []).map((r) => ({
+        displayName: r.display_name ?? 'متعلّمة',
+        rating: r.rating,
+        comment: r.comment,
+      })),
+    }
   } catch {
     return withLiveFallbackOffer(fallback)
   }

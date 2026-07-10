@@ -60,18 +60,24 @@ export default async function BookingPage() {
               </div>
 
               <div className="rounded-2xl bg-ivory/70 p-5">
-                <h4 className="mb-3 text-sm font-bold text-deep-teal">مواعيد الإتاحة الأسبوعية</h4>
-                <ul className="flex flex-wrap gap-3">
-                  {s.availability.map((a) => (
-                    <li
-                      key={`${a.weekday}-${a.startTime}`}
-                      className="tnum rounded-full border border-line bg-soft-white px-4 py-1.5 text-sm text-ink"
-                    >
-                      {weekdayNames[a.weekday]} · {a.startTime.slice(0, 5)}–{a.endTime.slice(0, 5)}
-                    </li>
-                  ))}
-                </ul>
-                <p className="mt-3 text-xs text-taupe">يُحدد الموعد الدقيق معك بعد تأكيد الدفع، بما يناسب جدولك.</p>
+                {s.availability.length > 0 && (
+                  <>
+                    <h4 className="mb-3 text-sm font-bold text-deep-teal">مواعيد الإتاحة الأسبوعية</h4>
+                    <ul className="flex flex-wrap gap-3">
+                      {s.availability.map((a) => (
+                        <li
+                          key={`${a.weekday}-${a.startTime}`}
+                          className="tnum rounded-full border border-line bg-soft-white px-4 py-1.5 text-sm text-ink"
+                        >
+                          {weekdayNames[a.weekday]} · {a.startTime.slice(0, 5)}–{a.endTime.slice(0, 5)}
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+                <p className={s.availability.length > 0 ? 'mt-3 text-xs text-taupe' : 'text-sm text-text-soft'}>
+                  يُحدد الموعد الدقيق معك بعد تأكيد الدفع، بما يناسب جدولك.
+                </p>
               </div>
 
               <Button href={`/checkout/session/${s.slug}`} size="lg" className="self-center md:self-start">

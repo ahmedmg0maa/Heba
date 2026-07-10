@@ -71,9 +71,9 @@ export function applyOffer(price: number, offer: ActiveOffer | null): number {
 }
 
 export type PaymentSettings = {
-  instapay: { handle: string; name: string }
-  wallet: { number: string; provider: string }
-  bank: { bank: string; iban: string; name: string }
+  instapay: { handle: string; name: string } | null
+  wallet: { number: string; provider: string } | null
+  bank: { bank: string; iban: string; name: string } | null
   expiryHours: number
 }
 
@@ -97,9 +97,11 @@ export async function getPaymentSettings(): Promise<PaymentSettings> {
       .in('key', ['payment_instapay', 'payment_wallet', 'payment_bank', 'order_expiry_hours'])
     const map = Object.fromEntries((data ?? []).map((r) => [r.key, r.value]))
     return {
-      instapay: map.payment_instapay ?? fallbackSettings.instapay,
-      wallet: map.payment_wallet ?? fallbackSettings.wallet,
-      bank: map.payment_bank ?? fallbackSettings.bank,
+      // Live database: unconfigured methods are null so checkout hides them —
+      // never show fabricated account details for real payments.
+      instapay: map.payment_instapay ?? null,
+      wallet: map.payment_wallet ?? null,
+      bank: map.payment_bank ?? null,
       expiryHours: map.order_expiry_hours?.hours ?? fallbackSettings.expiryHours,
     }
   } catch {
@@ -141,7 +143,8 @@ export async function getCheckoutProduct(type: string, slug: string): Promise<Ch
       .eq('type', t)
       .eq('is_published', true)
       .maybeSingle()
-    if (!data) return fallbackProduct(t, slug)
+    // Live database: unknown product → 404 (fallbacks are for no-env demo only).
+    if (!data) return null
     const listPrice = Number(data.price)
     const offer = await resolveActiveOffer(data.id, t)
     const effective = applyOffer(listPrice, offer)

@@ -1,6 +1,9 @@
 -- 001: extensions + shared helper functions
 create extension if not exists "pgcrypto";
 
+-- role helper bodies reference tables created in later migrations
+set check_function_bodies = off;
+
 -- updated_at maintenance
 create or replace function public.set_updated_at()
 returns trigger language plpgsql as $$

@@ -98,3 +98,16 @@
 - **`lessonsLabel()` handles Arabic count grammar** (درس واحد/درسان/دروس/درسًا) — applied on discovery, detail, and dashboard.
 - **Countdown digits now Arabic-Indic** via toLocaleString(minimumIntegerDigits) for numeral consistency with the rest of the UI.
 - **Streak = consecutive active days from lesson_progress.completed_at** (30-day lookback, today-or-yesterday anchored); achievements derive from certificates + course_progress thresholds (50%/100%).
+
+## 2026-07-10 — V1.7.0
+- **One Sidebar, three renderings:** desktop sticky column, mobile top bar, RTL end-anchored slide-over drawer (backdrop dismiss, closes on navigate) — shells stayed thin wrappers.
+- **Mobile QA is programmatic where possible:** scrollWidth sweep across 26 routes × 3 widths beats screenshot eyeballing for regressions; visual checks reserved for composition.
+
+## 2026-07-10 — V1.8.0 (live Supabase integration)
+- **User connected the real project** (`azuvwkzpgtyxwxmvedmp`); the provided URL was the dashboard URL — corrected to the API URL in .env.
+- **Pre-existing schema preserved, never dropped:** earlier attempt (remote migrations 0001–0009) held real business rows. Migration 000 relocates all public tables+functions to a `legacy` schema (extension functions excluded — ownership), drops legacy auth triggers and storage policies; 013 ports the real data (services 1200/1500 ج.م, Instapay number, brand/booking settings) reading from `legacy.*` so values never live hardcoded in the repo.
+- **Owner auto-grant:** handle_new_user now grants `owner` to heba0elsherif@gmail.com on signup — no manual SQL step for the platform owner.
+- **`check_function_bodies = off` in 001** — `language sql` helpers reference tables created by later migrations.
+- **Live vs demo semantics separated:** editorial fallbacks now trigger ONLY on missing env or query error. A live-but-empty catalog shows honest empty states; unknown checkout products 404; payment methods without configured accounts are hidden (bank hidden until `payment_bank` is set); hero's invented stats replaced with factual descriptors.
+- **Live RLS validated end-to-end** with a throwaway user: profile trigger, order-total integrity (tampered insert → 42501), coupon invisibility — then cleaned up.
+- **pg_cron scheduled via migration 014** (idempotent re-schedule) — order expiry now runs hourly on the live DB.
