@@ -14,6 +14,9 @@
   --color-cobalt: #2F6FA8;
   --color-antique-gold: #B59A65;
   --color-muted-gold: #D5C49E;
+  /* «بذرة نقية» logo hues */
+  --color-aqua: #6FC4B4;
+  --color-aqua-deep: #2E8D91;
   --color-ink: #1F1E1C;
   --color-text-soft: #6E675D;
   --color-line: #E6DDCF;
@@ -62,10 +65,90 @@ html {
   animation: fade-in 0.2s ease-out;
 }
 
+/* ——— Luxury motion ——— */
+
+/* Scroll-reveal (driven by the <Reveal> component) */
+.reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Hero entrance */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(28px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up {
+  animation: fade-up 0.8s ease-out both;
+}
+.delay-1 { animation-delay: 0.12s; }
+.delay-2 { animation-delay: 0.24s; }
+.delay-3 { animation-delay: 0.36s; }
+
+/* Gentle float for ornaments/portrait */
+@keyframes float-soft {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.animate-float {
+  animation: float-soft 7s ease-in-out infinite;
+}
+
+/* Gold shimmer sweep for premium CTAs */
+@keyframes shimmer {
+  from { transform: translateX(120%); }
+  to { transform: translateX(-120%); }
+}
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(120%);
+  background: linear-gradient(105deg, transparent 40%, rgb(255 253 248 / 0.35) 50%, transparent 60%);
+  pointer-events: none;
+}
+.shimmer:hover::after {
+  animation: shimmer 0.9s ease-out;
+}
+
+/* Refined thin scrollbar in brand hues */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-ivory);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-sand);
+  border-radius: 999px;
+  border: 2px solid var(--color-ivory);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-antique-gold);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-drawer,
-  .animate-backdrop {
+  .animate-backdrop,
+  .animate-fade-up,
+  .animate-float,
+  .shimmer::after {
     animation: none;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
   }
 }
 

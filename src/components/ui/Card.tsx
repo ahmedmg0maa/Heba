@@ -12,7 +12,7 @@ export function Card({ className, hover = false, as: Tag = 'div', children }: Ca
     <Tag
       className={cn(
         'rounded-2xl border border-line bg-soft-white p-6 shadow-card',
-        hover && 'transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover',
+        hover && 'transition-all duration-300 hover:-translate-y-1 hover:border-antique-gold/50 hover:shadow-card-hover',
         className,
       )}
     >

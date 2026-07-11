@@ -12,13 +12,16 @@ export function CTARibbon({
   ctaHref?: string
 }) {
   return (
-    <section className="bg-deep-teal px-6 py-14">
-      <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-6 text-center md:flex-row md:text-start">
+    <section className="relative overflow-hidden bg-deep-teal px-6 py-14">
+      {/* gold hairline + seed hue glow for a premium finish */}
+      <span className="absolute inset-x-0 top-0 h-px bg-linear-to-l from-transparent via-antique-gold to-transparent" aria-hidden />
+      <span className="pointer-events-none absolute -end-24 -top-24 h-64 w-64 rounded-full bg-aqua/10 blur-3xl" aria-hidden />
+      <div className="relative mx-auto flex max-w-5xl flex-col items-center justify-between gap-6 text-center md:flex-row md:text-start">
         <div>
           <h2 className="text-2xl font-bold text-soft-white md:text-3xl">{title}</h2>
           <p className="mt-2 text-soft-white/75">{lead}</p>
         </div>
-        <Button href={ctaHref} variant="gold" size="lg" className="shrink-0">
+        <Button href={ctaHref} variant="gold" size="lg" className="shimmer shrink-0">
           {ctaLabel}
         </Button>
       </div>

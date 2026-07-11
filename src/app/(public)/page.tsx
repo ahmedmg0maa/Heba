@@ -6,6 +6,7 @@ import { OfferBlock } from '@/components/home/OfferBlock'
 import { FeaturedArticles } from '@/components/home/FeaturedArticles'
 import { Testimonials } from '@/components/home/Testimonials'
 import { Newsletter } from '@/components/home/Newsletter'
+import { Reveal } from '@/components/ui/Reveal'
 
 export const revalidate = 300
 
@@ -15,12 +16,24 @@ export default async function HomePage() {
   return (
     <main>
       <Hero />
-      <TrustStrip />
-      <ServiceCards />
-      <OfferBlock offer={offer} />
-      <FeaturedArticles articles={articles} />
-      <Testimonials testimonials={testimonials} />
-      <Newsletter />
+      <Reveal>
+        <TrustStrip />
+      </Reveal>
+      <Reveal>
+        <ServiceCards />
+      </Reveal>
+      <Reveal>
+        <OfferBlock offer={offer} />
+      </Reveal>
+      <Reveal>
+        <FeaturedArticles articles={articles} />
+      </Reveal>
+      <Reveal>
+        <Testimonials testimonials={testimonials} />
+      </Reveal>
+      <Reveal>
+        <Newsletter />
+      </Reveal>
     </main>
   )
 }

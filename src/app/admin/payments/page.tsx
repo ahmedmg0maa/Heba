@@ -17,14 +17,25 @@ const methodLabels: Record<string, string> = {
 
 export default async function AdminPaymentsPage() {
   const queue = await getApprovalQueue()
+  const pendingTotal = queue.reduce((s, a) => s + a.amount, 0)
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
-      <header>
-        <h1 className="text-3xl font-bold text-deep-teal">موافقات الدفع</h1>
-        <p className="mt-1 text-text-soft">
-          راجعي الإيصال ثم اعتمدي أو ارفضي — الاعتماد يفعّل وصول العميلة تلقائيًا ويرسل لها إشعارًا.
-        </p>
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-deep-teal">موافقات الدفع</h1>
+          <p className="mt-1 text-text-soft">
+            راجعي الإيصال ثم اعتمدي أو ارفضي — الاعتماد يفعّل وصول العميلة تلقائيًا ويرسل لها إشعارًا.
+          </p>
+        </div>
+        {queue.length > 0 && (
+          <div className="rounded-2xl border border-antique-gold/40 bg-soft-white px-5 py-3 text-center shadow-card">
+            <p className="text-xs font-semibold text-taupe">بانتظار المراجعة</p>
+            <p className="tnum text-xl font-bold text-deep-teal">
+              {queue.length.toLocaleString('ar-EG')} · {formatPrice(pendingTotal)}
+            </p>
+          </div>
+        )}
       </header>
 
       {queue.length === 0 ? (

@@ -1,5 +1,5 @@
 # PROJECT STATE
-Last session: 2026-07-10 | Current phase: V2.1.0 | Status: done
+Last session: 2026-07-11 | Current phase: V2.2.0 | Status: done
 ## Completed phases
 - V0.1.0 ✅ foundation: Next.js 16 + TS + Tailwind v4, RTL root, Arabic fonts, brand tokens, audit scripts, docs, check:deploy green
 - V0.2.0 ✅ brand system: 10 ui primitives (src/components/ui/ + index barrel), BrandLogo SVG substitute, PublicHeader/PublicFooter, DashboardShell/AdminShell, (public) route group wired
@@ -31,6 +31,7 @@ Last session: 2026-07-10 | Current phase: V2.1.0 | Status: done
 - V2.0.0 ✅ FINAL RELEASE: all §16 docs complete (TEST/ROUTE_QA/ADMIN_GUIDE/CUSTOMER_GUIDE/VISUAL_SYSTEM/SUPABASE_MIGRATIONS/FINAL_DELIVERY_REPORT), §15 acceptance verified (frozen-lockfile ✓, check:deploy ✓, no package-lock ✓), tagged v2.0.0
 ## Current phase tasks
 - V2.1.0 ✅ mobile UX pass (user-requested): bottom tab bar, sticky buy bar, safe areas + manifest + icon, touch targets, orders cards on phones — verified live at 375px with real login
+- V2.2.0 ✅ brand + luxury + admin elevation (user-requested): official «بذرة نقية» logo as SVG everywhere + app icon, magic-link login (/auth/confirm) + password eye toggle, AdminTopbar global search + quick links + users search + notify tool + pending totals, scroll-reveal/hero entrance/shimmer/gold accents motion system — verified in browser
 - (project complete — post-launch items are owner actions, see Blockers)
 ## Next 3 actions (exact, concrete)
 1. (owner) Push to GitHub → deploy per docs/VERCEL_DEPLOYMENT.md.

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { getBrowserClient } from '@/lib/supabase/client'
 import { AuthShell, AuthLink } from '@/components/auth/AuthShell'
+import { PasswordField } from '@/components/auth/PasswordField'
 import { FormField } from '@/components/ui/FormField'
 import { Button } from '@/components/ui/Button'
 
@@ -59,15 +60,7 @@ export default function RegisterPage() {
         <form onSubmit={onSubmit} className="space-y-5">
           <FormField label="الاسم الكامل" name="full_name" autoComplete="name" required />
           <FormField label="البريد الإلكتروني" name="email" type="email" autoComplete="email" required dir="ltr" />
-          <FormField
-            label="كلمة المرور"
-            name="password"
-            type="password"
-            autoComplete="new-password"
-            hint="٨ أحرف على الأقل"
-            required
-            dir="ltr"
-          />
+          <PasswordField label="كلمة المرور" name="password" autoComplete="new-password" hint="٨ أحرف على الأقل" />
           {error && (
             <p className="rounded-xl bg-burgundy/10 px-4 py-3 text-sm font-medium text-burgundy" role="alert">
               {error}
