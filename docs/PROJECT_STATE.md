@@ -1,6 +1,12 @@
 # PROJECT STATE
 Last session: 2026-08-26 | Current program: Master Launch Execution | BLOCKED — CLOUDFLARE OWNER SETUP AND STAGING ACCEPTANCE REQUIRED; 043 live read-only evidence exists, while 044–047 remain local-only and no external write is authorized
 
+## Cloudflare Staging deployment checkpoint — 2026-08-26
+- A separate Workers.dev-only Worker, `heba-elsherif-platform-staging`, is deployed from commit `6be490a7912d685e2c090600e5a4eb5dfae97ed2` on `codex/cloudflare-compatibility-spike`. It uses `HEBA_DEPLOYMENT_ENV=staging`, a separate Worker name, `nodejs_compat`, and only the static `ASSETS` binding. No DNS, domain, Production Worker, Production Supabase, migration, or production setting changed.
+- The deployed endpoint intentionally returns Basic-Auth `401` until Cloudflare Staging secrets exist. It proved noindex/CSP/HSTS/nosniff behavior and has no deployed source maps. The isolated local Worker suite now starts its own Wrangler server and passed **46/46** desktop/mobile tests; type-check, lint and the isolated Staging build passed.
+- Status is **`STAGING BLOCKED`**, not accepted: Cloudflare has no staging secret names yet, there is no separately configured Supabase Staging project, and GitHub Workers Builds has not been connected in the Cloudflare dashboard. These conditions prevent live public/auth/booking/payment/storage/email/monitoring verification and correctly leave every write journey unverified.
+- Evidence: `docs/CLOUDFLARE_STAGING_DEPLOYMENT_EVIDENCE_2026-08-26.md`. Exact next task is the single owner-side Cloudflare/Supabase Staging configuration described there; afterwards, perform only the authorized Staging recovery, migration and acceptance gates.
+
 ## Production launch closure checkpoint — 2026-08-26
 - Current decision is **`BLOCKED — CLOUDFLARE OWNER SETUP AND STAGING ACCEPTANCE REQUIRED`**. A fresh read-only CLI check confirms production ref `zfbwpubsnuijybxjuidc` is active and migration history remains 000–043; 044–047 are pending. The provider reports PITR disabled and no physical backup, and no staging branch exists.
 - The public endpoint responds over HTTPS but has not been proven to run this source release under the approved Cloudflare architecture. No Cloudflare account, Worker, DNS or route has been inspected or changed.
