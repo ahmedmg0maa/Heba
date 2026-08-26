@@ -9,6 +9,12 @@ Last session: 2026-08-26 | Current program: Master Launch Execution | BLOCKED �
 - Status is **`STAGING BLOCKED`**, not accepted: Basic Auth and an isolated Staging project exist, but Backup/Restore evidence and the authorized Staging migration gate have not occurred, the application is not configured with the Staging project, and GitHub Workers Builds has not been connected in the Cloudflare dashboard. These conditions prevent live auth/booking/payment/storage/email/monitoring verification and correctly leave every write journey unverified.
 - Evidence: `docs/CLOUDFLARE_STAGING_DEPLOYMENT_EVIDENCE_2026-08-26.md`. Exact next task is the single owner-side Cloudflare/Supabase Staging configuration described there; afterwards, perform only the authorized Staging recovery, migration and acceptance gates.
 
+## Supabase Staging recovery and migration gate — 2026-08-26
+- Production `zfbw…jidc` and the separate empty Staging project `uecv…cphp` are both active; no Production connection, API key, migration, Auth record, Storage object or Production write was accessed in this gate.
+- `RESTORE DRILL BLOCKED`: official PostgreSQL tools are available, but the executor has no `HEBA_LAUNCH_PRODUCTION_DATABASE_URL`. The runner was tested fail-closed and created no backup artifact or restore target when the input was absent.
+- Local migration evidence passed: 48 sequential source migrations (`000`–`047`) have no duplicate/missing prefixes, `audit:db` passed, and the booking contract verifier confirmed `044 → 045 → 046 → 047`. Baseline, parity, Staging writes, pending migrations, synthetic tests, Auth and Admin remain unverified and unapplied.
+- Recovery tooling now derives the organization/region from the authorized healthy Production ref and cleans its temporary backup artifacts after a drill. Evidence and the exact unblock condition are in `docs/SUPABASE_STAGING_MIGRATION_AND_ACCEPTANCE_2026-08-26.md`.
+
 ## Production launch closure checkpoint — 2026-08-26
 - Current decision is **`BLOCKED — CLOUDFLARE OWNER SETUP AND STAGING ACCEPTANCE REQUIRED`**. A fresh read-only CLI check confirms production ref `zfbwpubsnuijybxjuidc` is active and migration history remains 000–043; 044–047 are pending. The provider reports PITR disabled and no physical backup, and no staging branch exists.
 - The public endpoint responds over HTTPS but has not been proven to run this source release under the approved Cloudflare architecture. No Cloudflare account, Worker, DNS or route has been inspected or changed.

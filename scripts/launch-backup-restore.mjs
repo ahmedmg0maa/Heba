@@ -1,15 +1,15 @@
 import { createHash, randomUUID } from 'node:crypto'
-import { existsSync, mkdirSync, readdirSync, statSync, readFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, statSync, readFileSync, rmSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { spawnSync } from 'node:child_process'
 
 const sourceUrl = process.env.HEBA_LAUNCH_PRODUCTION_DATABASE_URL
 const restoreUrl = process.env.HEBA_LAUNCH_RESTORE_DATABASE_URL
+const cleanupTemporaryArtifacts = process.env.HEBA_LAUNCH_CLEANUP === '1'
 const root = resolve(process.cwd(), '.launch-backups')
 
 function fail(message) {
-  process.stderr.write(`${message}\n`)
-  process.exit(2)
+  throw new Error(message)
 }
 
 function findTool(name) {
@@ -78,27 +78,33 @@ const globals = join(root, `production-globals-${stamp}-${runId}.sql`)
 const sourceEnv = connectionEnvironment(sourceUrl, 'HEBA_LAUNCH_PRODUCTION_DATABASE_URL')
 const restoreEnv = connectionEnvironment(restoreUrl, 'HEBA_LAUNCH_RESTORE_DATABASE_URL')
 
-execute(pgDump, ['--format=custom', '--file', archive, '--verbose'], sourceEnv, 'Logical database backup')
-execute(pgDumpAll, ['--globals-only', '--no-role-passwords', '--file', globals], sourceEnv, 'Logical role backup')
-const listing = execute(pgRestore, ['--list', archive], sourceEnv, 'Backup archive validation', true)
-if (!listing.includes('TABLE DATA') || !listing.includes('SCHEMA - public')) fail('Backup archive validation did not find the expected public schema and table data entries.')
+try {
+  execute(pgDump, ['--format=custom', '--file', archive, '--verbose'], sourceEnv, 'Logical database backup')
+  execute(pgDumpAll, ['--globals-only', '--no-role-passwords', '--file', globals], sourceEnv, 'Logical role backup')
+  const listing = execute(pgRestore, ['--list', archive], sourceEnv, 'Backup archive validation', true)
+  if (!listing.includes('TABLE DATA') || !listing.includes('SCHEMA - public')) fail('Backup archive validation did not find the expected public schema and table data entries.')
 
-execute(pgRestore, ['--clean', '--if-exists', '--no-owner', '--no-acl', '--exit-on-error', '--dbname', restoreEnv.PGDATABASE, archive], restoreEnv, 'Isolated restore')
-const checkSql = "select (to_regclass('public.bookings') is not null and to_regclass('public.orders') is not null and to_regclass('public.audit_logs') is not null and (select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='r' and c.relrowsecurity) > 0) as restored_contract_ok;"
-const psql = findTool('psql')
-if (!psql) fail('The approved PostgreSQL command-line tools do not include psql.')
-const restored = execute(psql, ['-X', '-v', 'ON_ERROR_STOP=1', '-At', '-c', checkSql], restoreEnv, 'Isolated restore integrity check', true).trim()
-if (restored !== 't') fail('The isolated restore integrity contract did not pass.')
+  execute(pgRestore, ['--clean', '--if-exists', '--no-owner', '--no-acl', '--exit-on-error', '--dbname', restoreEnv.PGDATABASE, archive], restoreEnv, 'Isolated restore')
+  const checkSql = "select (to_regclass('public.bookings') is not null and to_regclass('public.orders') is not null and to_regclass('public.audit_logs') is not null and (select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='r' and c.relrowsecurity) > 0) as restored_contract_ok;"
+  const psql = findTool('psql')
+  if (!psql) fail('The approved PostgreSQL command-line tools do not include psql.')
+  const restored = execute(psql, ['-X', '-v', 'ON_ERROR_STOP=1', '-At', '-c', checkSql], restoreEnv, 'Isolated restore integrity check', true).trim()
+  if (restored !== 't') fail('The isolated restore integrity contract did not pass.')
 
-const checksum = createHash('sha256').update(readFileSync(archive)).digest('hex')
-const size = statSync(archive).size
-process.stdout.write(JSON.stringify({
-  result: 'LOGICAL_BACKUP_AND_ISOLATED_RESTORE_PASSED',
-  archive: archive.replace(process.cwd(), '.'),
-  globals: globals.replace(process.cwd(), '.'),
-  sha256: checksum,
-  bytes: size,
-  rpo: 'point-in-time at backup completion',
-  rto: 'record elapsed execution time in the launch closure',
-  storageObjects: 'not included; export/restore them separately through the approved Storage provider path',
-}) + '\n')
+  const checksum = createHash('sha256').update(readFileSync(archive)).digest('hex')
+  const size = statSync(archive).size
+  process.stdout.write(JSON.stringify({
+    result: 'LOGICAL_BACKUP_AND_ISOLATED_RESTORE_PASSED',
+    sha256: checksum,
+    bytes: size,
+    rpo: 'point-in-time at logical backup completion',
+    rto: 'record elapsed execution time in the launch closure',
+    temporaryArtifactsDeleted: cleanupTemporaryArtifacts,
+    storageObjects: 'not included; export/restore them separately through the approved Storage provider path',
+  }) + '\n')
+} finally {
+  if (cleanupTemporaryArtifacts) {
+    rmSync(archive, { force: true })
+    rmSync(globals, { force: true })
+  }
+}

@@ -405,3 +405,9 @@
 
 - **Staging is a separate empty Nano project.** It was created in the authorized organization/region with no Production data copied and no paid size selected. Its generated database password was used only for the create operation and was not printed, committed or retained as a workspace setting.
 - **No fake Admin identity precedes schema and RBAC.** A real owner-controlled email may be used only after the isolated recovery, migration, Auth redirect and application-configuration gates succeed. Creating an Auth record before its server-side role, audit and permission model exists would not constitute an operational administration account.
+
+## 2026-08-26 — Recovery-drill hardening before Staging writes
+
+- **Logical recovery is a hard gate.** An absent executor-only Production connection prevents the runner from creating a backup, target or artifact. This is a correct `RESTORE DRILL BLOCKED` result, not a permission to approximate a backup from source migrations.
+- **Restore targets and artifacts are temporary.** The runner derives organization/region from the authoritative healthy Production project, creates a distinct Nano target, and deletes the target plus its custom dump/globals artifacts after the drill. It never uses the persistent Staging project as a restore target.
+- **Baseline is not parity evidence by itself.** Applying 000–043 to a blank project must follow a successful drill and be compared read-only to the Production-043 metadata before 044–047, Auth identities, or application writes are allowed.
