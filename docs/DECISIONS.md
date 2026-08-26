@@ -400,3 +400,8 @@
 - **Staging has a distinct Worker identity.** `env.staging` resolves to `heba-elsherif-platform-staging` and carries only the non-secret `HEBA_DEPLOYMENT_ENV=staging` variable. The source deployment command builds that environment in an isolated temporary mirror, then deploys its generated config with `--keep-vars`; it never targets the root Production Worker name.
 - **Staging is fail-closed before credentials exist.** The staging proxy requires both Cloudflare-held Basic Auth secrets. Until they and a separate Staging Supabase project are configured, the public worker returns 401/noindex rather than accepting writes or accidentally connecting to Production.
 - **Worker E2E starts its own neutral runtime.** The Cloudflare Playwright suite now rebuilds a credential-free generic Worker and starts Wrangler itself. This prevents stale port reuse and prevents a staging-only Basic Auth configuration from masquerading as an application regression.
+
+## 2026-08-26 — Empty disposable Supabase Staging project
+
+- **Staging is a separate empty Nano project.** It was created in the authorized organization/region with no Production data copied and no paid size selected. Its generated database password was used only for the create operation and was not printed, committed or retained as a workspace setting.
+- **No fake Admin identity precedes schema and RBAC.** A real owner-controlled email may be used only after the isolated recovery, migration, Auth redirect and application-configuration gates succeed. Creating an Auth record before its server-side role, audit and permission model exists would not constitute an operational administration account.

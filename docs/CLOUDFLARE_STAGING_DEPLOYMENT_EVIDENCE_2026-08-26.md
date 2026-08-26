@@ -4,7 +4,7 @@
 
 **`STAGING BLOCKED`**
 
-تم إنشاء ونشر Worker تجريبي مستقل وآمن على `workers.dev`، لكن قبول Staging الوظيفي غير ممكن بعد لأن أسرار الحماية ومشروع Supabase Staging المستقل غير مُهيأين. لم يُستخدم Supabase Production، ولم تتغير DNS أو Nameservers أو النطاق الأساسي أو أي مورد Production.
+تم إنشاء ونشر Worker تجريبي مستقل وآمن على `workers.dev`، وأنشئ لاحقًا مشروع Supabase Staging مستقل بحجم Nano المجاني وبلا بيانات. لكن قبول Staging الوظيفي غير ممكن بعد لأن schema/RBAC وبيانات اتصال التطبيق وAuth redirects لم تُجهز بعد. لم يُستخدم Supabase Production، ولم تتغير DNS أو Nameservers أو النطاق الأساسي أو أي مورد Production.
 
 ## هوية النشر
 
@@ -59,8 +59,8 @@ wrangler deploy --config dist/server/wrangler.json --keep-vars
 ## ما لم يُتحقق منه ولماذا
 
 - العرض البصري الحي RTL عند 390px وdesktop، والصور والملفات: **unverified**؛ صحة الاستجابة HTTP ثبتت بعد Basic Auth، لكن لا يوجد بعد اختبار متصفح حي أو Storage Staging.
-- Auth redirects، جلسات HttpOnly، MFA وRBAC: **unverified**؛ لا يوجد مشروع Supabase Staging أو إعداد redirects خاص به.
-- Booking E2E، الدفع اليدوي، منع الإثبات المكرر، الاستحقاقات، الإدارة والـaudit: **unverified**؛ لا يجوز تنفيذ كتابة على Supabase Production، ومشروع Staging المستقل غير موجود.
+- Auth redirects، جلسات HttpOnly، MFA وRBAC: **unverified**؛ مشروع Supabase Staging مستقل موجود، لكنه لم يتلق إعداد redirects أو schema/RBAC أو بيانات اتصال التطبيق بعد.
+- Booking E2E، الدفع اليدوي، منع الإثبات المكرر، الاستحقاقات، الإدارة والـaudit: **unverified**؛ لا يجوز تنفيذ كتابة على Supabase Production، وStaging ما زال فارغًا إلى أن تنجح بوابة Backup/Restore والمigrations المعتمدة.
 - Resend وSentry وStorage والتسليم المحمي: **unverified**؛ إعدادات Staging الخارجية غير مهيأة.
 - GitHub Workers Builds: **unverified / awaiting owner**؛ النشر اليدوي عبر OAuth نجح، أما ربط Cloudflare Dashboard بالمستودع `ahmedmg0maa/Heba` واختيار فرع `codex/cloudflare-compatibility-spike` فهو إجراء Dashboard خارجي لم يُنفذ من هذا المسار. لا يوجد نشر تلقائي لـ`main`.
 
@@ -68,7 +68,7 @@ wrangler deploy --config dist/server/wrangler.json --keep-vars
 
 **تهيئة قبول Staging المستقلة في Cloudflare/Supabase.**
 
-تتكون من ربط Workers Builds بالمستودع والفرع التجريبي، ثم إدخال أسرار Basic Auth ومشروع Supabase Staging المنفصل ومتغيراته من Cloudflare Dashboard فقط، وإضافة رابط Worker إلى Auth redirect URLs في مشروع Staging. لا تُرسل القيم في المحادثة. بعد ذلك يمكن إعادة تشغيل اختبار الدخول والكتابة وE2E الحي، ثم فقط يُطلب تفويض منفصل لنسخة احتياطية/Restore Drill وتطبيق 044–047 على **Staging**.
+تتكون من ربط Workers Builds بالمستودع والفرع التجريبي، ثم إضافة متغيرات مشروع Supabase Staging من Cloudflare Dashboard فقط، وإضافة رابط Worker إلى Auth redirect URLs في مشروع Staging. لا تُرسل القيم في المحادثة. بعد نجاح Backup/Restore Drill وتفويض Staging migrations، تطبق الـschema بالترتيب ثم ينشأ حساب Admin الحقيقي ويمنح دورًا محفوظًا ومدققًا؛ عندها فقط يمكن اختبار الدخول والكتابة وE2E الحي.
 
 ## بوابات Production المتبقية
 
