@@ -38,7 +38,7 @@ wrangler deploy --config dist/server/wrangler.json --keep-vars
 | Staging value | عنوان Worker أعلاه، ومشروع Supabase Staging وResend/Sentry الخاصان بـStaging فقط |
 | Production value | النطاق الأساسي ومشروع Supabase Production وأسراره؛ لا تُدخل ولا تُستخدم في هذا Worker |
 
-فحص Cloudflare لأسماء الأسرار فقط أعاد صفر أسرار على Worker عند النشر. لم تُقرأ أو تُعرض أي قيمة سرية.
+تمت إضافة سرّي Basic Auth المطلوبين لاحقًا إلى Worker عبر مطالبة Wrangler التفاعلية. فحص الأسماء فقط يؤكد وجودهما، ولم تُقرأ أو تُعرض أي قيمة سرية.
 
 ## الأدلة والاختبارات
 
@@ -52,12 +52,13 @@ wrangler deploy --config dist/server/wrangler.json --keep-vars
 | `pnpm lint` | ناجح |
 | `pnpm test:e2e:cloudflare` | **46/46 ناجح** محليًا ضد Wrangler مستقل، مكتبي ومحمول (يشمل RTL وPixel 7/390px) |
 | الصفحة الرئيسية، login، admin وrobots على الرابط الحي بلا اعتماد | `401` متوقع مع Basic Auth، مع `X-Robots-Tag: noindex` وCSP وHSTS و`nosniff` |
+| المسارات الحية بعد اعتماد Basic Auth | 11 مسارًا عامًا ومسار login أعادت `200`؛ `/admin` أعاد `307` إلى حاجز المصادقة المتوقع؛ جميعها احتفظت بـCSP و`noindex` |
 | مسار source map غير موجود على الرابط الحي | `404`؛ وناتج النشر المحلي يحتوي 0 ملفات `.map` |
 | Worker error tail | لا توجد أحداث خطأ مرصودة في نافذة المراقبة القصيرة؛ لا يُعامل ذلك كدليل مراقبة قبول |
 
 ## ما لم يُتحقق منه ولماذا
 
-- جميع المسارات العامة بمحتواها الفعلي، الصور والملفات: **unverified**؛ الحماية المتعمدة تمنع المرور دون سرّي Basic Auth.
+- العرض البصري الحي RTL عند 390px وdesktop، والصور والملفات: **unverified**؛ صحة الاستجابة HTTP ثبتت بعد Basic Auth، لكن لا يوجد بعد اختبار متصفح حي أو Storage Staging.
 - Auth redirects، جلسات HttpOnly، MFA وRBAC: **unverified**؛ لا يوجد مشروع Supabase Staging أو إعداد redirects خاص به.
 - Booking E2E، الدفع اليدوي، منع الإثبات المكرر، الاستحقاقات، الإدارة والـaudit: **unverified**؛ لا يجوز تنفيذ كتابة على Supabase Production، ومشروع Staging المستقل غير موجود.
 - Resend وSentry وStorage والتسليم المحمي: **unverified**؛ إعدادات Staging الخارجية غير مهيأة.
