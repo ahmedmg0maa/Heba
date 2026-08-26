@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import { getApprovalQueue } from '@/lib/data/admin'
 import { formatPrice } from '@/lib/format'
 import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table'
@@ -29,7 +29,7 @@ export default async function AdminPaymentsPage() {
           </p>
         </div>
         {queue.length > 0 && (
-          <div className="rounded-2xl border border-antique-gold/40 bg-soft-white px-5 py-3 text-center shadow-card">
+          <div className="rounded-2xl border border-antique-gold/40 bg-surface-raised px-5 py-3 text-center shadow-card">
             <p className="text-xs font-semibold text-taupe">بانتظار المراجعة</p>
             <p className="tnum text-xl font-bold text-deep-teal">
               {queue.length.toLocaleString('ar-EG')} · {formatPrice(pendingTotal)}

@@ -1,13 +1,14 @@
 import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
+import { getSupabasePublicKey } from './public-key'
 
 // Server Components / Server Actions / Route Handlers client (anon key + user cookies).
 export async function getServerClient() {
   const cookieStore = await cookies()
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    getSupabasePublicKey(),
     {
       cookies: {
         getAll() {
@@ -28,7 +29,14 @@ export async function getServerClient() {
 // Service-role client — SERVER ONLY. Bypasses RLS; use exclusively after an
 // explicit access check (signed URLs, grants, admin mutations).
 export function getServiceClient() {
-  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+  const key = process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!key) throw new Error('Supabase server secret is not configured.')
+  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, key, {
     auth: { persistSession: false, autoRefreshToken: false },
   })
+}
+
+/** True only when a server-only elevated key is available; never expose this value. */
+export function hasSupabaseServerSecret() {
+  return Boolean(process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)
 }

@@ -1,4 +1,5 @@
 import { getServerClient } from '@/lib/supabase/server'
+import { hasSupabasePublicConfig } from '@/lib/supabase/public-key'
 
 export type RevenueReport = {
   byMonth: { label: string; revenue: number; orders: number }[]
@@ -16,35 +17,44 @@ export type BookingsReport = {
   total: number
 }
 
+export type MembershipReport = {
+  active: number
+  total: number
+  byPlan: { title: string; active: number; total: number }[]
+}
+
 export type Snapshot = { id: string; kind: string; periodStart: string; periodEnd: string; createdAt: string }
 
 export type ReportsBundle = {
+  state: 'ready' | 'unconfigured' | 'error'
   revenue: RevenueReport
   enrollments: EnrollmentReport
   bookings: BookingsReport
+  memberships: MembershipReport
   snapshots: Snapshot[]
 }
 
 const empty: ReportsBundle = {
+  state: 'ready',
   revenue: { byMonth: [], byType: [], total: 0 },
   enrollments: { courses: [], total: 0 },
   bookings: { byStatus: [], total: 0 },
+  memberships: { active: 0, total: 0, byPlan: [] },
   snapshots: [],
 }
 
-const hasEnv = () =>
-  Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+const hasEnv = hasSupabasePublicConfig
 
 const monthFmt = new Intl.DateTimeFormat('ar-EG', { month: 'long', year: 'numeric' })
 
 export async function getReports(): Promise<ReportsBundle> {
-  if (!hasEnv()) return empty
+  if (!hasEnv()) return { ...empty, state: 'unconfigured' }
   try {
     const supabase = await getServerClient()
     const now = new Date()
     const yearAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1)
 
-    const [ordersRes, itemsRes, coursesRes, progressRes, bookingsRes, snapshotsRes] = await Promise.all([
+    const [ordersRes, itemsRes, coursesRes, progressRes, bookingsRes, snapshotsRes, plansRes] = await Promise.all([
       supabase
         .from('orders')
         .select('id, total, created_at')
@@ -60,7 +70,12 @@ export async function getReports(): Promise<ReportsBundle> {
         .select('id, kind, period_start, period_end, created_at')
         .order('created_at', { ascending: false })
         .limit(12),
+      supabase.from('subscription_plans').select('id, title, subscriptions(id, status)'),
     ])
+
+    if ([ordersRes, itemsRes, coursesRes, progressRes, bookingsRes, snapshotsRes, plansRes].some((result) => result.error)) {
+      return { ...empty, state: 'error' }
+    }
 
     const paidOrders = ordersRes.data ?? []
     const paidIds = new Set(paidOrders.map((o) => o.id))
@@ -111,13 +126,23 @@ export async function getReports(): Promise<ReportsBundle> {
 
     const statusAgg = new Map<string, number>()
     for (const b of bookingsRes.data ?? []) statusAgg.set(b.status, (statusAgg.get(b.status) ?? 0) + 1)
+    const membershipByPlan = (plansRes.data ?? []).map((plan) => {
+      const rows = plan.subscriptions ?? []
+      return { title: plan.title, active: rows.filter((row) => row.status === 'active').length, total: rows.length }
+    })
 
     return {
+      state: 'ready',
       revenue: { byMonth, byType, total },
       enrollments: { courses, total: courses.reduce((s, c) => s + c.enrollments, 0) },
       bookings: {
         byStatus: [...statusAgg.entries()].map(([status, count]) => ({ status, count })),
         total: bookingsRes.data?.length ?? 0,
+      },
+      memberships: {
+        active: membershipByPlan.reduce((sum, plan) => sum + plan.active, 0),
+        total: membershipByPlan.reduce((sum, plan) => sum + plan.total, 0),
+        byPlan: membershipByPlan,
       },
       snapshots: (snapshotsRes.data ?? []).map((s) => ({
         id: s.id,
@@ -128,6 +153,6 @@ export async function getReports(): Promise<ReportsBundle> {
       })),
     }
   } catch {
-    return empty
+    return { ...empty, state: 'error' }
   }
 }

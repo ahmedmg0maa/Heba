@@ -6,7 +6,7 @@ Premium Arabic-first learning platform: public site, customer dashboard, LMS cou
 
 - **Next.js 16** (App Router, RTL root) · **TypeScript** strict · **Tailwind CSS v4** (CSS-first `@theme`)
 - **Supabase** — Postgres + RLS, Auth (SSR cookies), Storage (signed URLs for all protected content)
-- **pnpm 10.13.1** (pinned via corepack) · Node **24** · Vercel-ready
+- **pnpm 10.13.1** (pinned via Corepack) · Node **24** · Cloudflare Workers-ready
 
 ## Quick start
 
@@ -14,7 +14,7 @@ Premium Arabic-first learning platform: public site, customer dashboard, LMS cou
 corepack enable && corepack prepare pnpm@10.13.1 --activate
 pnpm install --frozen-lockfile
 cp .env.example .env.local   # fill from your Supabase project
-pnpm dev
+
 ```
 
 Without Supabase credentials the site runs in **demo mode**: public pages show editorial fallback content, dashboards show empty states, and ordering is disabled with a clear message.
@@ -50,6 +50,6 @@ Ordered SQL migrations live in `supabase/migrations/` (001 → 010: helpers, use
 - [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md) — open items with severity
 - [docs/SUPABASE_SETUP.md](docs/SUPABASE_SETUP.md) — backend setup
 
-## Deployment (Vercel)
+## Deployment (Cloudflare Workers)
 
-`vercel.json` pins the install command (corepack + frozen lockfile). Set the three Supabase env vars in the Vercel project. Detailed guides land in `DEPLOYMENT.md` / `VERCEL_DEPLOYMENT.md` at V1.8.0.
+The final hosting path is GitHub Free → Cloudflare Workers Free through vinext; Cloudflare provides DNS/CDN while Supabase remains the database, Auth and Storage provider. Namecheap is the registrar only. Set variables only in Cloudflare Worker/Build Secrets, never in the repository. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md), [docs/CLOUDFLARE_DEPLOYMENT.md](docs/CLOUDFLARE_DEPLOYMENT.md), and the gated [launch closure](docs/PRODUCTION_LAUNCH_CLOSURE_2026-08-26.md).

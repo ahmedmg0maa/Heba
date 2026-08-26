@@ -7,11 +7,11 @@ import type { HomeArticle } from '@/lib/data/home'
 export function FeaturedArticles({ articles }: { articles: HomeArticle[] }) {
   if (articles.length === 0) return null
   return (
-    <Section tone="white" eyebrow="من المدونة" title="مقالات مختارة" lead="قراءات قصيرة وعملية ترافق فنجان قهوتك.">
+    <Section tone="white" eyebrow="قراءات منتقاة" title="مقالات تعيد ترتيب الفكرة" lead="مساحات قصيرة للتأمل والفهم والتطبيق.">
       <div className="grid gap-6 md:grid-cols-3">
         {articles.map((a) => (
-          <Card key={a.slug} hover as="article" className="flex flex-col">
-            <span className="mb-4 h-1 w-12 rounded-full bg-antique-gold" aria-hidden />
+          <Card key={a.slug} hover as="article" className="relative flex flex-col overflow-hidden pt-8">
+            <span className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-antique-gold/10 via-antique-gold/70 to-antique-gold/10" aria-hidden />
             <h3 className="text-lg font-bold text-deep-teal">
               <Link href={`/articles/${a.slug}`} className="hover:text-burgundy">
                 {a.title}

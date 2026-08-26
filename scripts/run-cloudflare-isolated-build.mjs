@@ -1,0 +1,62 @@
+import { spawnSync } from 'node:child_process'
+import { cpSync, mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { basename, join, relative } from 'node:path'
+import { SUPABASE_PUBLIC_ENV_NAMES } from './public-config.mjs'
+
+const root = process.cwd()
+const tempRoot = mkdtempSync(join(tmpdir(), 'heba-cloudflare-isolated-build-'))
+const buildRoot = join(tempRoot, 'app')
+const outputRoot = join(root, 'dist')
+const excludedRoots = new Set([
+  '.git', '.next', 'dist', '.vinext', '.wrangler', '.launch-backups', '.launch-tools', '.namecheap-standalone',
+  'node_modules', '.pnpm-store', 'release', 'coverage', 'playwright-report', 'test-results', 'reports', 'exports',
+])
+
+function excludeFromBuild(source) {
+  const rel = relative(root, source).replaceAll('\\', '/')
+  if (!rel) return false
+  const [top] = rel.split('/')
+  const name = basename(source)
+  return excludedRoots.has(top)
+    || name === '.env'
+    || name.startsWith('.env.')
+    || /\.(?:zip|tar|tgz|tar\.gz|7z|rar|gz|dump|backup|bak|bkp)$/i.test(name)
+}
+
+// The Spike must prove the Workers build without reading an ambient local
+// environment file. A temporary source mirror excludes every .env* file and
+// shadows all known public/server configuration values with inert placeholders.
+const blocked = {
+  ...Object.fromEntries(SUPABASE_PUBLIC_ENV_NAMES.map((name) => [name, ''])),
+  NEXT_PUBLIC_SITE_URL: 'http://localhost:3102',
+  SUPABASE_SECRET_KEY: '',
+  SUPABASE_SERVICE_ROLE_KEY: '',
+  HEBA_DEPLOYMENT_ENV: '',
+  STAGING_ACCESS_USER: '',
+  STAGING_ACCESS_PASSWORD: '',
+}
+const pnpmCli = process.env.npm_execpath
+if (!pnpmCli) throw new Error('pnpm CLI path is unavailable')
+
+function runPnpm(args) {
+  const result = spawnSync(process.execPath, [pnpmCli, ...args], {
+    cwd: buildRoot,
+    env: { ...process.env, ...blocked },
+    stdio: 'inherit',
+  })
+  if (result.error) throw result.error
+  if (result.status !== 0) throw new Error(`isolated pnpm ${args[0]} failed with exit code ${result.status ?? 'unknown'}`)
+}
+
+try {
+  cpSync(root, buildRoot, { recursive: true, filter: (source) => !excludeFromBuild(source) })
+  runPnpm(['install', '--prefer-offline', '--frozen-lockfile'])
+  runPnpm(['build:vinext'])
+
+  rmSync(outputRoot, { recursive: true, force: true })
+  cpSync(join(buildRoot, 'dist'), outputRoot, { recursive: true })
+  console.log('Cloudflare isolated Workers output prepared: dist/')
+} finally {
+  rmSync(tempRoot, { recursive: true, force: true })
+}

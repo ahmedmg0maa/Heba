@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { Card, CardTitle } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
+import { AdminSessionsPanel } from '@/components/admin/AdminSessionsPanel'
+import { getAdminSessionInventory } from '@/lib/actions/admin-sessions'
 
 export const metadata: Metadata = { title: 'الأمان — الإدارة' }
 
@@ -14,7 +16,8 @@ const controls = [
   { name: 'التحقق من الأسعار على الخادم', detail: 'الخصومات والكوبونات تُحسب في الخادم — لا يمكن التلاعب بها من المتصفح.' },
 ]
 
-export default function AdminSecurityPage() {
+export default async function AdminSecurityPage() {
+  const sessions = await getAdminSessionInventory()
   return (
     <div className="mx-auto max-w-3xl space-y-8">
       <header>
@@ -36,6 +39,8 @@ export default function AdminSecurityPage() {
           ))}
         </ul>
       </Card>
+
+      <Card className="p-8"><AdminSessionsPanel sessions={sessions} /></Card>
 
       <Card className="p-8">
         <CardTitle className="mb-3">توصيات التشغيل</CardTitle>

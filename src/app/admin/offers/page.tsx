@@ -5,7 +5,7 @@ import { Card, CardTitle } from '@/components/ui/Card'
 import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table'
 import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { OfferForm, ActiveToggle } from '@/components/admin/MarketingForms'
+import { OfferForm, ActiveToggle, OfferEdit } from '@/components/admin/MarketingForms'
 
 export const metadata: Metadata = { title: 'العروض — الإدارة' }
 
@@ -86,7 +86,7 @@ export default async function AdminOffersPage() {
                     </Badge>
                   </TD>
                   <TD>
-                    <ActiveToggle id={o.id} active={o.isActive} kind="offer" />
+                    <div className="flex flex-wrap items-start gap-2"><ActiveToggle id={o.id} active={o.isActive} kind="offer" /><OfferEdit offer={o} /></div>
                   </TD>
                 </TR>
               )

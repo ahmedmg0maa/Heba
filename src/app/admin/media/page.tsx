@@ -1,67 +1,62 @@
 import type { Metadata } from 'next'
-import { adminList } from '@/lib/data/cms'
-import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table'
+import Link from 'next/link'
+import { getServerClient } from '@/lib/supabase/server'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { MediaDelete, MediaMetadata, MediaUpload, CopyMediaUrl } from '@/components/admin/MediaManager'
 
-export const metadata: Metadata = { title: 'الوسائط — الإدارة' }
+export const metadata: Metadata = { title: 'مكتبة الوسائط — الإدارة' }
+const PAGE_SIZE = 24
+const dateFmt = new Intl.DateTimeFormat('ar-EG', { day: 'numeric', month: 'short', year: 'numeric' })
 
-type Row = { id: string; bucket: string; path: string; alt: string; kind: string; size_bytes: number | null; created_at: string }
-
-const dateFmt = new Intl.DateTimeFormat('ar-EG', { day: 'numeric', month: 'short' })
+type Row = { id: string; bucket: string; path: string; title: string; alt: string; tags: string[]; kind: string; mime_type: string | null; visibility: string; size_bytes: number | null; created_at: string; caption: string; credit: string; rights_status: string; rights_reference: string; folder: string; focal_x: number; focal_y: number; processing_status: string; media_usages: { id: string }[] }
+type Props = { searchParams: Promise<{ q?: string; bucket?: string; kind?: string; page?: string }> }
 
 function fmtSize(bytes: number | null) {
   if (!bytes) return '—'
   if (bytes > 1_048_576) return `${(bytes / 1_048_576).toFixed(1)} م.ب`
-  return `${Math.round(bytes / 1024)} ك.ب`
+  return `${Math.max(1, Math.round(bytes / 1024))} ك.ب`
 }
 
-export default async function AdminMediaPage() {
-  const assets = await adminList<Row>('media_assets', 'id, bucket, path, alt, kind, size_bytes, created_at', {
-    orderBy: 'created_at',
-    limit: 200,
-  })
+export default async function AdminMediaPage({ searchParams }: Props) {
+  const params = await searchParams
+  const q = (params.q ?? '').trim().replace(/[%_,.()]/g, ' ').slice(0, 80)
+  const bucket = params.bucket ?? ''
+  const kind = params.kind ?? ''
+  const page = Math.max(1, Number.parseInt(params.page ?? '1', 10) || 1)
+  const supabase = await getServerClient()
+  let query = supabase.from('media_assets').select('id, bucket, path, title, alt, tags, kind, mime_type, visibility, size_bytes, created_at, caption, credit, rights_status, rights_reference, folder, focal_x, focal_y, processing_status, media_usages(id)', { count: 'exact' })
+  if (q) query = query.or(`title.ilike.%${q}%,alt.ilike.%${q}%,path.ilike.%${q}%`)
+  if (bucket) query = query.eq('bucket', bucket)
+  if (kind) query = query.eq('kind', kind)
+  const { data, count } = await query.order('created_at', { ascending: false }).range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1)
+  const assets = (data ?? []) as Row[]
+  const total = count ?? 0
+  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  const href = (nextPage: number) => `/admin/media?${new URLSearchParams({ ...(q ? { q } : {}), ...(bucket ? { bucket } : {}), ...(kind ? { kind } : {}), page: String(nextPage) })}`
 
-  return (
-    <div className="mx-auto max-w-5xl space-y-8">
-      <header>
-        <h1 className="text-3xl font-bold text-deep-teal">الوسائط</h1>
-        <p className="mt-1 text-text-soft">سجل الأصول المرفوعة عبر مخازن Supabase.</p>
-      </header>
-
-      {assets.length === 0 ? (
-        <EmptyState
-          title="لا وسائط مسجلة بعد"
-          description="ارفعي الملفات إلى مخازن Supabase (public-media للعام، والمخازن الخاصة للمحتوى المحمي) وسجّليها هنا لسهولة التتبع."
-        />
-      ) : (
-        <Table>
-          <THead>
-            <tr>
-              <TH>الملف</TH>
-              <TH>المخزن</TH>
-              <TH>النوع</TH>
-              <TH>الحجم</TH>
-              <TH>رُفع</TH>
-            </tr>
-          </THead>
-          <TBody>
-            {assets.map((a) => (
-              <TR key={a.id}>
-                <TD>
-                  <p className="font-semibold text-deep-teal" dir="ltr">{a.path}</p>
-                  {a.alt && <p className="text-xs text-taupe">{a.alt}</p>}
-                </TD>
-                <TD>
-                  <span dir="ltr">{a.bucket}</span>
-                </TD>
-                <TD>{a.kind}</TD>
-                <TD>{fmtSize(a.size_bytes)}</TD>
-                <TD>{dateFmt.format(new Date(a.created_at))}</TD>
-              </TR>
-            ))}
-          </TBody>
-        </Table>
-      )}
-    </div>
-  )
+  return <div className="mx-auto max-w-6xl space-y-8">
+    <header><h1 className="text-3xl font-bold text-deep-teal">مكتبة الوسائط</h1><p className="mt-1 text-text-soft">رفع وفهرسة واختيار آمن للأصول العامة والمحتوى المحمي، مع منع حذف أي ملف مستخدم.</p></header>
+    <MediaUpload />
+    <form method="get" className="grid gap-3 rounded-2xl border border-line bg-surface-raised p-4 sm:grid-cols-[1fr_auto_auto_auto]">
+      <input name="q" defaultValue={q} placeholder="ابحثي بالاسم أو الوصف أو المسار" className="min-h-11 rounded-xl border border-line bg-ivory px-4 text-sm text-ink" />
+      <select name="bucket" defaultValue={bucket} className="min-h-11 rounded-xl border border-line bg-surface-raised px-3 text-sm text-ink"><option value="">كل المخازن</option><option value="public-media">عام</option><option value="course-videos">فيديو الدورات</option><option value="course-resources">موارد الدورات</option><option value="protected-books">كتب محمية</option><option value="workshop-recordings">تسجيلات الورش</option></select>
+      <select name="kind" defaultValue={kind} className="min-h-11 rounded-xl border border-line bg-surface-raised px-3 text-sm text-ink"><option value="">كل الأنواع</option><option value="image">صور</option><option value="video">فيديو</option><option value="audio">صوت</option><option value="document">مستندات</option></select>
+      <button className="min-h-11 rounded-xl bg-deep-teal px-5 text-sm font-bold text-white">تطبيق</button>
+    </form>
+    <div className="flex items-center justify-between text-sm text-text-soft"><span>{total.toLocaleString('ar-EG')} أصل · صفحة {page.toLocaleString('ar-EG')} من {pages.toLocaleString('ar-EG')}</span>{(q || bucket || kind) && <Link href="/admin/media" className="font-bold text-deep-teal">مسح الفلاتر</Link>}</div>
+    {assets.length === 0 ? <EmptyState title="لا وسائط مطابقة" description="ارفعي أصلًا جديدًا أو غيّري البحث والفلاتر." /> : <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{assets.map((asset) => {
+      const publicUrl = asset.visibility === 'public' ? supabase.storage.from(asset.bucket).getPublicUrl(asset.path).data.publicUrl : null
+      const usageCount = asset.media_usages?.length ?? 0
+      return <article key={asset.id} className="overflow-hidden rounded-2xl border border-line bg-surface-raised shadow-card">
+        <div className="flex aspect-[4/3] items-center justify-center bg-sand/15 bg-cover" role={asset.kind === 'image' && publicUrl ? 'img' : undefined} aria-label={asset.alt || asset.title} style={{ backgroundImage: asset.kind === 'image' && publicUrl ? `url(${publicUrl})` : undefined, backgroundPosition: `${asset.focal_x}% ${asset.focal_y}%` }}><span className="rounded-full bg-deep-teal/85 px-3 py-1 text-xs font-bold text-white">{asset.kind}</span></div>
+        <div className="space-y-3 p-4"><div><h2 className="truncate font-bold text-deep-teal">{asset.title}</h2><p className="truncate text-xs text-text-soft" dir="ltr">{asset.path}</p></div>
+          <div className="flex flex-wrap gap-1">{asset.tags.map((tag) => <span key={tag} className="rounded-full bg-aqua/10 px-2 py-1 text-[11px] text-deep-teal">{tag}</span>)}</div>
+          <dl className="grid grid-cols-2 gap-1 text-xs text-text-soft"><div><dt className="sr-only">الحجم</dt><dd>{fmtSize(asset.size_bytes)}</dd></div><div><dt className="sr-only">التاريخ</dt><dd>{dateFmt.format(new Date(asset.created_at))}</dd></div><div><dt className="sr-only">الظهور</dt><dd>{asset.visibility === 'public' ? 'عام' : 'خاص'}</dd></div><div><dt className="sr-only">الاستخدام</dt><dd>{usageCount.toLocaleString('ar-EG')} استخدام</dd></div><div><dt className="sr-only">المجلد</dt><dd dir="ltr">{asset.folder}</dd></div><div><dt className="sr-only">الحقوق</dt><dd>{asset.rights_status === 'unverified' ? 'حقوق غير موثقة' : 'حقوق موثقة'}</dd></div></dl>
+          <MediaMetadata id={asset.id} title={asset.title} alt={asset.alt} tags={asset.tags} caption={asset.caption} credit={asset.credit} rightsStatus={asset.rights_status} rightsReference={asset.rights_reference} folder={asset.folder} focalX={asset.focal_x} focalY={asset.focal_y} />
+          <div className="flex flex-wrap gap-2">{publicUrl && <CopyMediaUrl url={publicUrl} />}<MediaDelete id={asset.id} usageCount={usageCount} /></div>
+        </div>
+      </article>
+    })}</div>}
+    {pages > 1 && <nav aria-label="صفحات مكتبة الوسائط" className="flex justify-between">{page > 1 ? <Link className="rounded-xl border border-line px-4 py-2" href={href(page - 1)}>السابق</Link> : <span />}{page < pages && <Link className="rounded-xl border border-line px-4 py-2" href={href(page + 1)}>التالي</Link>}</nav>}
+  </div>
 }

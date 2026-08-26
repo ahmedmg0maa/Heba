@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import Link from 'next/link'
@@ -9,7 +9,8 @@ import { Button } from '@/components/ui/Button'
 import { FormField } from '@/components/ui/FormField'
 import { formatPrice } from '@/lib/format'
 import type { CheckoutProduct, PaymentSettings } from '@/lib/data/checkout'
-import { createOrder, submitPaymentProof, validateCoupon, type CreatedOrder } from '@/lib/actions/checkout'
+import { createOrder, validateCoupon, type CreatedOrder } from '@/lib/actions/checkout'
+import { uploadPaymentProofDirect } from '@/lib/payment-proof-upload'
 import { track } from '@/lib/analytics'
 
 type Method = 'instapay' | 'wallet' | 'bank_transfer'
@@ -33,9 +34,9 @@ function StepDots({ step }: { step: 1 | 2 | 3 }) {
               <span
                 className={cn(
                   'tnum flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold',
-                  state === 'done' && 'bg-deep-teal text-soft-white',
-                  state === 'active' && 'bg-antique-gold text-soft-white',
-                  state === 'next' && 'border border-line bg-soft-white text-taupe',
+                  state === 'done' && 'bg-deep-teal text-on-dark',
+                  state === 'active' && 'bg-antique-gold text-on-dark',
+                  state === 'next' && 'border border-line bg-surface-raised text-taupe',
                 )}
               >
                 {state === 'done' ? '✓' : n.toLocaleString('ar-EG')}
@@ -59,13 +60,16 @@ export function CheckoutClient({ product, settings }: { product: CheckoutProduct
   )
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [method, setMethod] = useState<Method>(methods[0]?.id ?? 'instapay')
+  const [variantId, setVariantId] = useState(product.variants[0]?.id ?? '')
   const [coupon, setCoupon] = useState<{ code: string; discount: number } | null>(null)
   const [couponMsg, setCouponMsg] = useState<string | null>(null)
   const [order, setOrder] = useState<(CreatedOrder & { hoursLeft: number }) | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
-  const total = Math.max(0, product.price - (coupon?.discount ?? 0))
+  const selectedVariant = product.variants.find((variant) => variant.id === variantId)
+  const selectedPrice = selectedVariant?.price ?? product.price
+  const total = Math.max(0, selectedPrice - (coupon?.discount ?? 0))
   const demoMode = product.id === null
 
   async function onApplyCoupon(e: React.FormEvent<HTMLFormElement>) {
@@ -75,7 +79,7 @@ export function CheckoutClient({ product, settings }: { product: CheckoutProduct
     if (!code) return
     setBusy(true)
     setCouponMsg(null)
-    const res = await validateCoupon(code, product.id, product.price)
+    const res = await validateCoupon(code, product.id, selectedPrice)
     if (res.ok) {
       setCoupon({ code: res.data.code, discount: res.data.discount })
       setCouponMsg(`تم تطبيق الكوبون — وفّرتِ ${formatPrice(res.data.discount)}`)
@@ -93,7 +97,7 @@ export function CheckoutClient({ product, settings }: { product: CheckoutProduct
     }
     setBusy(true)
     setError(null)
-    const res = await createOrder({ productId: product.id, couponCode: coupon?.code, method })
+    const res = await createOrder({ productId: product.id, variantId: variantId || undefined, couponCode: coupon?.code, method })
     if (res.ok) {
       const hoursLeft = Math.round((new Date(res.data.expiresAt).getTime() - Date.now()) / 3_600_000)
       setOrder({ ...res.data, hoursLeft })
@@ -110,10 +114,9 @@ export function CheckoutClient({ product, settings }: { product: CheckoutProduct
     if (!order) return
     setBusy(true)
     setError(null)
-    const formData = new FormData(e.currentTarget)
-    formData.set('orderId', order.orderId)
-    formData.set('method', method)
-    const res = await submitPaymentProof(formData)
+    const file = new FormData(e.currentTarget).get('proof')
+    if (!(file instanceof File)) { setError('أرفقي صورة الإيصال أولًا.'); setBusy(false); return }
+    const res = await uploadPaymentProofDirect(order.orderId, method, file)
     if (res.ok) {
       setStep(3)
       track('proof_submitted', { product: product.slug, method })
@@ -175,6 +178,8 @@ export function CheckoutClient({ product, settings }: { product: CheckoutProduct
             </div>
           </div>
 
+          {product.variants.length > 0 && <label className="block text-sm font-bold text-deep-teal">اختاري النسخة<select value={variantId} onChange={(event) => { setVariantId(event.target.value); setCoupon(null); setCouponMsg(null) }} className="mt-2 min-h-11 w-full rounded-xl border border-line bg-surface-raised px-4 text-ink">{product.variants.map((variant) => <option key={variant.id} value={variant.id}>{variant.name} — {formatPrice(variant.price)}</option>)}</select></label>}
+
           <form onSubmit={onApplyCoupon} className="flex items-end gap-3">
             <FormField label="كوبون خصم (اختياري)" name="coupon" dir="ltr" className="flex-1" />
             <Button type="submit" variant="secondary" disabled={busy || demoMode}>
@@ -197,7 +202,7 @@ export function CheckoutClient({ product, settings }: { product: CheckoutProduct
                     'cursor-pointer rounded-2xl border p-4 text-center transition-all',
                     method === m.id
                       ? 'border-deep-teal bg-deep-teal/5 shadow-card'
-                      : 'border-line bg-soft-white hover:border-taupe',
+                      : 'border-line bg-surface-raised hover:border-taupe',
                   )}
                 >
                   <input
@@ -235,7 +240,7 @@ export function CheckoutClient({ product, settings }: { product: CheckoutProduct
           <div className="text-center">
             <h1 className="text-2xl font-bold text-deep-teal">{instructions[method].title}</h1>
             <p className="mt-2 text-sm text-text-soft">
-              بعد التحويل صوّري الإيصال وأرفقيه هنا — نراجعه ونفعّل وصولك خلال ٢٤ ساعة كحد أقصى.
+              بعد التحويل صوّري الإيصال وأرفقيه هنا — يراجعه الفريق ضمن أوقات العمل ثم يفعّل وصولك.
             </p>
           </div>
 
@@ -265,7 +270,7 @@ export function CheckoutClient({ product, settings }: { product: CheckoutProduct
                 type="file"
                 accept="image/png,image/jpeg,image/webp"
                 required
-                className="w-full rounded-xl border border-dashed border-taupe bg-soft-white px-4 py-6 text-sm text-text-soft file:me-4 file:rounded-full file:border-0 file:bg-deep-teal file:px-5 file:py-2 file:text-sm file:font-semibold file:text-soft-white"
+                className="w-full rounded-xl border border-dashed border-taupe bg-surface-raised px-4 py-6 text-sm text-text-soft file:me-4 file:rounded-full file:border-0 file:bg-deep-teal file:px-5 file:py-2 file:text-sm file:font-semibold file:text-on-dark"
               />
               <p className="mt-2 text-xs text-taupe">JPG أو PNG أو WebP — بحد أقصى ٥ ميجابايت</p>
             </div>
@@ -289,7 +294,7 @@ export function CheckoutClient({ product, settings }: { product: CheckoutProduct
           </svg>
           <h1 className="text-2xl font-bold text-deep-teal">استلمنا إيصالك</h1>
           <p className="mx-auto max-w-sm leading-loose text-text-soft">
-            طلبك الآن قيد المراجعة. سنفعّل وصولك ونرسل لك إشعارًا خلال ٢٤ ساعة كحد أقصى في أيام العمل.
+            طلبك الآن قيد المراجعة. سنفعّل وصولك ونرسل لك إشعارًا فور اعتماد الإيصال.
           </p>
           <div className="flex flex-wrap justify-center gap-3 pt-2">
             <Button href="/dashboard/payments">تابعي حالة الدفع</Button>

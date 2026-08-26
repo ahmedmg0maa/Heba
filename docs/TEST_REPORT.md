@@ -1,4 +1,4 @@
-# TEST REPORT — V2.0.0
+# TEST REPORT — V2.5.0
 
 ## Automated (every build, `pnpm check:deploy`)
 | Check | Result |
@@ -19,7 +19,10 @@
 | Test | Result |
 |---|---|
 | Auth health + REST reachability | ✅ |
-| All 15 migrations applied via CLI (000–014) | ✅ |
+| All 19 migrations applied via CLI (000–018) | ✅ |
+| Atomic booking/order RPC + GiST overlap guard applied live | ✅ |
+| Durable PostgreSQL rate limiter RPC/table applied live | ✅ |
+| `pnpm verify:booking`: real authenticated RPC → linked order/booking + durable limiter + complete cleanup | ✅ |
 | Storage: 7 buckets exist with correct visibility | ✅ |
 | `handle_new_user` trigger creates profile on signup | ✅ |
 | RLS: user inserts valid order (totals consistent) | ✅ |
@@ -35,8 +38,9 @@
 - Desktop (1440px) + mobile (375px) passes on home, courses, dashboard, learn player, admin overview.
 - Mobile drawer, testimonial carousel, countdown, accordions verified interactively.
 - Overflow sweep: 26 routes × {375, 768, 1024} → zero horizontal overflow.
+- Playwright: 31 passed, 3 intentional skips across desktop/mobile; covers 9 public routes, encoding, dark persistence, five-step booking, auth chrome isolation, anonymous guards, mobile overflow, password-only admin login, live admin availability, and learner workspace. Temporary QA users are deleted in teardown.
+- In-app browser composition QA: 1440px + 390px, light + dark, homepage, booking, admin availability, learner shell, and generated no-person asset.
 
 ## Not covered (post-launch recommendations)
-- No unit/E2E test suite (Playwright/Vitest) — audits + live API tests stand in; add before feature growth.
 - Human pass on physical devices and screen readers recommended.
 - Payment approval flow tested at API/RLS level; full human walkthrough (real receipt image → approve → access) is a launch-checklist item in DEPLOYMENT.md.

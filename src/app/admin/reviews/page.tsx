@@ -16,13 +16,18 @@ type Row = {
   is_approved: boolean
   is_featured: boolean
   created_at: string
+  verified_purchase:boolean
+  status: 'pending' | 'approved' | 'rejected' | 'archived'
+  moderation_reason: string | null
+  owner_response: string | null
+  owner_response_published: boolean
   products: { title: string } | { title: string }[] | null
 }
 
 export default async function AdminReviewsPage() {
   const reviews = await adminList<Row>(
     'reviews',
-    'id, display_name, rating, comment, is_approved, is_featured, created_at, products(title)',
+    'id, display_name, rating, comment, is_approved, is_featured, verified_purchase, status, moderation_reason, owner_response, owner_response_published, created_at, products(title)',
     { orderBy: 'created_at' },
   )
 
@@ -45,13 +50,16 @@ export default async function AdminReviewsPage() {
                   <div className="flex items-center gap-3">
                     <span className="font-bold text-deep-teal">{r.display_name ?? 'عميلة'}</span>
                     <Stars rating={r.rating} />
-                    {r.is_approved ? <Badge tone="success">معتمد</Badge> : <Badge tone="pending">بانتظار المراجعة</Badge>}
+                    {r.status === 'approved' ? <Badge tone="success">معتمد</Badge> : r.status === 'rejected' ? <Badge tone="danger">مرفوض</Badge> : r.status === 'archived' ? <Badge tone="sand">مؤرشف</Badge> : <Badge tone="pending">بانتظار المراجعة</Badge>}
                     {r.is_featured && <Badge tone="gold">مميّز</Badge>}
+                    {r.verified_purchase && <Badge tone="teal">شراء موثّق</Badge>}
                   </div>
                   {product && <span className="text-xs text-taupe">{product.title}</span>}
                 </div>
                 <p className="leading-relaxed text-ink">{r.comment}</p>
-                <ReviewControls id={r.id} approved={r.is_approved} featured={r.is_featured} />
+                {r.moderation_reason && <p className="rounded-lg bg-sand/30 p-2 text-xs text-text-soft">سبب داخلي: {r.moderation_reason}</p>}
+                {r.owner_response && <p className="rounded-lg bg-ivory/60 p-2 text-sm text-text-soft">رد المالكة: {r.owner_response}{r.owner_response_published ? ' (منشور)' : ' (داخلي)'}</p>}
+                <ReviewControls id={r.id} approved={r.is_approved} featured={r.is_featured} status={r.status} />
               </Card>
             )
           })}

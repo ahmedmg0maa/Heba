@@ -1,9 +1,11 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import { getServerClient } from '@/lib/supabase/server'
 import { adminList } from '@/lib/data/cms'
 import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { NotifyUser } from '@/components/admin/NotifyUser'
+import { hasSupabasePublicConfig } from '@/lib/supabase/public-key'
+import Link from 'next/link'
 
 export const metadata: Metadata = { title: 'العملاء — الإدارة' }
 
@@ -11,8 +13,7 @@ type Row = { id: string; full_name: string; email: string; phone: string | null;
 
 const dateFmt = new Intl.DateTimeFormat('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' })
 
-const hasEnv = () =>
-  Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+const hasEnv = hasSupabasePublicConfig
 
 async function searchUsers(q: string): Promise<Row[]> {
   if (!hasEnv()) return []
@@ -60,9 +61,9 @@ export default async function AdminUsersPage({ searchParams }: Props) {
             name="q"
             defaultValue={q ?? ''}
             placeholder="الاسم أو البريد…"
-            className="w-56 rounded-full border border-line bg-soft-white px-4 py-2 text-sm shadow-card focus:border-deep-teal focus:outline-2 focus:outline-deep-teal/20"
+            className="w-56 rounded-full border border-line bg-surface-raised px-4 py-2 text-sm shadow-card focus:border-deep-teal focus:outline-2 focus:outline-deep-teal/20"
           />
-          <button type="submit" className="rounded-full bg-deep-teal px-5 py-2 text-sm font-semibold text-soft-white">
+          <button type="submit" className="rounded-full bg-deep-teal px-5 py-2 text-sm font-semibold text-on-dark">
             بحث
           </button>
         </form>
@@ -87,7 +88,7 @@ export default async function AdminUsersPage({ searchParams }: Props) {
           <TBody>
             {users.map((u) => (
               <TR key={u.id}>
-                <TD className="font-semibold text-deep-teal">{u.full_name || '—'}</TD>
+                <TD className="font-semibold text-deep-teal"><Link href={`/admin/users/${u.id}`} className="underline-offset-4 hover:underline">{u.full_name || '—'}</Link></TD>
                 <TD>
                   <span dir="ltr">{u.email}</span>
                 </TD>

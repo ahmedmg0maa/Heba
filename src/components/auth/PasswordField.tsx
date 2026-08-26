@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 
@@ -30,7 +30,7 @@ export function PasswordField({
           autoComplete={autoComplete}
           required
           dir="ltr"
-          className="w-full rounded-xl border border-line bg-soft-white px-4 py-2.5 pe-12 text-ink transition-colors focus:border-deep-teal focus:outline-2 focus:outline-offset-0 focus:outline-deep-teal/20"
+          className="w-full rounded-xl border border-line bg-surface-raised px-4 py-2.5 pe-12 text-ink transition-colors focus:border-deep-teal focus:outline-2 focus:outline-offset-0 focus:outline-deep-teal/20"
         />
         <button
           type="button"

@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { Amiri, Aref_Ruqaa, IBM_Plex_Sans_Arabic, Cairo } from "next/font/google";
 import "./globals.css";
 
 // Mobile-first viewport: notch-safe rendering + branded status bar on Android/iOS.
@@ -7,34 +6,12 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  interactiveWidget: "resizes-content",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#F7F2EA" },
+    { media: "(prefers-color-scheme: light)", color: "#F2EADF" },
     { media: "(prefers-color-scheme: dark)", color: "#0E3440" },
   ],
 };
-
-const amiri = Amiri({
-  variable: "--font-amiri",
-  subsets: ["arabic", "latin"],
-  weight: ["400", "700"],
-});
-
-const arefRuqaa = Aref_Ruqaa({
-  variable: "--font-aref-ruqaa",
-  subsets: ["arabic", "latin"],
-  weight: ["400", "700"],
-});
-
-const plexArabic = IBM_Plex_Sans_Arabic({
-  variable: "--font-plex-arabic",
-  subsets: ["arabic", "latin"],
-  weight: ["300", "400", "500", "600", "700"],
-});
-
-const cairo = Cairo({
-  variable: "--font-cairo",
-  subsets: ["arabic", "latin"],
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
@@ -54,6 +31,10 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
   },
+  icons: {
+    icon: "/brand/main-logo.png",
+    apple: "/brand/main-logo.png",
+  },
   appleWebApp: {
     capable: true,
     title: "هبة الشريف",
@@ -70,8 +51,16 @@ export default function RootLayout({
     <html
       lang="ar"
       dir="rtl"
-      className={`${amiri.variable} ${arefRuqaa.variable} ${plexArabic.variable} ${cairo.variable} h-full antialiased`}
+      suppressHydrationWarning
+      className="h-full antialiased"
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var s=localStorage.getItem('heba-theme');var d=s==='dark'||(!s&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d);document.documentElement.style.colorScheme=d?'dark':'light'}catch(e){}})()`,
+          }}
+        />
+      </head>
       <body className="flex min-h-full flex-col">{children}</body>
     </html>
   );

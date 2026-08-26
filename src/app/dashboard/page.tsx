@@ -38,10 +38,10 @@ export default async function DashboardHome() {
   const unread = notifications.filter((n) => !n.readAt).length
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8">
+    <div className="mx-auto max-w-7xl space-y-6">
       <header>
-        <h1 className="text-3xl font-bold text-deep-teal">أهلًا {firstName} 🌿</h1>
-        <p className="mt-1 text-text-soft">سعداء بعودتك — هذه خلاصة رحلتك اليوم.</p>
+        <h1 className="text-4xl font-bold text-deep-teal">لوحة المتعلّمة</h1>
+        <p className="mt-1 font-semibold text-burgundy">أهلًا {firstName}، رحلتك مستمرة بخطوات هادئة.</p>
       </header>
 
       <div className="grid gap-5 sm:grid-cols-3">

@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 
 export type CategoryItem = {
   href: string
@@ -15,7 +15,7 @@ export function CategoryStrip({ items }: { items: CategoryItem[] }) {
           <li key={item.href}>
             <Link
               href={item.href}
-              className="group flex items-center gap-3 rounded-full border border-line bg-soft-white px-5 py-2.5 text-sm font-semibold text-deep-teal shadow-card transition-all hover:-translate-y-0.5 hover:border-antique-gold hover:shadow-card-hover"
+              className="group flex items-center gap-3 rounded-full border border-line bg-surface-raised px-5 py-2.5 text-sm font-semibold text-deep-teal shadow-card transition-all hover:-translate-y-0.5 hover:border-antique-gold hover:shadow-card-hover"
             >
               <span className="text-antique-gold" aria-hidden>
                 <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6">

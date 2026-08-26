@@ -1,9 +1,10 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import { getMyOrders } from '@/lib/data/dashboard'
 import { formatPrice, isPast } from '@/lib/format'
 import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table'
 import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { VerifiedReviewForm } from '@/components/dashboard/VerifiedReviewForm'
 
 export const metadata: Metadata = { title: 'طلباتي' }
 
@@ -43,7 +44,7 @@ export default async function MyOrdersPage() {
               const expired = o.status === 'pending_payment' && isPast(o.expiresAt)
               const st = expired ? statusMap.expired : (statusMap[o.status] ?? statusMap.pending_payment)
               return (
-                <li key={o.id} className="rounded-2xl border border-line bg-soft-white p-5 shadow-card">
+                <li key={o.id} className="rounded-2xl border border-line bg-surface-raised p-5 shadow-card">
                   <div className="flex items-start justify-between gap-3">
                     <h2 className="font-semibold text-deep-teal">
                       {o.productTitles.length > 0 ? o.productTitles.join(' + ') : 'طلب شراء'}
@@ -54,6 +55,7 @@ export default async function MyOrdersPage() {
                     <span className="text-taupe">{dateFmt.format(new Date(o.createdAt))}</span>
                     <span className="font-bold text-burgundy">{formatPrice(o.total)}</span>
                   </p>
+                  {o.status==='paid'&&o.products.map(product=><VerifiedReviewForm key={product.id} productId={product.id} title={product.title}/>)}
                 </li>
               )
             })}
@@ -67,6 +69,7 @@ export default async function MyOrdersPage() {
                 <TH>التاريخ</TH>
                 <TH>الإجمالي</TH>
                 <TH>الحالة</TH>
+                <TH>التقييم</TH>
               </tr>
             </THead>
             <TBody>
@@ -83,6 +86,7 @@ export default async function MyOrdersPage() {
                     <TD>
                       <Badge tone={st.tone}>{st.label}</Badge>
                     </TD>
+                    <TD>{o.status==='paid'&&o.products.map(product=><VerifiedReviewForm key={product.id} productId={product.id} title={product.title}/>)}</TD>
                   </TR>
                 )
               })}

@@ -1,28 +1,15 @@
 'use server'
 
-import { getServerClient, getServiceClient } from '@/lib/supabase/server'
+import { getServerClient, getServiceClient, hasSupabaseServerSecret } from '@/lib/supabase/server'
+import { requirePermission } from '@/lib/auth/permissions'
+import { hasSupabasePublicConfig } from '@/lib/supabase/public-key'
 
 type ActionResult<T = null> = { ok: true; data: T } | { ok: false; error: string }
 
 const NO_ENV = 'غير متاح في بيئة العرض التجريبية.'
 const NOT_ADMIN = 'هذه العملية تتطلب صلاحية إدارية.'
 
-const hasEnv = () =>
-  Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
-      process.env.SUPABASE_SERVICE_ROLE_KEY,
-  )
-
-async function requireAdminUser() {
-  const supabase = await getServerClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return null
-  const { data: role } = await supabase.from('admin_roles').select('role').eq('user_id', user.id).limit(1).maybeSingle()
-  return role ? user : null
-}
+const hasEnv = () => hasSupabasePublicConfig() && hasSupabaseServerSecret()
 
 export type SearchHit = {
   kind: 'customer' | 'order' | 'payment'
@@ -34,7 +21,7 @@ export type SearchHit = {
 // Global admin search: customers by name/email, plus their recent orders/payments.
 export async function adminSearch(q: string): Promise<ActionResult<SearchHit[]>> {
   if (!hasEnv()) return { ok: false, error: NO_ENV }
-  const admin = await requireAdminUser()
+  const admin = await requirePermission('admin.search')
   if (!admin) return { ok: false, error: NOT_ADMIN }
 
   const term = q.trim()
@@ -102,7 +89,7 @@ export async function adminSearch(q: string): Promise<ActionResult<SearchHit[]>>
 // Send a personal in-app notification to one customer (support tool).
 export async function sendUserNotification(userId: string, title: string, body: string): Promise<ActionResult> {
   if (!hasEnv()) return { ok: false, error: NO_ENV }
-  const admin = await requireAdminUser()
+  const admin = await requirePermission('notifications.send')
   if (!admin) return { ok: false, error: NOT_ADMIN }
   const t = title.trim()
   if (t.length < 3) return { ok: false, error: 'اكتبي عنوان الرسالة.' }
@@ -117,7 +104,7 @@ export async function sendUserNotification(userId: string, title: string, body: 
   })
   if (error) return { ok: false, error: 'تعذّر الإرسال.' }
   await service.from('audit_logs').insert({
-    actor_id: admin.id,
+    actor_id: admin.userId,
     action: 'notification.sent',
     entity_type: 'user',
     entity_id: userId,

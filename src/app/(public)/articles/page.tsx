@@ -8,7 +8,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 
 export const metadata: Metadata = {
   title: 'المقالات',
-  description: 'قراءات قصيرة وعملية في الوعي والتوازن والنمو الهادئ.',
+  description: 'مقالات منشورة من المنصة في الوعي والنمو الهادئ.',
 }
 
 export const revalidate = 300
@@ -23,16 +23,16 @@ export default async function ArticlesPage() {
       <PageHero
         eyebrow="المدونة"
         title="قراءات ترافق فنجان قهوتك"
-        lead="مقالات قصيرة وعملية — فكرة واحدة واضحة في كل مقال، وتمرين صغير تطبّقينه اليوم."
+        lead="اقرئي المقالات المنشورة عندما تتوفر، وعودي إلى المسارات الرئيسية في أي وقت."
       />
 
       <Section>
         {articles.length === 0 ? (
           <EmptyState
             title="لا توجد مقالات بعد"
-            description="نكتب الآن أولى مقالاتنا. اشتركي في الرسالة الأسبوعية ليصلك الجديد."
-            actionLabel="العودة للرئيسية"
-            actionHref="/"
+            description="ستظهر المقالات هنا عند نشرها من إدارة المنصة."
+            actionLabel="ابدئي من هنا"
+            actionHref="/start-here"
           />
         ) : (
           <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-3">

@@ -1,8 +1,8 @@
-import { Button } from '@/components/ui/Button'
+﻿import { Button } from '@/components/ui/Button'
 
 export function CTARibbon({
   title = 'جاهزة لخطوتك التالية؟',
-  lead = 'انضمي لأكثر من ألف متعلّمة اخترن النمو الهادئ.',
+  lead = 'اختاري خطوة واضحة تناسب مرحلتك وإيقاعك الحالي.',
   ctaLabel = 'ابدئي الآن',
   ctaHref = '/courses',
 }: {
@@ -18,8 +18,8 @@ export function CTARibbon({
       <span className="pointer-events-none absolute -end-24 -top-24 h-64 w-64 rounded-full bg-aqua/10 blur-3xl" aria-hidden />
       <div className="relative mx-auto flex max-w-5xl flex-col items-center justify-between gap-6 text-center md:flex-row md:text-start">
         <div>
-          <h2 className="text-2xl font-bold text-soft-white md:text-3xl">{title}</h2>
-          <p className="mt-2 text-soft-white/75">{lead}</p>
+          <h2 className="text-2xl font-bold text-on-dark md:text-3xl">{title}</h2>
+          <p className="mt-2 text-on-dark/75">{lead}</p>
         </div>
         <Button href={ctaHref} variant="gold" size="lg" className="shimmer shrink-0">
           {ctaLabel}

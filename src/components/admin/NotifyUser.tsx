@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { sendUserNotification } from '@/lib/actions/admin-tools'
@@ -42,7 +42,7 @@ export function NotifyUser({ userId, userName }: { userId: string; userName: str
             name="title"
             required
             placeholder="العنوان"
-            className="w-full rounded-lg border border-line bg-soft-white px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-line bg-surface-raised px-3 py-2 text-sm"
           />
           <label htmlFor={`nb-${userId}`} className="sr-only">
             النص
@@ -52,7 +52,7 @@ export function NotifyUser({ userId, userName }: { userId: string; userName: str
             name="body"
             rows={2}
             placeholder="نص الرسالة (اختياري)"
-            className="w-full rounded-lg border border-line bg-soft-white px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-line bg-surface-raised px-3 py-2 text-sm"
           />
           <Button type="submit" size="sm" disabled={busy}>
             {busy ? 'لحظات…' : 'إرسال'}

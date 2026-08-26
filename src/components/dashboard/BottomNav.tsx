@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -39,7 +39,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="التنقل السريع"
-      className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-line bg-soft-white/95 backdrop-blur-md lg:hidden"
+      className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface-raised/95 backdrop-blur-md lg:hidden"
     >
       <ul className="flex">
         {items.map((item) => {

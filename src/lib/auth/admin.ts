@@ -1,26 +1,12 @@
 import { redirect } from 'next/navigation'
-import { getServerClient } from '@/lib/supabase/server'
+import { requirePermission } from '@/lib/auth/permissions'
+import type { AdminSession } from '@/lib/auth/admin-session'
 
-const hasEnv = () =>
-  Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
-
-export type AdminContext = { userId: string | null; role: string | null; demo: boolean }
+export type AdminContext = { userId: string | null; role: string | null; roles: string[]; session: AdminSession | null }
 
 // Server-side admin gate for the /admin tree (middleware guards too — defense in depth).
-// Demo mode (no env) renders admin UI with zero data so the OS is reviewable pre-integration.
 export async function requireAdmin(): Promise<AdminContext> {
-  if (!hasEnv()) return { userId: null, role: null, demo: true }
-  const supabase = await getServerClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) redirect('/auth/login?redirect=/admin/overview')
-  const { data: roleRow } = await supabase
-    .from('admin_roles')
-    .select('role')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-  if (!roleRow) redirect('/dashboard')
-  return { userId: user.id, role: roleRow.role, demo: false }
+  const context = await requirePermission('admin.access', { redirectOnFailure: true })
+  if (!context) redirect('/auth/admin?error=role')
+  return { userId: context.userId, role: context.role, roles: context.roles, session: context.session }
 }

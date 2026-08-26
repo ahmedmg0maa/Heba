@@ -1,20 +1,20 @@
 import type { Metadata } from 'next'
-import { ProsePage } from '@/components/catalog/ProsePage'
+import { CmsControlledProsePage } from '@/components/catalog/CmsControlledProsePage'
 
-export const metadata: Metadata = { title: 'إخلاء المسؤولية' }
+export const metadata: Metadata = { title: 'إخلاء المسؤولية', robots: { index: false, follow: false } }
 
 export default function DisclaimerPage() {
   return (
-    <ProsePage
+    <CmsControlledProsePage slug="disclaimer"
       eyebrow="قانوني"
       title="إخلاء المسؤولية"
       lead="حدود واضحة لما تقدمه المنصة — لأن الوضوح جزء من الأمانة."
-      updatedAt="يوليو ٢٠٢٦"
+      updatedAt="مسودة تشغيلية — بانتظار المراجعة القانونية"
       sections={[
         {
           heading: 'طبيعة المحتوى',
           paragraphs: [
-            'كل ما تقدمه المنصة — دورات وكتب وورش وجلسات — محتوى تعليمي وتطويري عام، يستند إلى خبرة عملية ومصادر معتبرة، لكنه ليس علاجًا نفسيًا ولا استشارة طبية.',
+            'أي محتوى تعليمي أو تطويري منشور في المنصة لا يقدّم علاجًا نفسيًا أو استشارة طبية ولا يحل محل الرعاية المتخصصة.',
           ],
         },
         {
@@ -26,7 +26,7 @@ export default function DisclaimerPage() {
         {
           heading: 'النتائج الفردية',
           paragraphs: [
-            'النتائج تختلف من شخص لآخر حسب الالتزام والظروف. لا نضمن نتائج محددة، ونضمن محتوى صادقًا وأدوات عملية مجرّبة.',
+            'تختلف النتائج من شخص لآخر. لا تعرض المنصة ضمانًا لنتيجة محددة، ولا ينبغي اعتبار أي محتوى بديلًا عن تقييم المختص المناسب.',
           ],
         },
       ]}

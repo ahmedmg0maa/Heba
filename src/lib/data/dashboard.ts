@@ -1,4 +1,5 @@
 import { getServerClient } from '@/lib/supabase/server'
+import { hasSupabasePublicConfig } from '@/lib/supabase/public-key'
 
 export type MyPayment = {
   id: string
@@ -34,15 +35,21 @@ export type MyWorkshop = {
   status: string
   locationKind: string
   meetingUrl: string | null
+  resources: { id: string; title: string; kind: string }[]
+  recordings: { id: string; title: string }[]
 }
 
 export type MyBooking = {
   id: string
+  serviceId: string
   serviceTitle: string
   startsAt: string
   endsAt: string
   status: string
   meetingUrl: string | null
+  customerNotes: string | null
+  events: { id: string; event: string; createdAt: string }[]
+  rescheduleRequests: { id: string; proposedStartsAt: string; status: string; reason: string; createdAt: string }[]
 }
 
 export type MyOrder = {
@@ -52,6 +59,7 @@ export type MyOrder = {
   createdAt: string
   expiresAt: string | null
   productTitles: string[]
+  products: { id: string; title: string }[]
 }
 
 export type MyNotification = {
@@ -64,8 +72,7 @@ export type MyNotification = {
   createdAt: string
 }
 
-const hasEnv = () =>
-  Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+const hasEnv = hasSupabasePublicConfig
 
 async function withUser<T>(fallback: T, fn: (supabase: Awaited<ReturnType<typeof getServerClient>>, userId: string) => Promise<T>): Promise<T> {
   if (!hasEnv()) return fallback
@@ -131,7 +138,7 @@ export async function getMyWorkshops(): Promise<MyWorkshop[]> {
   return withUser<MyWorkshop[]>([], async (supabase, userId) => {
     const { data } = await supabase
       .from('workshop_registrations')
-      .select('status, workshops!inner(slug, title, starts_at, ends_at, location_kind, meeting_url)')
+      .select('status, workshops!inner(slug, title, starts_at, ends_at, location_kind, workshop_delivery(meeting_url), workshop_resources(id,title,kind), workshop_recordings(id,title,published_at))')
       .eq('user_id', userId)
       .neq('status', 'cancelled')
     return (data ?? []).map((r) => {
@@ -143,7 +150,9 @@ export async function getMyWorkshops(): Promise<MyWorkshop[]> {
         endsAt: w?.ends_at ?? '',
         status: r.status,
         locationKind: w?.location_kind ?? 'online',
-        meetingUrl: w?.meeting_url ?? null,
+        meetingUrl: w?.workshop_delivery?.[0]?.meeting_url ?? null,
+        resources: w?.workshop_resources ?? [],
+        recordings: (w?.workshop_recordings ?? []).filter((recording)=>recording.published_at).map((recording)=>({id:recording.id,title:recording.title})),
       }
     })
   })
@@ -153,18 +162,22 @@ export async function getMyBookings(): Promise<MyBooking[]> {
   return withUser<MyBooking[]>([], async (supabase, userId) => {
     const { data } = await supabase
       .from('bookings')
-      .select('id, starts_at, ends_at, status, meeting_url, services!inner(title)')
+      .select('id, service_id, starts_at, ends_at, status, meeting_url, customer_notes, services!inner(title), booking_events(id, event, created_at), booking_reschedule_requests(id, proposed_starts_at, status, reason, created_at)')
       .eq('user_id', userId)
       .order('starts_at', { ascending: false })
     return (data ?? []).map((b) => {
       const s = Array.isArray(b.services) ? b.services[0] : b.services
       return {
         id: b.id,
+        serviceId: b.service_id,
         serviceTitle: s?.title ?? '',
         startsAt: b.starts_at,
         endsAt: b.ends_at,
         status: b.status,
         meetingUrl: b.meeting_url,
+        customerNotes: b.customer_notes,
+        events: (b.booking_events ?? []).map((event) => ({ id: event.id, event: event.event, createdAt: event.created_at })),
+        rescheduleRequests: (b.booking_reschedule_requests ?? []).map((request) => ({ id: request.id, proposedStartsAt: request.proposed_starts_at, status: request.status, reason: request.reason, createdAt: request.created_at })),
       }
     })
   })
@@ -174,11 +187,11 @@ export async function getMyOrders(): Promise<MyOrder[]> {
   return withUser<MyOrder[]>([], async (supabase, userId) => {
     const { data } = await supabase
       .from('orders')
-      .select('id, status, total, created_at, expires_at, order_items(products(title))')
+      .select('id, status, total, created_at, expires_at, order_items(products(id,title))')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
     return (data ?? []).map((o) => {
-      const items = (o.order_items ?? []) as { products: { title: string } | { title: string }[] | null }[]
+      const items = (o.order_items ?? []) as { products: { id:string;title: string } | { id:string;title: string }[] | null }[]
       return {
         id: o.id,
         status: o.status,
@@ -188,6 +201,7 @@ export async function getMyOrders(): Promise<MyOrder[]> {
         productTitles: items
           .map((i) => (Array.isArray(i.products) ? i.products[0]?.title : i.products?.title))
           .filter((t): t is string => Boolean(t)),
+        products: items.map((item)=>Array.isArray(item.products)?item.products[0]:item.products).filter((product):product is {id:string;title:string}=>Boolean(product)),
       }
     })
   })

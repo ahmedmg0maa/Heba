@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { addModule, addLesson } from '@/lib/actions/cms'
@@ -30,7 +30,7 @@ export function ModuleForm({ courseId }: { courseId: string }) {
           id="module-title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full rounded-xl border border-line bg-soft-white px-4 py-2.5 text-ink focus:border-deep-teal focus:outline-2 focus:outline-deep-teal/20"
+          className="w-full rounded-xl border border-line bg-surface-raised px-4 py-2.5 text-ink focus:border-deep-teal focus:outline-2 focus:outline-deep-teal/20"
         />
       </div>
       <Button type="submit" disabled={busy || title.trim().length < 2}>

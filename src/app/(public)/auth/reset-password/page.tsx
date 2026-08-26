@@ -35,7 +35,7 @@ export default function ResetPasswordPage() {
         <div className="space-y-3 text-center">
           <h2 className="text-xl font-bold text-deep-teal">تحققي من بريدك</h2>
           <p className="leading-relaxed text-text-soft">
-            إذا كان البريد مسجّلًا لدينا فستصلك رسالة برابط إعادة تعيين كلمة المرور خلال دقائق.
+            إذا كان البريد مسجّلًا ومزوّد البريد مهيّأ، تُرسل خدمة المصادقة رسالة برابط إعادة التعيين. لا نعرض مدة تسليم ثابتة.
           </p>
         </div>
       ) : (

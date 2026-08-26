@@ -1,0 +1,218 @@
+'use client'
+
+import { useState } from 'react'
+import { deleteCatalogItem, saveCatalogItem, type AdminActionResult } from '@/lib/actions/admin-control'
+import { Button } from '@/components/ui/Button'
+import { MediaPickerField } from '@/components/admin/MediaPickerField'
+import type { MediaOption } from '@/lib/data/cms'
+
+export type CatalogAdminItem = {
+  id: string
+  title: string
+  slug: string
+  description?: string
+  subtitle?: string | null
+  price: number
+  compareAtPrice?: number | null
+  currency?: string
+  coverUrl?: string | null
+  sort?: number
+  isPublished: boolean
+  level?: string
+  durationMinutes?: number
+  bookingPaymentMode?: 'payment_required' | 'free'
+  bufferBeforeMinutes?: number | null
+  bufferAfterMinutes?: number | null
+  minimumNoticeMinutes?: number | null
+  bookingWindowDays?: number | null
+  holdMinutes?: number
+  cancellationNoticeHours?: number | null
+  rescheduleNoticeHours?: number | null
+  maxReschedules?: number
+  bookingPolicyNote?: string
+  author?: string
+  pagesCount?: number | null
+  startsAt?: string
+  endsAt?: string
+  seatsTotal?: number
+  locationKind?: string
+  locationText?: string | null
+  meetingUrl?: string | null
+}
+
+type Kind = 'course' | 'book' | 'workshop' | 'service'
+
+const labels: Record<Kind, { singular: string; create: string }> = {
+  course: { singular: 'الدورة', create: 'إضافة دورة جديدة' },
+  book: { singular: 'الكتاب', create: 'إضافة كتاب جديد' },
+  workshop: { singular: 'الورشة', create: 'إضافة ورشة جديدة' },
+  service: { singular: 'الخدمة', create: 'إضافة خدمة جلسة' },
+}
+
+function Field({ prefix, label, name, defaultValue, type = 'text', required = false, min, step, dir }: {
+  prefix: string; label: string; name: string; defaultValue?: string | number | null; type?: string; required?: boolean; min?: number; step?: number | string; dir?: 'ltr' | 'rtl'
+}) {
+  const id = `${prefix}-${name}`
+  return (
+    <label htmlFor={id} className="flex flex-col gap-1.5 text-sm font-semibold text-deep-teal">
+      {label}
+      <input id={id} name={name} type={type} required={required} min={min} step={step} dir={dir}
+        defaultValue={defaultValue ?? ''}
+        className="min-h-11 w-full rounded-xl border border-line bg-surface-raised px-4 py-2 text-ink focus:border-deep-teal focus:outline-2 focus:outline-deep-teal/15" />
+    </label>
+  )
+}
+
+function Select({ prefix, label, name, defaultValue, options }: {
+  prefix: string; label: string; name: string; defaultValue?: string; options: { value: string; label: string }[]
+}) {
+  const id = `${prefix}-${name}`
+  return (
+    <label htmlFor={id} className="flex flex-col gap-1.5 text-sm font-semibold text-deep-teal">
+      {label}
+      <select id={id} name={name} defaultValue={defaultValue}
+        className="min-h-11 rounded-xl border border-line bg-surface-raised px-4 py-2 text-ink focus:border-deep-teal focus:outline-2 focus:outline-deep-teal/15">
+        {options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+      </select>
+    </label>
+  )
+}
+
+function localDate(value?: string) {
+  if (!value) return ''
+  const date = new Date(value)
+  const offset = date.getTimezoneOffset() * 60_000
+  return new Date(date.getTime() - offset).toISOString().slice(0, 16)
+}
+
+function CatalogForm({ kind, item, onDone, media = [] }: { kind: Kind; item?: CatalogAdminItem; onDone?: () => void; media?: MediaOption[] }) {
+  const prefix = `${kind}-${item?.id ?? 'new'}`
+  const [busy, setBusy] = useState(false)
+  const [result, setResult] = useState<AdminActionResult | null>(null)
+  return (
+    <form className="grid gap-4" onSubmit={async (event) => {
+      event.preventDefault()
+      setBusy(true)
+      setResult(null)
+      const response = await saveCatalogItem(kind, item?.id ?? null, new FormData(event.currentTarget))
+      setResult(response)
+      setBusy(false)
+      if (response.ok) {
+        if (!item) event.currentTarget.reset()
+        onDone?.()
+      }
+    }}>
+      <div className="grid gap-4 md:grid-cols-2">
+        <Field prefix={prefix} label="العنوان" name="title" defaultValue={item?.title} required />
+        <Field prefix={prefix} label="الرابط (slug)" name="slug" defaultValue={item?.slug} required dir="ltr" />
+        <Field prefix={prefix} label="العنوان الفرعي" name="subtitle" defaultValue={item?.subtitle} />
+        <MediaPickerField assets={media} defaultValue={item?.coverUrl} label={`غلاف ${labels[kind].singular}`} />
+        <Field prefix={prefix} label="السعر" name="price" type="number" min={0} step="0.01" defaultValue={item?.price ?? 0} required />
+        <Field prefix={prefix} label="السعر قبل الخصم" name="compare_at_price" type="number" min={0} step="0.01" defaultValue={item?.compareAtPrice} />
+        <Field prefix={prefix} label="العملة" name="currency" defaultValue={item?.currency ?? 'EGP'} dir="ltr" />
+        <Field prefix={prefix} label="الترتيب" name="sort" type="number" defaultValue={item?.sort ?? 0} />
+      </div>
+
+      <label htmlFor={`${prefix}-description`} className="flex flex-col gap-1.5 text-sm font-semibold text-deep-teal">
+        الوصف
+        <textarea id={`${prefix}-description`} name="description" rows={4} defaultValue={item?.description}
+          className="w-full rounded-xl border border-line bg-surface-raised px-4 py-3 text-ink focus:border-deep-teal focus:outline-2 focus:outline-deep-teal/15" />
+      </label>
+
+      {kind === 'course' && <div className="grid gap-4 md:grid-cols-2">
+        <Select prefix={prefix} label="المستوى" name="level" defaultValue={item?.level ?? 'all'} options={[
+          { value: 'all', label: 'كل المستويات' }, { value: 'beginner', label: 'مبتدئ' },
+          { value: 'intermediate', label: 'متوسط' }, { value: 'advanced', label: 'متقدم' },
+        ]} />
+        <Field prefix={prefix} label="المدة بالدقائق" name="duration_minutes" type="number" min={0} defaultValue={item?.durationMinutes ?? 0} />
+      </div>}
+
+      {kind === 'book' && <div className="grid gap-4 md:grid-cols-2">
+        <Field prefix={prefix} label="المؤلفة" name="author" defaultValue={item?.author ?? 'هبة الشريف'} />
+        <Field prefix={prefix} label="عدد الصفحات" name="pages_count" type="number" min={1} defaultValue={item?.pagesCount} />
+      </div>}
+
+      {kind === 'service' && <>
+        <div className="grid gap-4 md:grid-cols-2">
+          <Field prefix={prefix} label="مدة الجلسة بالدقائق" name="duration_minutes" type="number" min={15} defaultValue={item?.durationMinutes ?? 60} required />
+          <Select prefix={prefix} label="الدفع عند الحجز" name="booking_payment_mode" defaultValue={item?.bookingPaymentMode ?? 'payment_required'} options={[
+            { value: 'payment_required', label: 'يتطلب وسيلة دفع مهيأة' },
+            { value: 'free', label: 'حجز مجاني بلا دفع' },
+          ]} />
+          <Field prefix={prefix} label="Buffer قبل الجلسة (دقائق)" name="buffer_before_minutes" type="number" min={0} defaultValue={item?.bufferBeforeMinutes} />
+          <Field prefix={prefix} label="Buffer بعد الجلسة (دقائق)" name="buffer_after_minutes" type="number" min={0} defaultValue={item?.bufferAfterMinutes} />
+          <Field prefix={prefix} label="أقل مهلة للحجز (دقائق)" name="minimum_notice_minutes" type="number" min={0} defaultValue={item?.minimumNoticeMinutes} />
+          <Field prefix={prefix} label="نافذة الحجز (أيام)" name="booking_window_days" type="number" min={1} defaultValue={item?.bookingWindowDays} />
+          <Field prefix={prefix} label="مدة الـ hold (دقائق)" name="hold_minutes" type="number" min={2} defaultValue={item?.holdMinutes ?? 10} />
+          <Field prefix={prefix} label="مهلة الإلغاء الذاتي (ساعات)" name="cancellation_notice_hours" type="number" min={0} defaultValue={item?.cancellationNoticeHours} />
+          <Field prefix={prefix} label="مهلة تغيير الموعد (ساعات)" name="reschedule_notice_hours" type="number" min={0} defaultValue={item?.rescheduleNoticeHours} />
+          <Field prefix={prefix} label="الحد الأقصى للتغييرات" name="max_reschedules" type="number" min={0} defaultValue={item?.maxReschedules ?? 2} />
+        </div>
+        <label htmlFor={`${prefix}-booking-policy-note`} className="flex flex-col gap-1.5 text-sm font-semibold text-deep-teal">سياسة الحجز الظاهرة للعميلة<textarea id={`${prefix}-booking-policy-note`} name="booking_policy_note" rows={3} defaultValue={item?.bookingPolicyNote} className="w-full rounded-xl border border-line bg-surface-raised px-4 py-3 text-ink focus:border-deep-teal focus:outline-2 focus:outline-deep-teal/15" /></label>
+      </>}
+
+      {kind === 'workshop' && <div className="grid gap-4 md:grid-cols-2">
+        <Field prefix={prefix} label="تبدأ في" name="starts_at" type="datetime-local" defaultValue={localDate(item?.startsAt)} required dir="ltr" />
+        <Field prefix={prefix} label="تنتهي في" name="ends_at" type="datetime-local" defaultValue={localDate(item?.endsAt)} required dir="ltr" />
+        <Field prefix={prefix} label="عدد المقاعد" name="seats_total" type="number" min={0} defaultValue={item?.seatsTotal ?? 0} required />
+        <Select prefix={prefix} label="نوع المكان" name="location_kind" defaultValue={item?.locationKind ?? 'online'} options={[
+          { value: 'online', label: 'أونلاين' }, { value: 'in_person', label: 'حضوري' }, { value: 'hybrid', label: 'هجين' },
+        ]} />
+        <Field prefix={prefix} label="وصف المكان" name="location_text" defaultValue={item?.locationText} />
+        <Field prefix={prefix} label="رابط اللقاء" name="meeting_url" defaultValue={item?.meetingUrl} dir="ltr" />
+      </div>}
+
+      <label className="flex min-h-11 items-center gap-3 rounded-xl border border-line bg-ivory/55 px-4 text-sm font-bold text-deep-teal">
+        <input type="checkbox" name="is_published" defaultChecked={item?.isPublished} className="h-4 w-4 accent-deep-teal" />
+        {kind === 'service' ? 'الخدمة مفعّلة ومتاحة للحجز' : 'نشر العنصر فور الحفظ'}
+      </label>
+
+      {result && <p role="status" className={`rounded-xl px-4 py-3 text-sm font-semibold ${result.ok ? 'bg-aqua/10 text-deep-teal' : 'bg-burgundy/10 text-burgundy'}`}>
+        {result.ok ? 'تم الحفظ بنجاح.' : result.error}
+      </p>}
+      <Button type="submit" disabled={busy} className="justify-self-start">{busy ? 'جاري الحفظ…' : item ? `حفظ تعديلات ${labels[kind].singular}` : labels[kind].create}</Button>
+    </form>
+  )
+}
+
+export function CatalogCreatePanel({ kind, media = [] }: { kind: Kind; media?: MediaOption[] }) {
+  return (
+    <details className="group rounded-2xl border border-antique-gold/30 bg-surface-raised shadow-card">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-6 py-5 font-heading text-xl font-bold text-deep-teal">
+        {labels[kind].create}
+        <span className="flex h-9 w-9 items-center justify-center rounded-full border border-antique-gold/30 text-antique-gold transition group-open:rotate-45">+</span>
+      </summary>
+      <div className="border-t border-line p-6"><CatalogForm kind={kind} media={media} /></div>
+    </details>
+  )
+}
+
+export function CatalogEditPanel({ kind, item, media = [] }: { kind: Kind; item: CatalogAdminItem; media?: MediaOption[] }) {
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  return (
+    <details className="group min-w-64 rounded-xl border border-line bg-ivory/40">
+      <summary className="cursor-pointer list-none px-4 py-2 text-sm font-bold text-deep-teal">تعديل وإدارة</summary>
+      <div className="space-y-5 border-t border-line p-4">
+        <CatalogForm kind={kind} item={item} media={media} />
+        <div className="border-t border-line pt-4">
+          {!confirmDelete ? <Button size="sm" variant="burgundy" onClick={() => setConfirmDelete(true)}>حذف نهائي</Button> :
+            <div className="rounded-xl border border-burgundy/25 bg-burgundy/5 p-3">
+              <p className="text-sm font-semibold text-burgundy">سيُحذف العنصر وكل تفاصيله. الطلبات السابقة تمنع الحذف حفاظًا على السجلات.</p>
+              <div className="mt-3 flex gap-2">
+                <Button size="sm" variant="burgundy" disabled={deleting} onClick={async () => {
+                  setDeleting(true); setDeleteError(null)
+                  const response = await deleteCatalogItem(kind, item.id)
+                  if (!response.ok) setDeleteError(response.error)
+                  setDeleting(false)
+                }}>{deleting ? 'جاري الحذف…' : 'تأكيد الحذف'}</Button>
+                <Button size="sm" variant="ghost" onClick={() => setConfirmDelete(false)}>تراجع</Button>
+              </div>
+              {deleteError && <p className="mt-2 text-xs text-burgundy">{deleteError}</p>}
+            </div>}
+        </div>
+      </div>
+    </details>
+  )
+}

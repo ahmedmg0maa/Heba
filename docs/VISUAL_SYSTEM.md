@@ -24,13 +24,13 @@ Generic Tailwind palette classes are build-forbidden (`audit:colors`).
 
 ## Primitives (`src/components/ui/`)
 Button (5 variants × 3 sizes, renders Link with href) · Card(+Header/Title) · Section (eyebrow/title/lead, 4 tones) · Badge (8 tones) · Countdown (RTL-safe, ar-EG digits) · EmptyState · StatCard (+sparkline) · Sidebar (desktop column / mobile drawer) · Table set · FormField/Textarea/Select · PageSpinner.
-Composites: PageHero, ProductCard (branded gradient covers per kind), CategoryStrip, ComparisonPanel, CTARibbon, ProsePage, Stars, admin Charts (SVG line/donut).
+Composites: PageHero, ProductCard (original no-person editorial photography cropped per kind), CategoryStrip, ComparisonPanel, CTARibbon, ProsePage, Stars, admin Charts (SVG line/donut).
 
 ## Elevation & shape
 Shadows: `shadow-card` / `shadow-card-hover` / `shadow-sidebar` (tokens). Radii: rounded-xl→3xl scale; pills (rounded-full) for buttons/badges/chips. Hover: cards lift `-translate-y-1` + shadow; transitions 200–300ms.
 
-## Asset substitutes (KNOWN_ISSUES #1)
-Logo monogram (هـ in double gold ring), arched portrait frame with silhouette, floral branch ornament, gradient+glyph product covers, typographic book covers — all inline SVG/CSS in brand colors. Swap points: `BrandLogo`, `PortraitFrame`, `FloralOrnament`, `ProductCard.coverArt`.
+## Brand assets
+The official seed identity is implemented in `BrandLogo`/`SeedMark`; scalable botanical ornament is original code-native SVG (`BotanicalSpray`). `public/brand/catalog-still-life.webp` is an original, optimized, no-person editorial photograph used as one coherent image system on home and catalog cards, with per-kind crop positions in `ProductCard.coverArt`.
 
 ## Do not
 Gray placeholder boxes · loud reds/blues · busy patterns behind text · gradients outside brand hues · English-first layouts · Western digits in Arabic UI copy.

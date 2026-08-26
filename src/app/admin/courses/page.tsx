@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { adminList } from '@/lib/data/cms'
+import { adminList, getPublicMediaOptions } from '@/lib/data/cms'
 import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table'
 import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { PublishToggle } from '@/components/admin/AdminControls'
+import { CatalogCreatePanel, CatalogEditPanel } from '@/components/admin/CatalogManager'
 
 export const metadata: Metadata = { title: 'الدورات — الإدارة' }
 
@@ -15,12 +16,18 @@ type Row = {
   is_published: boolean
   course_modules: { id: string; course_lessons: { id: string }[] }[]
   course_enrollments: { id: string }[]
+  description: string
+  level: string
+  duration_minutes: number
+  cover_url: string | null
+  products: { price: number; compare_at_price: number | null; currency: string; subtitle: string | null; sort: number } | { price: number; compare_at_price: number | null; currency: string; subtitle: string | null; sort: number }[]
 }
 
 export default async function AdminCoursesPage() {
+  const media = await getPublicMediaOptions()
   const courses = await adminList<Row>(
     'courses',
-    'id, title, slug, is_published, course_modules(id, course_lessons(id)), course_enrollments(id)',
+    'id, title, slug, description, level, duration_minutes, cover_url, is_published, products(price, compare_at_price, currency, subtitle, sort), course_modules(id, course_lessons(id)), course_enrollments(id)',
   )
 
   return (
@@ -29,6 +36,8 @@ export default async function AdminCoursesPage() {
         <h1 className="text-3xl font-bold text-deep-teal">الدورات</h1>
         <p className="mt-1 text-text-soft">المناهج والالتحاقات — «المنهج» يفتح منشئ الوحدات والدروس.</p>
       </header>
+
+      <CatalogCreatePanel kind="course" media={media} />
 
       {courses.length === 0 ? (
         <EmptyState title="لا دورات بعد" description="أنشئي المنتج والدورة عبر قاعدة البيانات ثم ابني المنهج من هنا." />
@@ -48,6 +57,7 @@ export default async function AdminCoursesPage() {
             {courses.map((c) => {
               const modules = c.course_modules ?? []
               const lessons = modules.reduce((n, m) => n + (m.course_lessons ?? []).length, 0)
+              const product = Array.isArray(c.products) ? c.products[0] : c.products
               return (
                 <TR key={c.id}>
                   <TD>
@@ -69,6 +79,13 @@ export default async function AdminCoursesPage() {
                         المنهج
                       </Link>
                       <PublishToggle table="courses" id={c.id} published={c.is_published} />
+                      <CatalogEditPanel kind="course" media={media} item={{
+                        id: c.id, title: c.title, slug: c.slug, description: c.description,
+                        price: Number(product?.price ?? 0), compareAtPrice: product?.compare_at_price,
+                        currency: product?.currency, subtitle: product?.subtitle, sort: product?.sort,
+                        coverUrl: c.cover_url, isPublished: c.is_published, level: c.level,
+                        durationMinutes: c.duration_minutes,
+                      }} />
                     </div>
                   </TD>
                 </TR>

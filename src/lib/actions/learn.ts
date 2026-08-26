@@ -1,6 +1,10 @@
 'use server'
 
-import { getServerClient, getServiceClient } from '@/lib/supabase/server'
+import { randomBytes } from 'node:crypto'
+import { cookies } from 'next/headers'
+import { getServerClient, getServiceClient, hasSupabaseServerSecret } from '@/lib/supabase/server'
+import { hasSupabasePublicConfig } from '@/lib/supabase/public-key'
+import { sha256 } from '@/lib/delivery/security'
 
 type ActionResult<T> = { ok: true; data: T } | { ok: false; error: string }
 
@@ -8,12 +12,7 @@ const NO_ENV = 'غير متاح في بيئة العرض التجريبية.'
 const NOT_ALLOWED = 'ليس لديك وصول لهذا الدرس.'
 const GENERIC = 'حدث خطأ — حاولي مرة أخرى.'
 
-const hasEnv = () =>
-  Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
-      process.env.SUPABASE_SERVICE_ROLE_KEY,
-  )
+const hasEnv = () => hasSupabasePublicConfig() && hasSupabaseServerSecret()
 
 async function requireUser() {
   const supabase = await getServerClient()
@@ -52,11 +51,41 @@ export async function getLessonVideoUrl(lessonId: string): Promise<ActionResult<
   if (!access) return { ok: false, error: NOT_ALLOWED }
   if (!access.videoPath) return { ok: false, error: 'لم يُرفع فيديو هذا الدرس بعد.' }
 
-  const { data, error } = await getServiceClient()
-    .storage.from('course-videos')
-    .createSignedUrl(access.videoPath, 60 * 60) // 1h — expires with the study session
-  if (error || !data) return { ok: false, error: GENERIC }
-  return { ok: true, data: { url: data.signedUrl } }
+  const cookieStore = await cookies()
+  let deviceToken = cookieStore.get('heba_delivery_device')?.value
+  if (!deviceToken) {
+    deviceToken = randomBytes(32).toString('base64url')
+    cookieStore.set('heba_delivery_device', deviceToken, {
+      httpOnly: true,
+      sameSite: 'strict',
+      secure: process.env.NODE_ENV === 'production',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 180,
+    })
+  }
+
+  const admissionToken = randomBytes(32).toString('base64url')
+  const { data, error } = await getServiceClient().rpc('begin_video_admission', {
+    p_user_id: access.user.id,
+    p_lesson_id: lessonId,
+    p_device_hash: sha256(deviceToken),
+    p_token_hash: sha256(admissionToken),
+  })
+  const admission = Array.isArray(data) ? data[0] : data
+  if (error || !admission) return { ok: false, error: GENERIC }
+  if (admission.status === 'device_limit') {
+    return { ok: false, error: 'وصل الحساب إلى الحد المسموح به: جهازان خلال آخر 30 يومًا.' }
+  }
+  if (admission.status !== 'allowed') return { ok: false, error: NOT_ALLOWED }
+
+  cookieStore.set('heba_video_admission', admissionToken, {
+    httpOnly: true,
+    sameSite: 'strict',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/dashboard/courses/lessons',
+    maxAge: 60 * 15,
+  })
+  return { ok: true, data: { url: `/dashboard/courses/lessons/${lessonId}/video` } }
 }
 
 export async function getResourceUrl(resourceId: string): Promise<ActionResult<{ url: string }>> {
@@ -72,11 +101,7 @@ export async function getResourceUrl(resourceId: string): Promise<ActionResult<{
     .maybeSingle()
   if (!resource) return { ok: false, error: NOT_ALLOWED }
 
-  const { data, error } = await getServiceClient()
-    .storage.from('course-resources')
-    .createSignedUrl(resource.file_path, 10 * 60)
-  if (error || !data) return { ok: false, error: GENERIC }
-  return { ok: true, data: { url: data.signedUrl } }
+  return { ok: true, data: { url: `/dashboard/courses/resources/${resource.id}/download` } }
 }
 
 export async function markLessonComplete(lessonId: string, completed: boolean): Promise<ActionResult<{ percent: number }>> {

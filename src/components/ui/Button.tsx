@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import { cn } from '@/lib/cn'
 
 type Variant = 'primary' | 'secondary' | 'gold' | 'burgundy' | 'ghost'
@@ -6,11 +6,11 @@ type Size = 'sm' | 'md' | 'lg'
 
 const variants: Record<Variant, string> = {
   primary:
-    'bg-deep-teal text-soft-white hover:bg-teal-hover shadow-card hover:shadow-card-hover',
+    'bg-deep-teal text-on-dark hover:bg-teal-hover shadow-card hover:shadow-card-hover',
   secondary:
     'border border-deep-teal/30 bg-transparent text-deep-teal hover:border-deep-teal hover:bg-deep-teal/5',
-  gold: 'bg-antique-gold text-soft-white hover:bg-antique-gold/90 shadow-card',
-  burgundy: 'bg-burgundy text-soft-white hover:bg-burgundy/90 shadow-card',
+  gold: 'bg-antique-gold text-on-dark hover:bg-antique-gold/90 shadow-card',
+  burgundy: 'bg-burgundy text-on-dark hover:bg-burgundy/90 shadow-card',
   ghost: 'bg-transparent text-deep-teal hover:bg-deep-teal/5',
 }
 

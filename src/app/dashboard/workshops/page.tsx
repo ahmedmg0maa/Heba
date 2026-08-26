@@ -54,6 +54,7 @@ export default async function MyWorkshopsPage() {
                     صفحة الورشة
                   </Button>
                 )}
+                {(w.resources.length>0||w.recordings.length>0)&&<div className="flex flex-wrap gap-2">{w.resources.map(resource=><Button key={resource.id} href={`/dashboard/workshops/${w.slug}/resources/${resource.id}`} variant="ghost" size="sm">{resource.title}</Button>)}{w.recordings.map(recording=><Button key={recording.id} href={`/dashboard/workshops/${w.slug}/recordings/${recording.id}`} variant="secondary" size="sm">{recording.title}</Button>)}</div>}
               </Card>
             )
           })}

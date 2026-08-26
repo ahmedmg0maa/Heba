@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button'
 import { Stars } from '@/components/catalog/Stars'
 import { CTARibbon } from '@/components/catalog/CTARibbon'
 import { MobileBuyBar } from '@/components/catalog/MobileBuyBar'
+import { getPaymentSettings } from '@/lib/data/checkout'
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -29,19 +30,19 @@ function fmtSeconds(s: number) {
 export default async function CourseDetailPage({ params }: Props) {
   const course = await getCourse((await params).slug)
   if (!course) notFound()
+  const paymentSettings = await getPaymentSettings()
+  const orderingAvailable = Boolean(paymentSettings.instapay || paymentSettings.wallet || paymentSettings.bank)
 
   const includes = [
     `${lessonsLabel(course.lessonsCount)} بالفيديو`,
     formatDuration(course.durationMinutes),
-    'كراسات عمل قابلة للتحميل',
-    'وصول مدى الحياة مع التحديثات',
-    'شهادة إتمام',
-    'دعم شخصي خلال ٢٤ ساعة',
+    'وصول محفوظ داخل حسابك',
+    'تتبّع واضح للتقدم',
   ]
 
   return (
     <main>
-      <section className="border-b border-line bg-soft-white">
+      <section className="border-b border-line bg-surface-raised">
         <div className="mx-auto grid max-w-6xl items-start gap-10 px-6 py-14 lg:grid-cols-[1.5fr_1fr]">
           <div>
             <p className="mb-2 text-sm font-semibold tracking-widest text-antique-gold">{course.subtitle}</p>
@@ -72,10 +73,15 @@ export default async function CourseDetailPage({ params }: Props) {
                 </li>
               ))}
             </ul>
-            <Button href={`/checkout/course/${course.slug}`} size="lg" className="mt-6 w-full">
-              التحقي بالدورة الآن
-            </Button>
-            <p className="mt-3 text-center text-xs text-taupe">دفع آمن عبر إنستاباي أو المحافظ أو التحويل البنكي</p>
+            {orderingAvailable ? (
+              <Button href={`/checkout/course/${course.slug}`} size="lg" className="mt-6 w-full">
+                اطلبي الالتحاق
+              </Button>
+            ) : (
+              <p className="mt-6 rounded-xl bg-ivory px-4 py-3 text-center text-sm font-medium text-text-soft" role="status">
+                الالتحاق غير متاح قبل تفعيل وسيلة دفع من الإدارة.
+              </p>
+            )}
           </Card>
         </div>
       </section>
@@ -83,7 +89,7 @@ export default async function CourseDetailPage({ params }: Props) {
       <Section eyebrow="ماذا ستتعلمين؟" title="منهج الدورة">
         <div className="mx-auto max-w-3xl space-y-4">
           {course.modules.map((m, mi) => (
-            <details key={m.title} open={mi === 0} className="group rounded-2xl border border-line bg-soft-white shadow-card">
+            <details key={m.title} open={mi === 0} className="group rounded-2xl border border-line bg-surface-raised shadow-card">
               <summary className="flex cursor-pointer items-center justify-between gap-4 p-5 font-bold text-deep-teal [&::-webkit-details-marker]:hidden">
                 {m.title}
                 <svg viewBox="0 0 20 20" className="h-5 w-5 shrink-0 text-taupe transition-transform group-open:rotate-180" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
@@ -110,17 +116,17 @@ export default async function CourseDetailPage({ params }: Props) {
       </Section>
 
       <CTARibbon
-        title="جاهزة تبدئين رحلتك؟"
-        lead="انضمي اليوم واحصلي على وصول فوري مدى الحياة."
-        ctaLabel="التحقي بالدورة"
-        ctaHref={`/checkout/course/${course.slug}`}
+        title="استكشفي المحتوى المنشور"
+        lead="تظهر تفاصيل الوصول وطريقة التعلّم داخل الحساب بعد اعتماد الاستحقاق."
+        ctaLabel="تصفحي الدورات"
+        ctaHref="/courses"
       />
-      <MobileBuyBar
+      {orderingAvailable && <MobileBuyBar
         price={course.price}
         compareAtPrice={course.compareAtPrice}
-        ctaLabel="التحقي بالدورة"
+        ctaLabel="اطلبي الالتحاق"
         ctaHref={`/checkout/course/${course.slug}`}
-      />
+      />}
     </main>
   )
 }

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/cn'
@@ -50,8 +50,8 @@ export function Countdown({ target, className, tone = 'light', onExpire, expired
 
   const cell =
     tone === 'dark'
-      ? 'bg-soft-white/10 text-soft-white border-soft-white/15'
-      : 'bg-soft-white text-deep-teal border-line'
+      ? 'bg-on-dark/10 text-on-dark border-on-dark/15'
+      : 'bg-surface-raised text-deep-teal border-line'
 
   if (time?.expired) {
     return <p className={cn('text-sm font-semibold text-burgundy', className)}>{expiredLabel}</p>

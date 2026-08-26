@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { CTARibbon } from '@/components/catalog/CTARibbon'
 import { MobileBuyBar } from '@/components/catalog/MobileBuyBar'
+import { getPaymentSettings } from '@/lib/data/checkout'
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -19,25 +20,25 @@ export const revalidate = 300
 export default async function BookDetailPage({ params }: Props) {
   const book = await getBook((await params).slug)
   if (!book) notFound()
+  const paymentSettings = await getPaymentSettings()
+  const orderingAvailable = Boolean(paymentSettings.instapay || paymentSettings.wallet || paymentSettings.bank)
 
   const includes = [
     book.pagesCount ? `${book.pagesCount.toLocaleString('ar-EG')} صفحة مصممة بعناية` : 'كتاب رقمي كامل',
-    'صيغة PDF أنيقة تعمل على كل الأجهزة',
-    'تحميل فوري بعد تأكيد الدفع',
-    'كل التحديثات المستقبلية مجانًا',
+    'تظهر طريقة الوصول وشروطها بعد اعتماد الطلب، عندما تكون متاحة لهذا الكتاب.',
   ]
 
   return (
     <main>
-      <section className="border-b border-line bg-soft-white">
+      <section className="border-b border-line bg-surface-raised">
         <div className="mx-auto grid max-w-6xl items-start gap-10 px-6 py-14 lg:grid-cols-[1fr_1.4fr]">
           {/* branded cover substitute */}
           <div className="mx-auto w-full max-w-xs">
             <div className="flex aspect-3/4 flex-col justify-between rounded-2xl bg-linear-to-br from-burgundy to-burgundy-soft p-8 shadow-card-hover">
               <span className="h-px w-12 bg-muted-gold" aria-hidden />
               <div>
-                <h2 className="font-heading text-3xl font-bold leading-snug text-soft-white">{book.title.replace('كتاب ', '')}</h2>
-                <p className="mt-2 text-sm text-soft-white/70">{book.subtitle}</p>
+                <h2 className="font-heading text-3xl font-bold leading-snug text-on-dark">{book.title.replace('كتاب ', '')}</h2>
+                <p className="mt-2 text-sm text-on-dark/70">{book.subtitle}</p>
               </div>
               <p className="text-sm font-semibold tracking-widest text-muted-gold">هبة الشريف</p>
             </div>
@@ -54,7 +55,7 @@ export default async function BookDetailPage({ params }: Props) {
                 {book.compareAtPrice && (
                   <span className="tnum text-lg text-taupe line-through">{formatPrice(book.compareAtPrice)}</span>
                 )}
-                {book.compareAtPrice && <Badge tone="burgundy">خصم محدود</Badge>}
+                {book.compareAtPrice && <Badge tone="burgundy">سعر مخفّض</Badge>}
               </p>
               <ul className="mt-5 space-y-2.5 border-t border-line pt-5 text-sm text-ink">
                 {includes.map((item) => (
@@ -66,9 +67,15 @@ export default async function BookDetailPage({ params }: Props) {
                   </li>
                 ))}
               </ul>
-              <Button href={`/checkout/book/${book.slug}`} size="lg" className="mt-6 w-full">
-                احصلي على نسختك
-              </Button>
+              {orderingAvailable ? (
+                <Button href={`/checkout/book/${book.slug}`} size="lg" className="mt-6 w-full">
+                  اطلبي النسخة
+                </Button>
+              ) : (
+                <p className="mt-6 rounded-xl bg-ivory px-4 py-3 text-center text-sm font-medium text-text-soft" role="status">
+                  الشراء غير متاح قبل تفعيل وسيلة دفع من الإدارة.
+                </p>
+              )}
             </Card>
           </div>
         </div>
@@ -76,16 +83,16 @@ export default async function BookDetailPage({ params }: Props) {
 
       <CTARibbon
         title="تحبين المرافقة المعمقة؟"
-        lead="دوراتنا التدريبية تأخذك من القراءة إلى التطبيق."
+        lead="تصفحي الدورات المنشورة واقرئي تفاصيل كل مسار قبل الاختيار."
         ctaLabel="تصفّحي الدورات"
         ctaHref="/courses"
       />
-      <MobileBuyBar
+      {orderingAvailable && <MobileBuyBar
         price={book.price}
         compareAtPrice={book.compareAtPrice}
-        ctaLabel="احصلي على نسختك"
+        ctaLabel="اطلبي النسخة"
         ctaHref={`/checkout/book/${book.slug}`}
-      />
+      />}
     </main>
   )
 }

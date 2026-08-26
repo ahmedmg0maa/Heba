@@ -1,4 +1,4 @@
-# SECURITY REPORT — V1.5.0
+# SECURITY REPORT — V2.5.0
 
 Scope: full review of auth, RLS, storage, server actions, and client/server boundaries.
 Verified automatically on every build by `pnpm audit:security` (+ `audit:admin`).
@@ -10,6 +10,7 @@ Verified automatically on every build by `pnpm audit:security` (+ `audit:admin`)
 - Middleware guards `/dashboard/*` and `/checkout/*` (session) and `/admin/*` (session + `admin_roles` lookup).
 - Defense in depth on admin: middleware → `requireAdmin()` in layout → `requireAdminUser()` re-check inside **every** admin server action.
 - Password reset never reveals whether an email is registered.
+- `/auth/admin` accepts only the admin password in the browser; the configured admin email stays server-only (`ADMIN_LOGIN_EMAIL`) and `admin_roles` is rechecked before redirecting.
 
 ### Row Level Security (all tables have RLS enabled)
 - Users read/write only their own rows: orders, order_items, payments, payment_proofs, bookings, enrollments, progress, notes, notifications, content_access, checkout_sessions, book_access, registrations, certificates.
@@ -32,7 +33,8 @@ Verified automatically on every build by `pnpm audit:security` (+ `audit:admin`)
 ### Server actions
 - Prices, offers, and coupons are always recomputed server-side (`resolveActiveOffer` + `applyOffer` + `validateCoupon`); client totals are display-only.
 - `adminSetField` uses a hard-coded (table, field) whitelist — no generic table access is reachable from the client.
-- Rate limits (V1.5.0): coupon validation 10/5min/user; proof upload 5/10min/user (in-memory sliding window — see Limitations).
+- Durable atomic rate limits (migration 017): coupon validation 10/5min/user; proof upload 5/10min/user. Buckets live in PostgreSQL, are RLS-inaccessible, and are consumed only through an authenticated SECURITY DEFINER RPC.
+- Booking/order creation is one authenticated SECURITY DEFINER transaction (migration 016); price, offer, Cairo availability, exception windows, and overlap are recomputed inside PostgreSQL.
 - Every sensitive mutation writes `audit_logs` with the actor id.
 
 ### Secrets & client/server boundary
@@ -46,8 +48,5 @@ Verified automatically on every build by `pnpm audit:security` (+ `audit:admin`)
 ## Known limitations / follow-ups
 | Item | Severity | Plan |
 |---|---|---|
-| Rate limiter is per-instance memory; resets on cold start and doesn't share across regions | low | Swap to Upstash Redis or a pg-backed counter if abuse is observed |
 | Proof review is human judgment (amount now enforced, authenticity is not) | accepted | Inherent to manual payment flow; audit trail covers disputes |
-| `expire_stale_orders()` must be scheduled (pg_cron) on the live project | low | Instructions in migration 011; verify at V1.8.0 staging |
 | Email confirmation must be enabled in Supabase Auth settings | low | Checklist item in SUPABASE_SETUP.md |
-| `middleware.ts` → `proxy.ts` rename (Next 16 deprecation) | low | V1.9.0 |

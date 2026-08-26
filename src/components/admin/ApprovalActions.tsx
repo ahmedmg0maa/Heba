@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { approvePayment, rejectPayment, getProofUrl } from '@/lib/actions/admin'
@@ -37,6 +37,7 @@ export function ApprovalActions({ paymentId, hasProof }: { paymentId: string; ha
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap items-center gap-2">
+        <a className="text-xs font-bold text-deep-teal underline underline-offset-4" href="/auth/admin/mfa?reauth=1&redirect=/admin/payments">تأكيد أمني حديث</a>
         {hasProof && (
           <Button variant="ghost" size="sm" onClick={onViewProof}>
             عرض الإيصال
@@ -58,7 +59,7 @@ export function ApprovalActions({ paymentId, hasProof }: { paymentId: string; ha
             id={`reason-${paymentId}`}
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            className="w-52 rounded-lg border border-line bg-soft-white px-3 py-1.5 text-sm"
+            className="w-52 rounded-lg border border-line bg-surface-raised px-3 py-1.5 text-sm"
           />
           <Button variant="burgundy" size="sm" disabled={busy || reason.trim().length < 3} onClick={onReject}>
             تأكيد الرفض

@@ -1,6 +1,8 @@
 import { getServerClient } from '@/lib/supabase/server'
+import { hasSupabasePublicConfig } from '@/lib/supabase/public-key'
 
 export type AdminKpis = {
+  health: 'ready' | 'unconfigured' | 'unknown'
   revenueThisMonth: number
   pendingPayments: number
   activeStudents: number
@@ -27,6 +29,7 @@ export type RecentCustomer = { id: string; name: string; email: string; joinedAt
 export type ScheduleItem = { id: string; title: string; startsAt: string; status: string }
 
 const emptyKpis: AdminKpis = {
+  health: 'unconfigured',
   revenueThisMonth: 0,
   pendingPayments: 0,
   activeStudents: 0,
@@ -36,8 +39,7 @@ const emptyKpis: AdminKpis = {
   bookingsByStatus: [],
 }
 
-const hasEnv = () =>
-  Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+const hasEnv = hasSupabasePublicConfig
 
 const monthFmt = new Intl.DateTimeFormat('ar-EG', { month: 'short' })
 
@@ -103,6 +105,7 @@ export async function getAdminKpis(): Promise<AdminKpis> {
     }))
 
     return {
+      health: 'ready',
       revenueThisMonth,
       pendingPayments: pendingRes.count ?? 0,
       activeStudents: studentsRes.count ?? 0,
@@ -112,7 +115,7 @@ export async function getAdminKpis(): Promise<AdminKpis> {
       bookingsByStatus,
     }
   } catch {
-    return emptyKpis
+    return { ...emptyKpis, health: 'unknown' }
   }
 }
 
@@ -282,6 +285,7 @@ export type AdminOffer = {
   id: string
   kind: string
   title: string
+  description: string
   badgeText: string | null
   discountKind: string | null
   discountValue: number | null
@@ -297,12 +301,13 @@ export async function getAdminOffers(): Promise<AdminOffer[]> {
     const supabase = await getServerClient()
     const { data } = await supabase
       .from('offers')
-      .select('id, kind, title, badge_text, discount_kind, discount_value, starts_at, ends_at, is_active, offer_targets(product_type, product_id)')
+      .select('id, kind, title, description, badge_text, discount_kind, discount_value, starts_at, ends_at, is_active, offer_targets(product_type, product_id)')
       .order('created_at', { ascending: false })
     return (data ?? []).map((o) => ({
       id: o.id,
       kind: o.kind,
       title: o.title,
+      description: o.description,
       badgeText: o.badge_text,
       discountKind: o.discount_kind,
       discountValue: o.discount_value ? Number(o.discount_value) : null,
@@ -325,4 +330,19 @@ export async function getPendingPaymentsCount(): Promise<number> {
   } catch {
     return 0
   }
+}
+
+export async function getAdminBadges() {
+  if (!hasEnv()) return { payments: 0, orders: 0, bookings: 0, reviews: 0, messages: 0 }
+  try {
+    const supabase = await getServerClient()
+    const [payments, orders, bookings, reviews, messages] = await Promise.all([
+      supabase.from('payments').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+      supabase.from('orders').select('id', { count: 'exact', head: true }).in('status', ['pending_payment','awaiting_review']),
+      supabase.from('bookings').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+      supabase.from('reviews').select('id', { count: 'exact', head: true }).eq('is_approved', false),
+      supabase.from('contact_messages').select('id', { count: 'exact', head: true }).eq('status', 'new'),
+    ])
+    return { payments: payments.count ?? 0, orders: orders.count ?? 0, bookings: bookings.count ?? 0, reviews: reviews.count ?? 0, messages: messages.count ?? 0 }
+  } catch { return { payments: 0, orders: 0, bookings: 0, reviews: 0, messages: 0 } }
 }

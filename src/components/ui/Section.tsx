@@ -1,4 +1,4 @@
-import { cn } from '@/lib/cn'
+﻿import { cn } from '@/lib/cn'
 
 type SectionProps = {
   id?: string
@@ -13,18 +13,18 @@ type SectionProps = {
 
 const tones = {
   ivory: 'bg-ivory text-ink',
-  white: 'bg-soft-white text-ink',
-  teal: 'bg-deep-teal text-soft-white',
+  white: 'bg-surface-raised text-ink',
+  teal: 'bg-deep-teal text-on-dark',
   sand: 'bg-sand/40 text-ink',
 }
 
 export function Section({ id, eyebrow, title, lead, align = 'center', tone = 'ivory', className, children }: SectionProps) {
   const centered = align === 'center'
   return (
-    <section id={id} className={cn('px-6 py-16 md:py-24', tones[tone], className)}>
-      <div className="mx-auto max-w-6xl">
+    <section id={id} className={cn('heritage-paper px-6 py-14 md:py-18', tones[tone], className)}>
+      <div className="mx-auto max-w-7xl">
         {(eyebrow || title || lead) && (
-          <header className={cn('mb-10 md:mb-14', centered ? 'text-center' : 'text-start')}>
+          <header className={cn('mb-9 md:mb-11', centered ? 'text-center' : 'text-start')}>
             {eyebrow && (
               <p
                 className={cn(
@@ -39,7 +39,7 @@ export function Section({ id, eyebrow, title, lead, align = 'center', tone = 'iv
               </p>
             )}
             {title && (
-              <h2 className={cn('text-3xl font-bold md:text-4xl', tone === 'teal' ? 'text-soft-white' : 'text-deep-teal')}>
+              <h2 className={cn('text-3xl font-bold md:text-4xl', tone === 'teal' ? 'text-on-dark' : 'text-deep-teal')}>
                 {title}
               </h2>
             )}
@@ -47,7 +47,7 @@ export function Section({ id, eyebrow, title, lead, align = 'center', tone = 'iv
               <p
                 className={cn(
                   'mt-4 max-w-2xl text-lg leading-loose',
-                  tone === 'teal' ? 'text-soft-white/80' : 'text-text-soft',
+                  tone === 'teal' ? 'text-on-dark/80' : 'text-text-soft',
                   centered && 'mx-auto',
                 )}
               >

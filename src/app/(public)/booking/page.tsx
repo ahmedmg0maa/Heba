@@ -1,92 +1,47 @@
-import type { Metadata } from 'next'
-import { listServices, formatPrice, formatDuration, weekdayNames } from '@/lib/data/catalog'
+﻿import type { Metadata } from 'next'
+import { getBookingExperience } from '@/lib/data/booking'
+import { BookingWizard } from '@/components/booking/BookingWizard'
 import { PageHero } from '@/components/catalog/PageHero'
-import { Section } from '@/components/ui/Section'
-import { Card } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
 
 export const metadata: Metadata = {
   title: 'حجز جلسة فردية',
-  description: 'احجزي جلسة وضوح فردية ٦٠ دقيقة عبر الفيديو.',
+  description: 'اختاري الجلسة والتاريخ والوقت، ثم ثبتي الحجز وارفعي إيصال الدفع في مسار واضح وآمن.',
 }
 
-export const revalidate = 300
-
-const steps = [
-  { title: 'اختاري الجلسة', text: 'راجعي تفاصيل الجلسة ومدتها ومواعيد الإتاحة.' },
-  { title: 'أتمّي الدفع', text: 'إنستاباي أو محفظة إلكترونية أو تحويل بنكي، ثم أرفقي إيصالك.' },
-  { title: 'استلمي التأكيد', text: 'بعد مراجعة الدفع يصلك رابط الجلسة والموعد على حسابك.' },
-]
+export const dynamic = 'force-dynamic'
 
 export default async function BookingPage() {
-  const services = await listServices()
+  const experience = await getBookingExperience()
 
   return (
-    <main>
+    <main className="overflow-hidden">
       <PageHero
-        eyebrow="الجلسات الفردية"
-        title="ساعة كاملة، لكِ وحدك"
-        lead="مساحة آمنة نفكك فيها التحدي الذي يشغلك — وتخرجين بخطة عملية واضحة لخطوتك التالية."
+        eyebrow="احجزي جلستك الخاصة"
+        title="اختاري وقتًا هادئًا يناسب رحلتك"
+        lead="تظهر الجلسات المنشورة ومواعيدها المتاحة فقط، ثم يوضّح المسار شروط الطلب والدفع الفعلية."
       />
 
-      <Section eyebrow="كيف يتم الحجز؟" title="ثلاث خطوات بسيطة" tone="white">
-        <ol className="grid gap-6 md:grid-cols-3">
-          {steps.map((step, i) => (
-            <li key={step.title} className="relative rounded-2xl border border-line bg-ivory/60 p-6">
-              <span className="tnum mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-deep-teal font-bold text-soft-white">
-                {(i + 1).toLocaleString('ar-EG')}
-              </span>
-              <h3 className="font-bold text-deep-teal">{step.title}</h3>
-              <p className="mt-1 text-sm leading-relaxed text-text-soft">{step.text}</p>
-            </li>
-          ))}
-        </ol>
-      </Section>
+      <section className="bg-ivory px-4 py-10 sm:px-6 sm:py-14">
+        <div className="mx-auto max-w-7xl">
+          <BookingWizard experience={experience} />
+        </div>
+      </section>
 
-      <Section eyebrow="الجلسات المتاحة" title="اختاري جلستك">
-        <div className="mx-auto max-w-3xl space-y-6">
-          {services.map((s) => (
-            <Card key={s.slug} hover className="flex flex-col gap-6">
-              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                <div>
-                  <h3 className="text-2xl font-bold text-deep-teal">{s.title}</h3>
-                  <p className="mt-1 text-sm text-antique-gold">{s.subtitle}</p>
-                  <p className="mt-3 max-w-xl leading-relaxed text-text-soft">{s.description}</p>
-                </div>
-                <div className="shrink-0 text-center md:text-end">
-                  <p className="tnum text-2xl font-bold text-burgundy">{formatPrice(s.price)}</p>
-                  <p className="tnum text-sm text-taupe">{formatDuration(s.durationMinutes)}</p>
-                </div>
-              </div>
-
-              <div className="rounded-2xl bg-ivory/70 p-5">
-                {s.availability.length > 0 && (
-                  <>
-                    <h4 className="mb-3 text-sm font-bold text-deep-teal">مواعيد الإتاحة الأسبوعية</h4>
-                    <ul className="flex flex-wrap gap-3">
-                      {s.availability.map((a) => (
-                        <li
-                          key={`${a.weekday}-${a.startTime}`}
-                          className="tnum rounded-full border border-line bg-soft-white px-4 py-1.5 text-sm text-ink"
-                        >
-                          {weekdayNames[a.weekday]} · {a.startTime.slice(0, 5)}–{a.endTime.slice(0, 5)}
-                        </li>
-                      ))}
-                    </ul>
-                  </>
-                )}
-                <p className={s.availability.length > 0 ? 'mt-3 text-xs text-taupe' : 'text-sm text-text-soft'}>
-                  يُحدد الموعد الدقيق معك بعد تأكيد الدفع، بما يناسب جدولك.
-                </p>
-              </div>
-
-              <Button href={`/checkout/session/${s.slug}`} size="lg" className="self-center md:self-start">
-                احجزي الآن وأتمّي الدفع
-              </Button>
-            </Card>
+      <section className="border-t border-line bg-surface-raised px-4 py-12 sm:px-6">
+        <div className="mx-auto grid max-w-5xl gap-5 sm:grid-cols-3">
+          {[
+            ['التفاصيل المنشورة', 'تُعرض مدة الجلسة وسعرها وتوافرها من بيانات الخدمة المنشورة.'],
+            ['توافر فعلي', 'لا يمكن اختيار وقت غير متاح؛ يتحقق النظام من التوافر عند إنشاء الطلب.'],
+            ['حالة واضحة', 'تظهر حالة الحجز داخل الحساب بعد إنشاء الطلب أو مراجعته.'],
+          ].map(([title, text]) => (
+            <article key={title} className="rounded-2xl border border-line bg-ivory/60 p-5 text-center">
+              <span className="text-antique-gold">✦</span>
+              <h2 className="mt-2 text-xl font-bold text-deep-teal">{title}</h2>
+              <p className="mt-1 text-sm leading-relaxed text-text-soft">{text}</p>
+            </article>
           ))}
         </div>
-      </Section>
+      </section>
     </main>
   )
 }

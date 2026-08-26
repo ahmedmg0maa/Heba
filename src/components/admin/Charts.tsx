@@ -28,7 +28,7 @@ export function RevenueChart({ data }: { data: { label: string; value: number }[
         <path d={area} fill="var(--color-deep-teal)" opacity="0.08" />
         <path d={line} fill="none" stroke="var(--color-deep-teal)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
         {points.map((p, i) => (
-          <circle key={i} cx={p.x} cy={p.y} r="4" fill="var(--color-antique-gold)" stroke="var(--color-soft-white)" strokeWidth="1.5" />
+          <circle key={i} cx={p.x} cy={p.y} r="4" fill="var(--color-antique-gold)" stroke="var(--color-surface-raised)" strokeWidth="1.5" />
         ))}
       </svg>
       <div className="mt-2 flex justify-between px-1 text-xs text-taupe" dir="rtl">
@@ -75,7 +75,7 @@ export function DonutChart({ data }: { data: { label: string; value: number; col
             strokeDashoffset={(-start * c).toFixed(2)}
           />
         ))}
-        <circle cx="80" cy="80" r="38" fill="var(--color-soft-white)" />
+        <circle cx="80" cy="80" r="38" fill="var(--color-surface-raised)" />
       </svg>
       <ul className="space-y-2 text-sm">
         {data.map((d) => (

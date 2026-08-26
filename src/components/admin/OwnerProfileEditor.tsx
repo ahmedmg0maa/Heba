@@ -1,0 +1,7 @@
+'use client'
+import{useState}from'react'
+import{saveOwnerProfile}from'@/lib/actions/cms'
+import type{OwnerProfile}from'@/lib/data/cms'
+import{Button}from'@/components/ui/Button'
+const input='min-h-11 w-full rounded-xl border border-line bg-surface-raised px-3 py-2 text-sm text-ink'
+export function OwnerProfileEditor({profile}:{profile:OwnerProfile}){const[busy,setBusy]=useState(false),[message,setMessage]=useState<string|null>(null);return <form className="grid gap-3" onSubmit={async e=>{e.preventDefault();setBusy(true);const r=await saveOwnerProfile(new FormData(e.currentTarget));setMessage(r.ok?'حُفظ التعريف مع نسخة مراجعة.':r.error);setBusy(false)}}><input name="eyebrow" defaultValue={profile.eyebrow} className={input}/><input name="title" defaultValue={profile.title} className={input}/><textarea name="lead" rows={3} defaultValue={profile.lead} className={input}/><textarea name="method" rows={2} defaultValue={profile.method} className={input}/>{[0,1,2].map(index=><div key={index} className="grid gap-2 sm:grid-cols-2"><input name={`value_title_${index}`} defaultValue={profile.values[index]?.title??''} placeholder="اسم القيمة" className={input}/><input name={`value_text_${index}`} defaultValue={profile.values[index]?.text??''} placeholder="شرح القيمة" className={input}/></div>)}{message&&<p className="text-xs text-deep-teal">{message}</p>}<Button type="submit" disabled={busy}>حفظ تعريف هبة</Button></form>}

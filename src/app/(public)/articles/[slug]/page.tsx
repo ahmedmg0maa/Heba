@@ -43,7 +43,7 @@ export default async function ArticlePage({ params }: Props) {
 
       <CTARibbon
         title="أعجبك المقال؟"
-        lead="دوراتنا تأخذ هذه الأفكار من القراءة إلى الممارسة اليومية."
+        lead="تصفحي المحتوى المنشور في المنصة لمعرفة ما هو متاح فعليًا."
         ctaLabel="استكشفي الدورات"
         ctaHref="/courses"
       />

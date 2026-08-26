@@ -19,6 +19,10 @@ Ordered SQL in `supabase/migrations/` — applied via `supabase db push` (all ap
 | 012 | rls_hardening | payments.amount = order total; orders total consistency; notification update trigger guard; anon payload size caps |
 | 013 | port_legacy_data | Ports real data from `legacy.*` (2 sessions, payment/brand/booking settings); default flags; owner auto-grant for heba0elsherif@gmail.com in signup trigger |
 | 014 | schedule_expiry | pg_cron: `expire-stale-orders` hourly |
+| 015 | booking_integrity | GiST exclusion constraint and overlap integrity for active bookings |
+| 016 | atomic_booking | Advisory-locked RPC creates the validated order, item, booking and events atomically |
+| 017 | durable_rate_limits | PostgreSQL-backed rate-limit buckets and authenticated consume RPC |
+| 018 | admin_control_center | Membership plans/subscriptions, content revisions, booking admin notes, and unique per-day availability/exception constraints |
 
 ## Conventions
 - New migrations: next 3-digit prefix + snake_case name (`audit:db` enforces).

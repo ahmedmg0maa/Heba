@@ -1,4 +1,5 @@
 import { getServerClient } from '@/lib/supabase/server'
+import { hasSupabasePublicConfig } from '@/lib/supabase/public-key'
 
 export type HomeOffer = {
   title: string
@@ -26,56 +27,14 @@ export type HomeData = {
   testimonials: HomeTestimonial[]
 }
 
-// Editorial fallbacks keep the page premium when Supabase env isn't configured
-// (local dev before credentials) or a query fails. Same shapes as seeded data.
-// The fallback offer gets a rolling 7-day window computed at request time in
-// getHomeData (data layer, not component render) so the countdown stays live.
-const fallback: HomeData = {
-  offer: {
-    title: 'خصم إطلاق المنصة',
-    description: 'خصم ٣٠٪ على جميع الدورات التدريبية لفترة محدودة — ابدئي رحلتك اليوم.',
-    badgeText: 'خصم ٣٠٪',
-    endsAt: null,
-  },
-  articles: [
-    {
-      slug: 'five-morning-questions',
-      title: 'خمسة أسئلة تفتح صباحك',
-      excerpt: 'أسئلة صباحية قصيرة تغيّر جودة يومك كاملة.',
-      publishedAt: null,
-    },
-    {
-      slug: 'quiet-no',
-      title: 'فن الرفض الهادئ',
-      excerpt: 'كيف تقولين لا بوضوح ولطف في آن واحد.',
-      publishedAt: null,
-    },
-    {
-      slug: 'energy-audit',
-      title: 'جرد الطاقة الأسبوعي',
-      excerpt: 'تمرين نصف ساعة يكشف أين تذهب طاقتك فعلًا.',
-      publishedAt: null,
-    },
-  ],
-  testimonials: [
-    { displayName: 'سارة م.', rating: 5, comment: 'الدورة غيرت علاقتي بنفسي فعلًا. التمارين عملية والشرح هادئ وواضح.' },
-    { displayName: 'نورهان ع.', rating: 5, comment: 'أفضل استثمار عملته في نفسي هذه السنة. أنصح بها كل امرأة تشعر بالاستنزاف.' },
-    { displayName: 'مريم أ.', rating: 4, comment: 'تعلمت أقول لا بدون ذنب لأول مرة في حياتي. القوالب الجاهزة كنز حقيقي.' },
-  ],
-}
+// Public social proof and promotions are data-only. Missing configuration or
+// query failures render honest empty sections instead of invented fallbacks.
+const EMPTY_HOME_DATA: HomeData = { offer: null, articles: [], testimonials: [] }
 
-const hasEnv = () =>
-  Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
-
-function withLiveFallbackOffer(data: HomeData): HomeData {
-  if (data.offer && !data.offer.endsAt) {
-    return { ...data, offer: { ...data.offer, endsAt: new Date(Date.now() + 7 * 86_400_000).toISOString() } }
-  }
-  return data
-}
+const hasEnv = hasSupabasePublicConfig
 
 export async function getHomeData(): Promise<HomeData> {
-  if (!hasEnv()) return withLiveFallbackOffer(fallback)
+  if (!hasEnv()) return EMPTY_HOME_DATA
   try {
     const supabase = await getServerClient()
     const [offerRes, articlesRes, reviewsRes] = await Promise.all([
@@ -100,8 +59,7 @@ export async function getHomeData(): Promise<HomeData> {
         .limit(6),
     ])
 
-    // Live database: empty results stay empty (sections hide themselves) —
-    // editorial fallbacks are for the no-env demo and error paths only.
+    // Missing rows remain absent and their sections hide themselves.
     return {
       offer: offerRes.data
         ? {
@@ -124,6 +82,6 @@ export async function getHomeData(): Promise<HomeData> {
       })),
     }
   } catch {
-    return withLiveFallbackOffer(fallback)
+    return EMPTY_HOME_DATA
   }
 }

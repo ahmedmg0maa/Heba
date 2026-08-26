@@ -5,7 +5,7 @@ import { Card, CardTitle } from '@/components/ui/Card'
 import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table'
 import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { CouponForm, ActiveToggle } from '@/components/admin/MarketingForms'
+import { CouponForm, ActiveToggle, CouponEdit } from '@/components/admin/MarketingForms'
 
 export const metadata: Metadata = { title: 'الكوبونات — الإدارة' }
 
@@ -56,7 +56,7 @@ export default async function AdminCouponsPage() {
                   <Badge tone={c.isActive ? 'success' : 'sand'}>{c.isActive ? 'فعّال' : 'موقوف'}</Badge>
                 </TD>
                 <TD>
-                  <ActiveToggle id={c.id} active={c.isActive} kind="coupon" />
+                  <div className="flex flex-wrap items-start gap-2"><ActiveToggle id={c.id} active={c.isActive} kind="coupon" /><CouponEdit coupon={c} /></div>
                 </TD>
               </TR>
             ))}

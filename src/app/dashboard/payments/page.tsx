@@ -41,7 +41,7 @@ function Timeline({ p }: { p: MyPayment }) {
     steps.push({ label: `رُفض الدفع${p.rejectReason ? ` — ${p.rejectReason}` : ''}`, time: p.reviewedAt, state: 'bad' })
     steps.push({ label: 'يمكنك رفع إيصال جديد من صفحة طلباتك', time: null, state: 'wait' })
   } else {
-    steps.push({ label: 'قيد مراجعة الفريق (خلال ٢٤ ساعة كحد أقصى)', time: null, state: 'wait' })
+    steps.push({ label: 'قيد مراجعة الفريق ضمن أوقات العمل', time: null, state: 'wait' })
   }
   return (
     <ol className="mt-4 space-y-3 border-t border-line pt-4">

@@ -1,9 +1,9 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import { Card } from '@/components/ui/Card'
+import Image from 'next/image'
 import { Badge } from '@/components/ui/Badge'
 import { Stars } from './Stars'
-import { formatPrice } from '@/lib/data/catalog'
-import { cn } from '@/lib/cn'
+import { formatPrice } from '@/lib/format'
 
 type ProductCardProps = {
   href: string
@@ -19,22 +19,23 @@ type ProductCardProps = {
   ctaLabel?: string
 }
 
-// Branded cover substitute per product kind (awaiting real photography — KNOWN_ISSUES #1)
-const coverArt: Record<NonNullable<ProductCardProps['coverKind']>, { bg: string; glyph: React.ReactNode }> = {
+// One original no-person editorial still life, cropped per product kind for a
+// coherent catalog instead of unrelated stock photography.
+const coverArt: Record<NonNullable<ProductCardProps['coverKind']>, { position: string; glyph: React.ReactNode }> = {
   course: {
-    bg: 'from-deep-teal to-teal-hover',
+    position: '66% center',
     glyph: <path d="M8 10h24v15H8zM14 30h12M20 25v5M14 15h12M14 19h8" strokeLinecap="round" strokeLinejoin="round" />,
   },
   book: {
-    bg: 'from-burgundy to-burgundy-soft',
+    position: '12% center',
     glyph: <path d="M8 10a3 3 0 0 1 3-3h21v22H11a3 3 0 0 0-3 3ZM8 10v22M32 29v4H11" strokeLinecap="round" strokeLinejoin="round" />,
   },
   workshop: {
-    bg: 'from-antique-gold to-muted-gold',
+    position: '92% center',
     glyph: <path d="M20 7v4M9.7 9.7l2.8 2.8M7 20h4M9.7 30.3l2.8-2.8M20 33v-4M30.3 30.3l-2.8-2.8M33 20h-4M30.3 9.7l-2.8 2.8M20 15a5 5 0 1 0 5 5" strokeLinecap="round" strokeLinejoin="round" />,
   },
   session: {
-    bg: 'from-cobalt to-deep-teal',
+    position: '39% center',
     glyph: <path d="M20 20a6 6 0 1 0-6-6 6 6 0 0 0 6 6Zm-11 14c0-6 4.9-11 11-11s11 5 11 11" strokeLinecap="round" strokeLinejoin="round" />,
   },
 }
@@ -55,12 +56,23 @@ export function ProductCard({
   const art = coverArt[coverKind]
   return (
     <Card hover as="article" className="group flex flex-col overflow-hidden p-0">
-      <div className={cn('relative flex h-40 items-center justify-center bg-linear-to-br', art.bg)}>
-        <svg viewBox="0 0 40 40" className="h-16 w-16 text-soft-white/85" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
-          {art.glyph}
-        </svg>
+      <div className="relative flex h-44 items-end overflow-hidden">
+        <Image
+          src="/brand/catalog-still-life.webp"
+          alt=""
+          fill
+          sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+          className="object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+          style={{ objectPosition: art.position }}
+        />
+        <span className="absolute inset-0 bg-linear-to-t from-deep-teal/65 via-deep-teal/5 to-transparent" />
+        <span className="relative m-4 flex h-11 w-11 items-center justify-center rounded-full border border-on-dark/35 bg-deep-teal/75 text-on-dark shadow-card backdrop-blur-sm">
+          <svg viewBox="0 0 40 40" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
+            {art.glyph}
+          </svg>
+        </span>
         {badge && (
-          <Badge tone={badge.tone ?? 'gold'} className="absolute end-4 top-4 bg-soft-white/95 shadow-card">
+          <Badge tone={badge.tone ?? 'gold'} className="absolute end-4 top-4 bg-surface-raised/95 shadow-card">
             {badge.label}
           </Badge>
         )}

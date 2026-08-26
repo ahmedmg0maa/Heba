@@ -1,31 +1,32 @@
 # SUPABASE SETUP
 
-> **Status:** the live project `HebaElSherif` (`azuvwkzpgtyxwxmvedmp`, eu-central-1) is fully provisioned —
-> migrations 000–014 applied, buckets created, hourly order-expiry cron scheduled, real
-> services/payment settings ported. The steps below document (re)provisioning from scratch.
+> **Status (2026-08-20):** the authoritative production reference is `zfbwpubsnuijybxjuidc`.
+> A read-only preflight verified migrations 000–043. Migrations 044–047 are local-only and
+> require an authorised staging window, recovery evidence and the order documented in
+> `BOOKING_LAUNCH_RUNBOOK.md`. This file does not authorize a database change.
 >
 > **Legacy schema note:** the project contained an earlier schema attempt with real rows.
 > Migration `000_relocate_legacy.sql` moved it untouched into the `legacy` schema and
 > `013_port_legacy_data.sql` ported the real data (services, payment/brand settings) into the
 > current schema. Drop the `legacy` schema only when certain it is no longer needed.
 >
-> **Owner bootstrap:** signing up with `heba0elsherif@gmail.com` grants the `owner` role
-> automatically (trigger in migration 013). §5 below is the manual alternative for other emails.
+> **Owner bootstrap:** the current owner account is provisioned in Supabase Auth and linked to
+> `public.admin_roles` with role `owner`. The password-only portal reads its email from the
+> server-only `ADMIN_LOGIN_EMAIL` variable; §5 is the manual alternative for a new owner.
 
 ## 1. Create the project
 1. Create a project at https://supabase.com/dashboard (region close to Egypt, e.g. `eu-central-1`).
-2. Copy from Project Settings → API: `Project URL`, `anon` key, `service_role` key.
+2. Copy from Project Settings → API: `Project URL`, `publishable` key, `anon` key, and `service_role` key.
 3. Fill `.env.local` from `.env.example` (service role key stays server-only, never `NEXT_PUBLIC_`).
 
 ## 2. Apply migrations
-With the Supabase CLI linked to the project:
+For a newly authorised isolated environment only:
 ```bash
 supabase login            # once per machine
 supabase link --project-ref <ref>
-supabase db push          # applies supabase/migrations/ in order (000 → 014)
+supabase db push          # only after reviewing the exact pending set for that environment
 ```
-Or paste each file from `supabase/migrations/` into the SQL editor **in numeric order**.
-Migration 014 enables `pg_cron` and schedules `expire_stale_orders()` hourly.
+Do not use this generic procedure for production. Production changes must name the exact forward migrations and have a separate approval, backup/recovery evidence, staging verification and rollback plan.
 
 ## 3. Storage
 Migration `010_storage.sql` creates the buckets (`public-media`, `avatars`, `protected-books`,

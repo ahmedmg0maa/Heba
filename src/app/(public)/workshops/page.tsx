@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import { listWorkshops, formatPrice } from '@/lib/data/catalog'
 import { PageHero } from '@/components/catalog/PageHero'
 import { CTARibbon } from '@/components/catalog/CTARibbon'
@@ -10,7 +10,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 
 export const metadata: Metadata = {
   title: 'ورش العمل',
-  description: 'لقاءات تفاعلية مباشرة أونلاين بمقاعد محدودة وتطبيق فوري.',
+  description: 'ورش منشورة مع المواعيد والتفاصيل وحالة المقاعد عند توفرها.',
 }
 
 export const revalidate = 120
@@ -25,17 +25,17 @@ export default async function WorkshopsPage() {
     <main>
       <PageHero
         eyebrow="ورش العمل المباشرة"
-        title="نلتقي، نتمرّن، نخرج بنتيجة"
-        lead="ورش تفاعلية مباشرة بمقاعد محدودة — تمارين جماعية وتطبيق فوري وتسجيل يبقى معك."
+        title="مساحة للتعلّم والمشاركة"
+        lead="تابعي الورش المنشورة، مواعيدها، وتفاصيل التسجيل من مكان واحد."
       />
 
       <Section eyebrow="الجدول القادم" title="الورش المتاحة">
         {workshops.length === 0 ? (
           <EmptyState
             title="لا توجد ورش معلنة حاليًا"
-            description="نجهّز الآن لورشة جديدة. اشتركي في الرسالة الأسبوعية ليصلك موعدها أولًا."
-            actionLabel="عودي للرئيسية"
-            actionHref="/"
+            description="ستظهر الورش هنا عند نشر موعد جديد من إدارة المنصة."
+            actionLabel="استكشفي المسارات"
+            actionHref="/services"
           />
         ) : (
           <div className="mx-auto max-w-3xl space-y-6">
@@ -44,7 +44,7 @@ export default async function WorkshopsPage() {
               const seatsLeft = w.seatsTotal - w.seatsReserved
               return (
                 <Card key={w.slug} hover as="article" className="flex flex-col gap-6 md:flex-row md:items-center">
-                  <div className="flex h-24 w-24 shrink-0 flex-col items-center justify-center rounded-2xl bg-deep-teal text-soft-white">
+                  <div className="flex h-24 w-24 shrink-0 flex-col items-center justify-center rounded-2xl bg-deep-teal text-on-dark">
                     <span className="tnum text-3xl font-bold">{starts.toLocaleDateString('ar-EG', { day: 'numeric' })}</span>
                     <span className="text-sm text-muted-gold">{starts.toLocaleDateString('ar-EG', { month: 'long' })}</span>
                   </div>
@@ -80,12 +80,14 @@ export default async function WorkshopsPage() {
         )}
       </Section>
 
-      <CTARibbon
-        title="فاتتك الورشة؟"
-        lead="دوراتنا المسجلة متاحة دائمًا بوصول مدى الحياة."
-        ctaLabel="تصفّحي الدورات"
-        ctaHref="/courses"
-      />
+      {workshops.length > 0 && (
+        <CTARibbon
+          title="هل تبحثين عن مسار آخر؟"
+          lead="راجعي البرامج المنشورة في المنصة حسب ما هو متاح الآن."
+          ctaLabel="تصفّحي الدورات"
+          ctaHref="/courses"
+        />
+      )}
     </main>
   )
 }

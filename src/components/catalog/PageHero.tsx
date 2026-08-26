@@ -1,5 +1,3 @@
-import { FloralOrnament } from '@/components/home/FloralOrnament'
-
 export function PageHero({
   eyebrow,
   title,
@@ -12,16 +10,19 @@ export function PageHero({
   children?: React.ReactNode
 }) {
   return (
-    <section className="relative overflow-hidden border-b border-line bg-soft-white">
-      <FloralOrnament className="pointer-events-none absolute -end-4 top-4 h-64 opacity-40" />
-      <div className="relative mx-auto max-w-4xl px-6 py-16 text-center md:py-20">
-        <p className="mb-3 flex items-center justify-center gap-3 text-sm font-semibold tracking-widest text-antique-gold">
-          <span className="h-px w-10 bg-current opacity-60" aria-hidden />
+    <section className="heritage-paper relative overflow-hidden border-b border-line bg-surface-raised">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_22%,color-mix(in_srgb,var(--color-aqua)_8%,transparent),transparent_28%),radial-gradient(circle_at_88%_80%,color-mix(in_srgb,var(--color-antique-gold)_13%,transparent),transparent_30%)]" />
+      <div className="pointer-events-none absolute inset-x-[20%] top-0 h-px bg-linear-to-r from-transparent via-antique-gold/50 to-transparent" />
+      <span className="pointer-events-none absolute start-8 top-8 h-10 w-10 border-s border-t border-antique-gold/20" />
+      <span className="pointer-events-none absolute end-8 bottom-8 h-10 w-10 border-e border-b border-antique-gold/20" />
+      <div className="relative mx-auto max-w-5xl px-6 py-14 text-center md:py-18">
+        <p className="mb-3 flex items-center justify-center gap-3 text-xs font-bold tracking-[.18em] text-antique-gold sm:text-sm">
+          <span className="h-px w-10 bg-current opacity-55" aria-hidden />
           {eyebrow}
-          <span className="h-px w-10 bg-current opacity-60" aria-hidden />
+          <span className="h-px w-10 bg-current opacity-55" aria-hidden />
         </p>
-        <h1 className="text-4xl font-bold text-deep-teal md:text-5xl">{title}</h1>
-        <p className="mx-auto mt-4 max-w-2xl text-lg leading-loose text-text-soft">{lead}</p>
+        <h1 className="text-4xl leading-tight font-bold text-deep-teal md:text-5xl">{title}</h1>
+        <p className="mx-auto mt-4 max-w-2xl text-base leading-loose text-text-soft md:text-lg">{lead}</p>
         {children}
       </div>
     </section>

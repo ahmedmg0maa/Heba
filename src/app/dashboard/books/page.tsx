@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import { getMyBooks } from '@/lib/data/dashboard'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -31,7 +31,7 @@ export default async function MyBooksPage() {
             <Card key={b.slug} hover className="flex gap-5">
               <div className="flex h-28 w-20 shrink-0 flex-col justify-between rounded-lg bg-linear-to-br from-burgundy to-burgundy-soft p-3">
                 <span className="h-px w-6 bg-muted-gold" aria-hidden />
-                <span className="font-heading text-xs font-bold leading-snug text-soft-white">
+                <span className="font-heading text-xs font-bold leading-snug text-on-dark">
                   {b.title.replace('كتاب ', '')}
                 </span>
               </div>
@@ -41,7 +41,7 @@ export default async function MyBooksPage() {
                   {b.pagesCount ? `${b.pagesCount.toLocaleString('ar-EG')} صفحة · ` : ''}
                   أُضيف {dateFmt.format(new Date(b.grantedAt))}
                 </p>
-                <Button href={`/books/${b.slug}`} variant="secondary" size="sm" className="self-start">
+                <Button href={`/dashboard/books/${b.slug}/download`} variant="secondary" size="sm" className="self-start">
                   تحميل الكتاب
                 </Button>
               </div>

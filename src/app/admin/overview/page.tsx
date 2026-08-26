@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/Badge'
 import { RevenueChart, DonutChart } from '@/components/admin/Charts'
 import { ApprovalActions } from '@/components/admin/ApprovalActions'
 import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table'
+import { adminList, getContentReadiness, launchLevelForStatus } from '@/lib/data/cms'
 
 export const metadata: Metadata = { title: 'نظرة عامة — الإدارة' }
 
@@ -15,30 +16,46 @@ const timeFmt = new Intl.DateTimeFormat('ar-EG', { hour: 'numeric', minute: '2-d
 const dateFmt = new Intl.DateTimeFormat('ar-EG', { day: 'numeric', month: 'short' })
 
 export default async function AdminOverviewPage() {
-  const [kpis, approvals, customers, schedule] = await Promise.all([
+  const [kpis, approvals, customers, schedule, rescheduleRequests, systemAlerts, readiness] = await Promise.all([
     getAdminKpis(),
     getApprovalQueue(5),
     getRecentCustomers(),
     getTodaySchedule(),
+    adminList<{ id: string; status: string; proposed_starts_at: string }>('booking_reschedule_requests', 'id, status, proposed_starts_at', { orderBy: 'created_at', limit: 20 }),
+    adminList<{ id: string; level: string; message: string }>('system_events', 'id, level, message', { orderBy: 'created_at', limit: 20 }),
+    getContentReadiness(),
   ])
+  const pendingReschedules = rescheduleRequests.filter((item) => item.status === 'pending').length
+  const activeAlerts = systemAlerts.filter((item) => item.level === 'error' || item.level === 'warn').length
+  const launchBlockers = readiness.filter((item) => launchLevelForStatus(item.status) === 'blocker').length
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8">
+    <div className="mx-auto max-w-7xl space-y-6">
       <header>
-        <h1 className="text-3xl font-bold text-deep-teal">نظرة عامة</h1>
+        <h1 className="text-4xl font-bold text-deep-teal">لوحة التحكم</h1>
         <p className="mt-1 text-text-soft">نبض المنصة اليوم — الإيرادات والموافقات والمواعيد.</p>
       </header>
 
+      {kpis.health !== 'ready' && <Card className="border-antique-gold/35 bg-antique-gold/5"><CardTitle>بيانات التشغيل غير جاهزة للعرض</CardTitle><p className="mt-2 text-sm leading-relaxed text-text-soft">{kpis.health === 'unconfigured' ? 'لا توجد تهيئة قراءة محلية؛ لا تعرض اللوحة أصفارًا باعتبارها بيانات تشغيل.' : 'تعذّر استعلام مصدر التشغيل. راجعي حالة النظام والصلاحيات والترحيلات قبل اتخاذ قرار.'}</p><Link href="/admin/system" className="mt-3 inline-block text-sm font-bold text-burgundy">فتح حالة النظام ←</Link></Card>}
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <Link href="/admin/bookings" className="rounded-2xl border border-line bg-surface-raised p-5 shadow-card transition hover:-translate-y-0.5"><span className="text-xs font-bold text-text-soft">طلبات إعادة الجدولة</span><strong className="mt-2 block text-3xl text-deep-teal">{pendingReschedules.toLocaleString('ar-EG')}</strong><span className="mt-2 block text-sm text-burgundy">فتح الأجندة والتفاصيل ←</span></Link>
+        <Link href="/admin/system" className="rounded-2xl border border-line bg-surface-raised p-5 shadow-card transition hover:-translate-y-0.5"><span className="text-xs font-bold text-text-soft">تنبيهات التشغيل</span><strong className="mt-2 block text-3xl text-deep-teal">{activeAlerts.toLocaleString('ar-EG')}</strong><span className="mt-2 block text-sm text-burgundy">مراجعة سجل النظام ←</span></Link>
+        <Link href="/admin/system" className="rounded-2xl border border-line bg-surface-raised p-5 shadow-card transition hover:-translate-y-0.5"><span className="text-xs font-bold text-text-soft">موانع الإطلاق</span><strong className="mt-2 block text-3xl text-burgundy">{launchBlockers.toLocaleString('ar-EG')}</strong><span className="mt-2 block text-sm text-burgundy">فتح لوحة الجاهزية ←</span></Link>
+      </div>
+
+      <Card className="p-5"><div className="flex flex-wrap items-center gap-3"><span className="font-bold text-deep-teal">إجراءات سريعة:</span><Link className="rounded-full border border-line px-4 py-2 text-sm font-semibold" href="/admin/bookings">إضافة خدمة/موعد</Link><Link className="rounded-full border border-line px-4 py-2 text-sm font-semibold" href="/admin/products">إضافة منتج</Link><Link className="rounded-full border border-line px-4 py-2 text-sm font-semibold" href="/admin/articles">كتابة مقال</Link><Link className="rounded-full border border-line px-4 py-2 text-sm font-semibold" href="/admin/media">رفع وسائط</Link></div></Card>
+
       {/* KPI strip */}
-      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+      {kpis.health === 'ready' && <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="إيرادات الشهر" value={formatPrice(kpis.revenueThisMonth)} accent="teal" sparkline={kpis.revenueByDay.length > 1 ? kpis.revenueByDay : undefined} />
         <StatCard label="مدفوعات بانتظار المراجعة" value={kpis.pendingPayments.toLocaleString('ar-EG')} accent="gold" />
         <StatCard label="التحاقات الدورات" value={kpis.activeStudents.toLocaleString('ar-EG')} accent="cobalt" />
         <StatCard label="حجوزات قادمة" value={kpis.upcomingBookings.toLocaleString('ar-EG')} accent="burgundy" />
-      </div>
+      </div>}
 
       {/* Charts */}
-      <div className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
+      {kpis.health === 'ready' && <div className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
         <Card>
           <CardTitle className="mb-4">الإيرادات — آخر ٦ أشهر</CardTitle>
           <RevenueChart data={kpis.revenueByMonth} />
@@ -47,7 +64,7 @@ export default async function AdminOverviewPage() {
           <CardTitle className="mb-4">الحجوزات حسب الحالة</CardTitle>
           <DonutChart data={kpis.bookingsByStatus} />
         </Card>
-      </div>
+      </div>}
 
       {/* Approvals */}
       <Card className="p-0">

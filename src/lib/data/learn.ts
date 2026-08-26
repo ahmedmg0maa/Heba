@@ -1,5 +1,5 @@
 import { getServerClient } from '@/lib/supabase/server'
-import { listCourses } from './catalog'
+import { hasSupabasePublicConfig } from '@/lib/supabase/public-key'
 
 export type LearnResource = { id: string; title: string; kind: string; sizeBytes: number | null }
 
@@ -18,7 +18,7 @@ export type LearnModule = { id: string; title: string; lessons: LearnLesson[] }
 export type LearnNote = { id: string; lessonId: string; content: string; updatedAt: string }
 
 export type LearnData = {
-  courseId: string | null // null → demo (no-env) mode
+  courseId: string
   slug: string
   title: string
   enrolled: boolean
@@ -28,38 +28,10 @@ export type LearnData = {
   notes: LearnNote[]
 }
 
-const hasEnv = () =>
-  Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
-
-async function fallbackLearnData(slug: string): Promise<LearnData | null> {
-  const course = (await listCourses()).find((c) => c.slug === slug)
-  if (!course) return null
-  return {
-    courseId: null,
-    slug: course.slug,
-    title: course.title,
-    enrolled: true,
-    percent: 0,
-    modules: course.modules.map((m, mi) => ({
-      id: `demo-m${mi}`,
-      title: m.title,
-      lessons: m.lessons.map((l, li) => ({
-        id: `demo-m${mi}-l${li}`,
-        title: l.title,
-        description: '',
-        durationSeconds: l.durationSeconds,
-        isPreview: l.isPreview,
-        hasVideo: false,
-        completed: false,
-      })),
-    })),
-    resources: {},
-    notes: [],
-  }
-}
+const hasEnv = hasSupabasePublicConfig
 
 export async function getLearnData(slug: string): Promise<LearnData | null> {
-  if (!hasEnv()) return fallbackLearnData(slug)
+  if (!hasEnv()) return null
   try {
     const supabase = await getServerClient()
     const {
@@ -75,7 +47,7 @@ export async function getLearnData(slug: string): Promise<LearnData | null> {
       .eq('slug', slug)
       .eq('is_published', true)
       .maybeSingle()
-    if (!course) return fallbackLearnData(slug)
+    if (!course) return null
 
     const [{ data: enrollment }, { data: progress }, { data: lessonProgress }, { data: notes }] = await Promise.all([
       supabase.from('course_enrollments').select('id').eq('user_id', user.id).eq('course_id', course.id).maybeSingle(),
@@ -123,7 +95,5 @@ export async function getLearnData(slug: string): Promise<LearnData | null> {
       resources,
       notes: (notes ?? []).map((n) => ({ id: n.id, lessonId: n.lesson_id, content: n.content, updatedAt: n.updated_at })),
     }
-  } catch {
-    return fallbackLearnData(slug)
-  }
+  } catch { return null }
 }

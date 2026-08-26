@@ -1,8 +1,8 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { submitPaymentProof } from '@/lib/actions/checkout'
+import { uploadPaymentProofDirect } from '@/lib/payment-proof-upload'
 import { Button } from '@/components/ui/Button'
 
 export function ResubmitProof({ orderId, method }: { orderId: string; method: string }) {
@@ -15,10 +15,9 @@ export function ResubmitProof({ orderId, method }: { orderId: string; method: st
     e.preventDefault()
     setBusy(true)
     setError(null)
-    const formData = new FormData(e.currentTarget)
-    formData.set('orderId', orderId)
-    formData.set('method', method)
-    const res = await submitPaymentProof(formData)
+    const file = new FormData(e.currentTarget).get('proof')
+    if (!(file instanceof File)) { setError('أرفقي صورة الإيصال أولًا.'); setBusy(false); return }
+    const res = await uploadPaymentProofDirect(orderId, method as 'instapay' | 'wallet' | 'bank_transfer', file)
     if (res.ok) {
       setDone(true)
       router.refresh()
@@ -31,7 +30,7 @@ export function ResubmitProof({ orderId, method }: { orderId: string; method: st
   if (done) {
     return (
       <p className="mt-4 rounded-xl bg-deep-teal/8 px-4 py-3 text-sm font-semibold text-deep-teal">
-        استلمنا إيصالك الجديد — سيراجعه الفريق خلال ٢٤ ساعة كحد أقصى.
+        استلمنا إيصالك الجديد — سيراجعه الفريق ضمن أوقات العمل.
       </p>
     )
   }
@@ -47,7 +46,7 @@ export function ResubmitProof({ orderId, method }: { orderId: string; method: st
         type="file"
         accept="image/png,image/jpeg,image/webp"
         required
-        className="w-full text-sm text-text-soft file:me-3 file:rounded-full file:border-0 file:bg-deep-teal file:px-4 file:py-1.5 file:text-xs file:font-semibold file:text-soft-white"
+        className="w-full text-sm text-text-soft file:me-3 file:rounded-full file:border-0 file:bg-deep-teal file:px-4 file:py-1.5 file:text-xs file:font-semibold file:text-on-dark"
       />
       {error && (
         <p className="text-xs font-medium text-burgundy" role="alert">

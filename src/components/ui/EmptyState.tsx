@@ -1,4 +1,4 @@
-import { cn } from '@/lib/cn'
+﻿import { cn } from '@/lib/cn'
 import { Button } from './Button'
 
 type EmptyStateProps = {
@@ -28,7 +28,7 @@ export function EmptyState({ icon, title, description, actionLabel, actionHref, 
   return (
     <div
       className={cn(
-        'flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-sand bg-soft-white/60 px-8 py-16 text-center',
+        'flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-sand bg-surface-raised/60 px-8 py-16 text-center',
         className,
       )}
     >

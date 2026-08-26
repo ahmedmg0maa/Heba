@@ -5,13 +5,13 @@ import {
   adminSetField,
   publishArticle,
   createArticle,
-  deleteReview,
   setBookingStatus,
   updateSetting,
   toggleFlag,
   grantRole,
   revokeRole,
 } from '@/lib/actions/cms'
+import { moderateReview } from '@/lib/actions/reviews'
 import { Button } from '@/components/ui/Button'
 import { FormField, FormTextarea, FormSelect } from '@/components/ui/FormField'
 
@@ -58,21 +58,25 @@ export function PublishToggle({
   )
 }
 
-export function ReviewControls({ id, approved, featured }: { id: string; approved: boolean; featured: boolean }) {
+export function ReviewControls({ id, featured, status = 'pending' }: { id: string; approved: boolean; featured: boolean; status?: string }) {
   const { busy, error, run } = useBusy()
+  const [reason, setReason] = useState('')
+  const [response, setResponse] = useState('')
+  const [publishResponse, setPublishResponse] = useState(false)
+  const moderate = (action: 'approve' | 'reject' | 'archive' | 'restore') => run(() => moderateReview(id, action, reason, response, publishResponse))
   return (
-    <div className="space-y-1">
+    <div className="space-y-2">
       <div className="flex flex-wrap gap-2">
-        <Button size="sm" variant={approved ? 'secondary' : 'primary'} disabled={busy} onClick={() => run(() => adminSetField('reviews', id, 'is_approved', !approved))}>
-          {approved ? 'إلغاء الاعتماد' : 'اعتماد'}
-        </Button>
-        <Button size="sm" variant={featured ? 'secondary' : 'gold'} disabled={busy} onClick={() => run(() => adminSetField('reviews', id, 'is_featured', !featured))}>
+        {status !== 'approved' && <Button size="sm" variant="primary" disabled={busy} onClick={() => moderate('approve')}>اعتماد</Button>}
+        {status !== 'rejected' && <Button size="sm" variant="secondary" disabled={busy} onClick={() => moderate('reject')}>رفض</Button>}
+        {status === 'archived' ? <Button size="sm" variant="secondary" disabled={busy} onClick={() => moderate('restore')}>استعادة</Button> : <Button size="sm" variant="burgundy" disabled={busy} onClick={() => moderate('archive')}>أرشفة</Button>}
+        {status === 'approved' && <Button size="sm" variant={featured ? 'secondary' : 'gold'} disabled={busy} onClick={() => run(() => adminSetField('reviews', id, 'is_featured', !featured))}>
           {featured ? 'إزالة التمييز' : 'تمييز'}
-        </Button>
-        <Button size="sm" variant="burgundy" disabled={busy} onClick={() => run(() => deleteReview(id))}>
-          حذف
-        </Button>
+        </Button>}
       </div>
+      <textarea value={reason} onChange={(event) => setReason(event.target.value)} rows={2} placeholder="سبب الرفض الداخلي (مطلوب عند الرفض)" className="w-full rounded-lg border border-line bg-surface-raised p-2 text-xs text-ink" />
+      <textarea value={response} onChange={(event) => setResponse(event.target.value)} rows={2} placeholder="رد المالكة الاختياري" className="w-full rounded-lg border border-line bg-surface-raised p-2 text-xs text-ink" />
+      <label className="flex items-center gap-2 text-xs text-text-soft"><input type="checkbox" checked={publishResponse} onChange={(event) => setPublishResponse(event.target.checked)} />نشر الرد مع التقييم المعتمد</label>
       {error && <p className="text-xs text-burgundy">{error}</p>}
     </div>
   )
@@ -198,6 +202,8 @@ export function FlagToggle({ flagKey, enabled, description }: { flagKey: string;
 export function RoleForm() {
   const { busy, error, run } = useBusy()
   return (
+    <>
+    <a className="text-xs font-bold text-deep-teal underline underline-offset-4" href="/auth/admin/mfa?reauth=1&redirect=/admin/roles">تأكيد أمني حديث قبل تغيير الأدوار</a>
     <form
       onSubmit={async (e) => {
         e.preventDefault()
@@ -213,6 +219,10 @@ export function RoleForm() {
         name="role"
         options={[
           { value: 'admin', label: 'مديرة' },
+          { value: 'operations', label: 'العمليات' },
+          { value: 'finance', label: 'المالية' },
+          { value: 'content', label: 'إدارة المحتوى' },
+          { value: 'marketing', label: 'التسويق' },
           { value: 'support', label: 'دعم' },
           { value: 'editor', label: 'محررة' },
           { value: 'owner', label: 'مالكة' },
@@ -224,6 +234,7 @@ export function RoleForm() {
       </Button>
       {error && <p className="w-full text-xs text-burgundy">{error}</p>}
     </form>
+    </>
   )
 }
 
@@ -231,6 +242,7 @@ export function RevokeRoleButton({ roleId }: { roleId: string }) {
   const { busy, error, run } = useBusy()
   return (
     <div>
+      <a className="mb-2 inline-block text-xs font-bold text-deep-teal underline underline-offset-4" href="/auth/admin/mfa?reauth=1&redirect=/admin/roles">تأكيد أمني حديث</a>
       <Button size="sm" variant="burgundy" disabled={busy} onClick={() => run(() => revokeRole(roleId))}>
         سحب الدور
       </Button>

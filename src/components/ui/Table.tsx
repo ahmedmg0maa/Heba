@@ -1,8 +1,8 @@
-import { cn } from '@/lib/cn'
+﻿import { cn } from '@/lib/cn'
 
 export function Table({ className, children }: { className?: string; children: React.ReactNode }) {
   return (
-    <div className={cn('overflow-x-auto rounded-2xl border border-line bg-soft-white shadow-card', className)}>
+    <div className={cn('overflow-x-auto rounded-2xl border border-line bg-surface-raised shadow-card', className)}>
       <table className="w-full min-w-max text-start text-sm">{children}</table>
     </div>
   )

@@ -38,10 +38,13 @@ function Sparkline({ points, className }: { points: number[]; className?: string
 
 export function StatCard({ label, value, delta, sparkline, accent = 'teal', icon, className }: StatCardProps) {
   return (
-    <Card className={cn('flex flex-col gap-3', className)}>
+    <Card className={cn('relative flex flex-col gap-3 overflow-hidden border-antique-gold/20', className)}>
+      <span className="pointer-events-none absolute -start-7 -top-7 h-20 w-20 rounded-full border border-antique-gold/15 bg-antique-gold/5" />
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm font-medium text-text-soft">{label}</span>
-        {icon && <span className={cn('opacity-80', accents[accent])}>{icon}</span>}
+        <span className={cn('flex h-10 w-10 items-center justify-center rounded-full border border-antique-gold/25 bg-ivory opacity-90', accents[accent])}>
+          {icon ?? <span className="h-2 w-2 rounded-full bg-current" />}
+        </span>
       </div>
       <div className="flex items-end justify-between gap-3">
         <span className={cn('tnum text-3xl font-bold', accents[accent])}>{value}</span>

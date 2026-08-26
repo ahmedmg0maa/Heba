@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { createCoupon, setCouponActive, createOffer, setOfferActive } from '@/lib/actions/marketing'
+import { createCoupon, setCouponActive, createOffer, setOfferActive, updateCoupon, deleteCoupon, updateOffer, deleteOffer } from '@/lib/actions/marketing'
+import type { AdminCoupon, AdminOffer } from '@/lib/data/admin'
 import { FormField, FormSelect } from '@/components/ui/FormField'
 import { Button } from '@/components/ui/Button'
 
@@ -126,4 +127,20 @@ export function ActiveToggle({
       {active ? 'إيقاف' : 'تفعيل'}
     </Button>
   )
+}
+
+function localDate(value: string | null) { if (!value) return ''; const date=new Date(value);const offset=date.getTimezoneOffset()*60000;return new Date(date.getTime()-offset).toISOString().slice(0,16) }
+
+export function CouponEdit({coupon}:{coupon:AdminCoupon}) {
+  const [busy,setBusy]=useState(false);const[message,setMessage]=useState<string|null>(null);const[confirm,setConfirm]=useState(false);const input='min-h-10 w-full rounded-xl border border-line bg-surface-raised px-3 py-2 text-sm text-ink'
+  return <details className="min-w-64 rounded-xl border border-line bg-ivory/40"><summary className="cursor-pointer list-none px-4 py-2 text-sm font-bold text-deep-teal">تعديل وحذف</summary><form className="grid gap-3 border-t border-line p-4" onSubmit={async(e)=>{e.preventDefault();setBusy(true);const r=await updateCoupon(coupon.id,new FormData(e.currentTarget));setMessage(r.ok?'تم التعديل.':r.error);setBusy(false)}}>
+    <input name="code" defaultValue={coupon.code} className={input} dir="ltr" required/><select name="kind" defaultValue={coupon.kind} className={input}><option value="percent">نسبة</option><option value="fixed">مبلغ</option></select><input name="value" type="number" min="1" defaultValue={coupon.value} className={input}/><input name="max_uses" type="number" min="1" defaultValue={coupon.maxUses??''} placeholder="الحد الكلي" className={input}/><input name="max_uses_per_user" type="number" min="1" defaultValue={coupon.maxUsesPerUser} className={input}/><input name="ends_at" type="datetime-local" defaultValue={localDate(coupon.endsAt)} className={input}/>{message&&<p className="text-xs font-semibold text-deep-teal">{message}</p>}<div className="flex gap-2"><Button type="submit" size="sm" disabled={busy}>حفظ</Button>{!confirm?<Button type="button" size="sm" variant="burgundy" onClick={()=>setConfirm(true)}>حذف</Button>:<Button type="button" size="sm" variant="burgundy" onClick={async()=>{setBusy(true);const r=await deleteCoupon(coupon.id);setMessage(r.ok?'حُذف.':r.error);setBusy(false)}}>تأكيد</Button>}</div>
+  </form></details>
+}
+
+export function OfferEdit({offer}:{offer:AdminOffer}) {
+  const [busy,setBusy]=useState(false);const[message,setMessage]=useState<string|null>(null);const[confirm,setConfirm]=useState(false);const input='min-h-10 w-full rounded-xl border border-line bg-surface-raised px-3 py-2 text-sm text-ink'
+  return <details className="min-w-64 rounded-xl border border-line bg-ivory/40"><summary className="cursor-pointer list-none px-4 py-2 text-sm font-bold text-deep-teal">تعديل وحذف</summary><form className="grid gap-3 border-t border-line p-4" onSubmit={async(e)=>{e.preventDefault();setBusy(true);const r=await updateOffer(offer.id,new FormData(e.currentTarget));setMessage(r.ok?'تم التعديل.':r.error);setBusy(false)}}>
+    <input name="title" defaultValue={offer.title} className={input} required/><textarea name="description" defaultValue={offer.description} className={input}/><select name="kind" defaultValue={offer.kind} className={input}><option value="flash_sale">تخفيض سريع</option><option value="countdown">عداد</option><option value="seasonal">موسمي</option><option value="limited_seats">مقاعد</option><option value="bundle">حزمة</option></select><input name="badge_text" defaultValue={offer.badgeText??''} className={input}/><select name="discount_kind" defaultValue={offer.discountKind??'percent'} className={input}><option value="percent">نسبة</option><option value="fixed">مبلغ</option></select><input name="discount_value" type="number" min="1" defaultValue={offer.discountValue??''} className={input}/><select name="target_type" defaultValue={offer.targetTypes[0]??''} className={input}><option value="">الكل</option><option value="course">الدورات</option><option value="book">الكتب</option><option value="workshop">الورش</option><option value="session">الجلسات</option></select><input name="ends_at" type="datetime-local" defaultValue={localDate(offer.endsAt)} className={input}/>{message&&<p className="text-xs font-semibold text-deep-teal">{message}</p>}<div className="flex gap-2"><Button type="submit" size="sm" disabled={busy}>حفظ</Button>{!confirm?<Button type="button" size="sm" variant="burgundy" onClick={()=>setConfirm(true)}>حذف</Button>:<Button type="button" size="sm" variant="burgundy" onClick={async()=>{setBusy(true);const r=await deleteOffer(offer.id);setMessage(r.ok?'حُذف.':r.error);setBusy(false)}}>تأكيد</Button>}</div>
+  </form></details>
 }

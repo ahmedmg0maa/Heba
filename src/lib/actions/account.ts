@@ -2,13 +2,13 @@
 
 import { revalidatePath } from 'next/cache'
 import { getServerClient } from '@/lib/supabase/server'
+import { hasSupabasePublicConfig } from '@/lib/supabase/public-key'
 
 type ActionResult = { ok: true } | { ok: false; error: string }
 
 const NO_ENV = 'غير متاح في بيئة العرض التجريبية.'
 
-const hasEnv = () =>
-  Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+const hasEnv = hasSupabasePublicConfig
 
 export async function updateProfile(formData: FormData): Promise<ActionResult> {
   if (!hasEnv()) return { ok: false, error: NO_ENV }

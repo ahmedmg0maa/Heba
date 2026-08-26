@@ -1,27 +1,42 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import { PageHero } from '@/components/catalog/PageHero'
 import { CTARibbon } from '@/components/catalog/CTARibbon'
+import { getPaymentSettings, type PaymentSettings } from '@/lib/data/checkout'
+import { getPublishedCmsPage } from '@/lib/data/cms'
 
 export const metadata: Metadata = {
   title: 'الأسئلة الشائعة',
   description: 'إجابات واضحة عن الأسئلة الأكثر تكرارًا حول الدورات والدفع والوصول.',
 }
 
-const faqs = [
+function getPaymentAnswer(settings: PaymentSettings) {
+  const methods = [
+    settings.instapay && 'إنستاباي',
+    settings.wallet && 'محفظة إلكترونية',
+    settings.bank && 'تحويل بنكي',
+  ].filter(Boolean)
+
+  return methods.length > 0
+    ? `تظهر وسائل الدفع المفعّلة (${methods.join('، ')}) في صفحة إتمام الطلب فقط. لا تُعرض أي بيانات دفع قبل تهيئتها من الإدارة.`
+    : 'لا توجد وسيلة دفع مفعّلة حاليًا، لذلك لا يمكن إنشاء طلب جديد من صفحة إتمام الطلب.'
+}
+
+function getFaqs(settings: PaymentSettings) {
+  return [
   {
     group: 'الدفع والوصول',
     items: [
       {
         q: 'ما وسائل الدفع المتاحة؟',
-        a: 'إنستاباي، المحافظ الإلكترونية (فودافون كاش وغيرها)، والتحويل البنكي. بعد التحويل ترفعين صورة الإيصال ويُفعَّل وصولك بعد المراجعة خلال ٢٤ ساعة كحد أقصى في أيام العمل.',
+        a: getPaymentAnswer(settings),
       },
       {
         q: 'متى يصلني المحتوى بعد الدفع؟',
-        a: 'فور اعتماد إيصالك يظهر المحتوى تلقائيًا في لوحتك — الدورات في «دوراتي» والكتب في «كتبي» — ويصلك إشعار بالتفعيل.',
+        a: 'بعد اعتماد الدفع للخدمة المستحقة، يظهر الوصول داخل حسابك. تُعرض حالة الطلب في لوحة الحساب، ولا نعد بمدة مراجعة ثابتة قبل تهيئة إجراءات التشغيل.',
       },
       {
-        q: 'هل الوصول للدورات مدى الحياة؟',
-        a: 'نعم. تشترين مرة واحدة ويبقى الوصول معك دائمًا، شاملًا كل تحديثات الدورة المستقبلية.',
+        q: 'كيف أعود إلى دوراتي بعد الشراء؟',
+        a: 'بعد اعتماد الدفع تظهر الدورة داخل «دوراتي» في حسابك. أي مدة أو شروط خاصة بالوصول تظهر بوضوح في صفحة المنتج.',
       },
     ],
   },
@@ -30,11 +45,11 @@ const faqs = [
     items: [
       {
         q: 'هل تناسبني الدورات لو وقتي ضيق؟',
-        a: 'صُممت الدروس قصيرة (١٥–٢٠ دقيقة) والتطبيقات الأسبوعية لا تتجاوز نصف ساعة. تتعلمين بإيقاعك تمامًا — لا مواعيد إلزامية.',
+        a: 'توضح صفحة كل دورة المحتوى والمدة وطريقة التعلّم المنشورة لها. لا تُعرض مدة أو وتيرة موحّدة قبل إضافة بيانات الدورة الفعلية.',
       },
       {
-        q: 'هل أحصل على شهادة؟',
-        a: 'نعم، شهادة إتمام إلكترونية موثقة تصدر تلقائيًا عند إنهاء ١٠٠٪ من دروس الدورة.',
+        q: 'كيف أعرف أنني أتممت الدورة؟',
+        a: 'تسجّل المنصة تقدمك في كل درس وتعرض نسبة الإتمام داخل حسابك. لا تعرض صفحة الدورة وعدًا بشهادة قبل نشر تفاصيلها.',
       },
       {
         q: 'هل يمكن مشاركة حسابي مع صديقة؟',
@@ -47,21 +62,41 @@ const faqs = [
     items: [
       {
         q: 'كيف تُعقد الجلسات الفردية؟',
-        a: 'عبر مكالمة فيديو خاصة (Zoom أو Google Meet). بعد تأكيد الدفع ننسق معك الموعد الدقيق بما يناسب جدولك ضمن المواعيد المتاحة.',
+        a: 'تظهر طريقة الجلسة وشروطها والمواعيد المتاحة عند نشر الخدمة. لا يظهر رابط اجتماع قبل وجود حجز مستحق ومؤكد.',
       },
       {
         q: 'ماذا لو فاتتني الورشة المباشرة؟',
-        a: 'يصلك تسجيل الورشة كاملًا مع ملفات العمل خلال ٤٨ ساعة من انتهائها، ويبقى متاحًا في حسابك.',
+        a: 'ما يتاح من تسجيلات أو مواد مرافقة يحدده وصف الورشة المنشور واستحقاقك لها؛ لا تُضمن التسجيلات افتراضيًا.',
       },
       {
         q: 'هل يمكنني إعادة جدولة جلستي؟',
-        a: 'نعم، مرة واحدة مجانًا بشرط الإخطار قبل الموعد بـ ٢٤ ساعة على الأقل من صفحة حجوزاتك.',
+        a: 'يتبع طلب إعادة الجدولة سياسة الخدمة المنشورة لحجزك. لا يظهر خيار الطلب إلا عندما تسمح حالة الحجز وقواعد التوافر بذلك.',
       },
     ],
   },
-]
+  ]
+}
 
-export default function FAQPage() {
+type FaqGroup = ReturnType<typeof getFaqs>[number]
+function cmsFaqGroups(page: Awaited<ReturnType<typeof getPublishedCmsPage>>): FaqGroup[] {
+  if (!page) return []
+  return page.sections.flatMap((section) => {
+    if (!section.content || typeof section.content !== 'object' || Array.isArray(section.content)) return []
+    const value = section.content as Record<string, unknown>
+    const group = typeof value.group === 'string' ? value.group.trim() : typeof value.heading === 'string' ? value.heading.trim() : ''
+    const items = Array.isArray(value.items) ? value.items.flatMap((item) => {
+      if (!item || typeof item !== 'object' || Array.isArray(item)) return []
+      const row = item as Record<string, unknown>
+      return typeof row.q === 'string' && row.q.trim() && typeof row.a === 'string' && row.a.trim() ? [{ q: row.q.trim(), a: row.a.trim() }] : []
+    }) : []
+    return group && items.length ? [{ group, items }] : []
+  })
+}
+
+export default async function FAQPage() {
+  const [paymentSettings, cmsPage] = await Promise.all([getPaymentSettings(), getPublishedCmsPage('faq')])
+  const managedFaqs = cmsFaqGroups(cmsPage)
+  const faqs = managedFaqs.length ? managedFaqs : getFaqs(paymentSettings)
   return (
     <main>
       <PageHero
@@ -79,7 +114,7 @@ export default function FAQPage() {
             </h2>
             <div className="space-y-3">
               {group.items.map((item) => (
-                <details key={item.q} className="group rounded-2xl border border-line bg-soft-white shadow-card">
+                <details key={item.q} className="group rounded-2xl border border-line bg-surface-raised shadow-card">
                   <summary className="flex cursor-pointer items-center justify-between gap-4 p-5 font-bold text-ink [&::-webkit-details-marker]:hidden">
                     {item.q}
                     <svg viewBox="0 0 20 20" className="h-5 w-5 shrink-0 text-antique-gold transition-transform group-open:rotate-180" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
@@ -96,7 +131,7 @@ export default function FAQPage() {
 
       <CTARibbon
         title="لم تجدي إجابتك؟"
-        lead="راسلينا مباشرة وسنرد خلال ٢٤ ساعة."
+        lead="استخدمي نموذج التواصل عند تهيئته؛ لا نعرض وعدًا بمدة استجابة قبل تحديدها تشغيليًا."
         ctaLabel="تواصلي معنا"
         ctaHref="/contact"
       />

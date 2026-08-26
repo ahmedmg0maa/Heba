@@ -1,8 +1,7 @@
-'use client'
+﻿'use client'
 
 import { useMemo, useState } from 'react'
 import { cn } from '@/lib/cn'
-import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import type { LearnData, LearnLesson } from '@/lib/data/learn'
 import { getLessonVideoUrl, getResourceUrl, markLessonComplete, saveNote, deleteNote } from '@/lib/actions/learn'
@@ -62,7 +61,7 @@ export function LearnClient({ data }: { data: LearnData }) {
     setVideoUrl(null)
     setVideoMsg(null)
     if (!lesson.hasVideo) {
-      setVideoMsg(data.courseId ? 'لم يُرفع فيديو هذا الدرس بعد.' : 'الفيديوهات متاحة بعد ربط قاعدة البيانات وتفعيل الوصول.')
+      setVideoMsg('لم يُرفع فيديو هذا الدرس بعد.')
       return
     }
     const res = await getLessonVideoUrl(lesson.id)
@@ -74,24 +73,13 @@ export function LearnClient({ data }: { data: LearnData }) {
     if (!current) return
     setBusy(true)
     const target = !completed.has(current.id)
-    if (data.courseId) {
-      const res = await markLessonComplete(current.id, target)
-      if (res.ok) {
-        setPercent(res.data.percent)
-        setCompleted((prev) => {
-          const next = new Set(prev)
-          if (target) next.add(current.id)
-          else next.delete(current.id)
-          return next
-        })
-      }
-    } else {
-      // demo mode — local only
+    const res = await markLessonComplete(current.id, target)
+    if (res.ok) {
+      setPercent(res.data.percent)
       setCompleted((prev) => {
         const next = new Set(prev)
         if (target) next.add(current.id)
         else next.delete(current.id)
-        setPercent(Math.round((next.size / flat.length) * 100))
         return next
       })
     }
@@ -102,18 +90,10 @@ export function LearnClient({ data }: { data: LearnData }) {
     e.preventDefault()
     if (!currentId || !noteDraft.trim()) return
     setBusy(true)
-    if (data.courseId) {
-      const res = await saveNote(currentId, noteDraft)
-      if (res.ok) {
-        setNotes((prev) => [
-          { id: res.data.id, lessonId: currentId, content: noteDraft.trim(), updatedAt: new Date().toISOString() },
-          ...prev,
-        ])
-        setNoteDraft('')
-      }
-    } else {
+    const res = await saveNote(currentId, noteDraft)
+    if (res.ok) {
       setNotes((prev) => [
-        { id: `demo-${prev.length}`, lessonId: currentId, content: noteDraft.trim(), updatedAt: new Date().toISOString() },
+        { id: res.data.id, lessonId: currentId, content: noteDraft.trim(), updatedAt: new Date().toISOString() },
         ...prev,
       ])
       setNoteDraft('')
@@ -123,7 +103,7 @@ export function LearnClient({ data }: { data: LearnData }) {
 
   async function onDeleteNote(id: string) {
     setNotes((prev) => prev.filter((n) => n.id !== id))
-    if (data.courseId && !id.startsWith('demo-')) await deleteNote(id)
+    await deleteNote(id)
   }
 
   async function onDownload(resourceId: string) {
@@ -149,7 +129,7 @@ export function LearnClient({ data }: { data: LearnData }) {
             {videoUrl ? (
               <video key={videoUrl} src={videoUrl} controls className="aspect-video w-full" controlsList="nodownload" />
             ) : (
-              <div className="flex aspect-video w-full flex-col items-center justify-center gap-4 text-soft-white/80">
+              <div className="flex aspect-video w-full flex-col items-center justify-center gap-4 text-on-dark/80">
                 <svg viewBox="0 0 64 64" className="h-16 w-16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
                   <circle cx="32" cy="32" r="26" strokeOpacity="0.4" />
                   <path d="M27 23v18l14-9Z" fill="currentColor" stroke="none" />
@@ -162,7 +142,7 @@ export function LearnClient({ data }: { data: LearnData }) {
           </div>
 
           {current && (
-            <div className="rounded-3xl border border-line bg-soft-white p-6 shadow-card">
+            <div className="rounded-3xl border border-line bg-surface-raised p-6 shadow-card">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <h2 className="text-xl font-bold text-deep-teal">{current.title}</h2>
@@ -194,7 +174,7 @@ export function LearnClient({ data }: { data: LearnData }) {
           )}
 
           {/* Notes / resources */}
-          <div className="rounded-3xl border border-line bg-soft-white shadow-card">
+          <div className="rounded-3xl border border-line bg-surface-raised shadow-card">
             <div className="flex border-b border-line" role="tablist">
               {(
                 [
@@ -291,7 +271,7 @@ export function LearnClient({ data }: { data: LearnData }) {
           {data.modules.map((m) => {
             const done = m.lessons.filter((l) => completed.has(l.id)).length
             return (
-              <details key={m.id} open={m.lessons.some((l) => l.id === currentId)} className="group rounded-2xl border border-line bg-soft-white shadow-card">
+              <details key={m.id} open={m.lessons.some((l) => l.id === currentId)} className="group rounded-2xl border border-line bg-surface-raised shadow-card">
                 <summary className="flex cursor-pointer items-center justify-between gap-3 p-4 [&::-webkit-details-marker]:hidden">
                   <span className="text-sm font-bold text-deep-teal">{m.title}</span>
                   <span className="tnum shrink-0 rounded-full bg-ivory px-2.5 py-1 text-xs font-semibold text-taupe">
@@ -316,7 +296,7 @@ export function LearnClient({ data }: { data: LearnData }) {
                           <span
                             className={cn(
                               'flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[10px]',
-                              isDone ? 'border-deep-teal bg-deep-teal text-soft-white' : 'border-sand bg-transparent text-transparent',
+                              isDone ? 'border-deep-teal bg-deep-teal text-on-dark' : 'border-sand bg-transparent text-transparent',
                             )}
                             aria-hidden
                           >
@@ -332,11 +312,6 @@ export function LearnClient({ data }: { data: LearnData }) {
               </details>
             )
           })}
-          {!data.courseId && (
-            <Badge tone="cobalt" className="w-full justify-center py-2">
-              وضع العرض — يعمل التتبع الفعلي بعد ربط قاعدة البيانات
-            </Badge>
-          )}
         </aside>
       </div>
     </div>

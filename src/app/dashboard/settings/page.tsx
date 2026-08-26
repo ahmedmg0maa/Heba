@@ -25,7 +25,7 @@ export default function SettingsPage() {
           <Link href="/dashboard/notifications" className="font-semibold text-burgundy underline-offset-4 hover:underline">
             صفحة الإشعارات
           </Link>
-          . الرسالة الأسبوعية اختيارية ويمكنك إلغاؤها من رابط «إلغاء الاشتراك» في أي رسالة.
+          . لا تُرسل المنصة رسائل بريدية دورية حاليًا؛ ستُعلن أي خدمة مراسلات مستقبلية بوضوح قبل تفعيلها.
         </p>
       </Card>
 

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import { getAdminOrders } from '@/lib/data/admin'
 import { formatPrice } from '@/lib/format'
@@ -53,8 +53,8 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
             className={cn(
               'rounded-full border px-4 py-1.5 text-sm font-semibold transition-colors',
               active === s.key
-                ? 'border-deep-teal bg-deep-teal text-soft-white'
-                : 'border-line bg-soft-white text-text-soft hover:border-deep-teal hover:text-deep-teal',
+                ? 'border-deep-teal bg-deep-teal text-on-dark'
+                : 'border-line bg-surface-raised text-text-soft hover:border-deep-teal hover:text-deep-teal',
             )}
           >
             {s.label}

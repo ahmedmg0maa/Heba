@@ -21,8 +21,11 @@
     "/refund",
     "/disclaimer",
     "/auth/login",
+    "/auth/admin",
     "/auth/register",
     "/auth/reset-password"
+    ,"/preview/[type]/[id]",
+    "/unsubscribe/[token]"
   ],
   "customer": [
     "/dashboard",
@@ -46,9 +49,12 @@
     "/admin/courses/[id]/curriculum",
     "/admin/workshops",
     "/admin/bookings",
+    "/admin/memberships",
     "/admin/orders",
     "/admin/payments",
     "/admin/users",
+    "/admin/users/[id]",
+    "/admin/inbox",
     "/admin/coupons",
     "/admin/offers",
     "/admin/pages",

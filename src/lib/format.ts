@@ -1,6 +1,12 @@
 // Locale/format helpers — safe for both server and client components.
 export function formatPrice(value: number, currency = 'ج.م') {
-  return `${value.toLocaleString('ar-EG')} ${currency}`
+  const label = currency === 'EGP' ? 'ج.م' : currency
+  return `${value.toLocaleString('ar-EG')} ${label}`
+}
+
+export function arabicDigits(value: string) {
+  const digits = '٠١٢٣٤٥٦٧٨٩'
+  return value.replace(/\d/g, (digit) => digits[Number(digit)])
 }
 
 export function formatDuration(minutes: number) {

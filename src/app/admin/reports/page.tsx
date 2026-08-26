@@ -30,7 +30,15 @@ const bookingLabels: Record<string, string> = {
 }
 
 export default async function AdminReportsPage() {
-  const { revenue, enrollments, bookings, snapshots } = await getReports()
+  const { state, revenue, enrollments, bookings, memberships, snapshots } = await getReports()
+
+  if (state !== 'ready') {
+    const unavailable = state === 'unconfigured'
+    return <div className="mx-auto max-w-6xl space-y-8">
+      <header><h1 className="text-3xl font-bold text-deep-teal">التقارير</h1></header>
+      <Card className="max-w-2xl"><CardTitle>{unavailable ? 'مصدر التقارير غير مهيأ' : 'تعذّرت قراءة مصدر التقارير'}</CardTitle><p className="mt-3 leading-loose text-text-soft">لا تُعرض أصفار بديلة لأن ذلك قد يضلل القرار التشغيلي. تحققي من حالة النظام والاتصال والصلاحيات ثم أعيدي المحاولة.</p><a className="mt-4 inline-block text-sm font-bold text-deep-teal underline underline-offset-4" href="/admin/system">فتح حالة النظام</a></Card>
+    </div>
+  }
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
@@ -42,13 +50,29 @@ export default async function AdminReportsPage() {
         <SnapshotButton />
       </header>
 
-      <div className="grid gap-5 sm:grid-cols-3">
+      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="إجمالي الإيرادات (١٢ شهرًا)" value={formatPrice(revenue.total)} accent="teal" />
         <StatCard label="إجمالي الالتحاقات" value={enrollments.total.toLocaleString('ar-EG')} accent="cobalt" />
         <StatCard label="إجمالي الحجوزات" value={bookings.total.toLocaleString('ar-EG')} accent="burgundy" />
+        <StatCard label="الاشتراكات النشطة" value={memberships.active.toLocaleString('ar-EG')} accent="teal" />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-2">
+        <Card>
+          <CardTitle className="mb-4">أداء الباقات</CardTitle>
+          {memberships.byPlan.length === 0 ? (
+            <p className="py-8 text-center text-sm text-taupe">لا باقات أو اشتراكات بعد.</p>
+          ) : (
+            <ul className="space-y-2">
+              {memberships.byPlan.map((plan) => (
+                <li key={plan.title} className="flex items-center justify-between rounded-xl bg-ivory/60 px-4 py-3 text-sm">
+                  <span className="font-semibold text-deep-teal">{plan.title}</span>
+                  <span className="tnum text-text-soft">{plan.active.toLocaleString('ar-EG')} نشط / {plan.total.toLocaleString('ar-EG')} إجمالي</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
         <Card className="p-0">
           <CardTitle className="p-6 pb-4">الإيرادات الشهرية</CardTitle>
           {revenue.byMonth.length === 0 ? (

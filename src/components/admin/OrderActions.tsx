@@ -23,6 +23,7 @@ export function OrderActions({ orderId, status }: { orderId: string; status: str
   return (
     <div className="space-y-1">
       <div className="flex gap-2">
+        {canRefund && <a className="self-center text-xs font-bold text-deep-teal underline underline-offset-4" href="/auth/admin/mfa?reauth=1&redirect=/admin/orders">تأكيد أمني حديث</a>}
         {canCancel && (
           <Button variant="secondary" size="sm" disabled={busy} onClick={() => act('cancelled')}>
             إلغاء

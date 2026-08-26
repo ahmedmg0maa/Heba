@@ -34,7 +34,7 @@ export function Reveal({
   }, [])
 
   return (
-    <div ref={ref} className={cn('reveal', className)} style={delay ? { transitionDelay: `${delay}ms` } : undefined}>
+    <div ref={ref} className={cn('reveal is-visible', className)} style={delay ? { transitionDelay: `${delay}ms` } : undefined}>
       {children}
     </div>
   )

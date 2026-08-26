@@ -1,7 +1,7 @@
-import { cn } from '@/lib/cn'
+﻿import { cn } from '@/lib/cn'
 
 const inputBase =
-  'w-full rounded-xl border border-line bg-soft-white px-4 py-2.5 text-ink transition-colors placeholder:text-taupe/70 focus:border-deep-teal focus:outline-2 focus:outline-offset-0 focus:outline-deep-teal/20 disabled:opacity-50'
+  'w-full rounded-xl border border-line bg-surface-raised px-4 py-2.5 text-ink transition-colors placeholder:text-taupe/70 focus:border-deep-teal focus:outline-2 focus:outline-offset-0 focus:outline-deep-teal/20 disabled:opacity-50'
 
 type BaseProps = {
   label: string

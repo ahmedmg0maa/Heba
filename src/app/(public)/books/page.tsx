@@ -1,14 +1,14 @@
 import type { Metadata } from 'next'
 import { listBooks } from '@/lib/data/catalog'
 import { PageHero } from '@/components/catalog/PageHero'
-import { ProductCard } from '@/components/catalog/ProductCard'
 import { CTARibbon } from '@/components/catalog/CTARibbon'
+import { BookLibrary } from '@/components/catalog/BookLibrary'
 import { Section } from '@/components/ui/Section'
 import { EmptyState } from '@/components/ui/EmptyState'
 
 export const metadata: Metadata = {
   title: 'الكتب الرقمية',
-  description: 'كتب عملية بتمارين ونماذج تدوين، تُحمَّل فورًا وترافقك أينما كنتِ.',
+  description: 'إصدارات رقمية منشورة مع تفاصيل واضحة للوصول والمحتوى.',
 }
 
 export const revalidate = 300
@@ -21,38 +21,19 @@ export default async function BooksPage() {
       <PageHero
         eyebrow="الكتب الرقمية"
         title="كتب تُقرأ بالقلم، لا بالعين فقط"
-        lead="كل كتاب مصمم كرحلة عملية: تأملات قصيرة، تمارين تطبيقية، ومساحات تدوين — يصلك فورًا بصيغة PDF أنيقة."
+        lead="تصفّحي الإصدارات المنشورة واقرئي تفاصيل المحتوى وطريقة الوصول قبل اتخاذ القرار."
       />
 
       <Section eyebrow="المكتبة" title="إصداراتنا">
         {books.length === 0 && (
           <EmptyState
             title="المكتبة قيد التجهيز"
-            description="نراجع الآن أولى إصداراتنا الرقمية. اشتركي في الرسالة الأسبوعية ليصلك خبر صدورها فور جاهزيتها."
-            actionLabel="عودي للرئيسية"
-            actionHref="/"
+            description="لا توجد كتب منشورة حاليًا. ستظهر الإصدارات هنا عند نشرها من إدارة المنصة."
+            actionLabel="ابدئي من هنا"
+            actionHref="/start-here"
           />
         )}
-        <div className="mx-auto grid max-w-4xl gap-8 md:grid-cols-2">
-          {books.map((b) => (
-            <ProductCard
-              key={b.slug}
-              href={`/books/${b.slug}`}
-              title={b.title}
-              subtitle={b.subtitle}
-              description={b.description}
-              price={b.price}
-              compareAtPrice={b.compareAtPrice}
-              coverKind="book"
-              badge={b.compareAtPrice ? { label: 'خصم محدود', tone: 'burgundy' } : undefined}
-              meta={[
-                b.pagesCount ? `${b.pagesCount.toLocaleString('ar-EG')} صفحة` : 'كتاب رقمي',
-                'تحميل فوري',
-                'تحديثات مجانية',
-              ]}
-            />
-          ))}
-        </div>
+        <BookLibrary books={books} />
       </Section>
 
       <CTARibbon

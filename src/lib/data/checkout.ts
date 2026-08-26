@@ -1,11 +1,12 @@
 import { getServerClient } from '@/lib/supabase/server'
+import { hasSupabasePublicConfig } from '@/lib/supabase/public-key'
 import { listBooks, listCourses, listServices, listWorkshops } from './catalog'
 
 export const PRODUCT_TYPES = ['book', 'course', 'workshop', 'session', 'bundle', 'vip', 'free_resource'] as const
 export type ProductType = (typeof PRODUCT_TYPES)[number]
 
 export type CheckoutProduct = {
-  id: string | null // null in fallback (no-env) mode — ordering disabled
+  id: string | null // null without public configuration — ordering is disabled
   type: ProductType
   slug: string
   title: string
@@ -14,6 +15,7 @@ export type CheckoutProduct = {
   compareAtPrice: number | null
   currency: string
   offerLabel: string | null // e.g. "خصم ٣٠٪ — عرض الإطلاق"
+  variants: { id: string; name: string; price: number }[]
 }
 
 export type ActiveOffer = {
@@ -77,18 +79,17 @@ export type PaymentSettings = {
   expiryHours: number
 }
 
-const fallbackSettings: PaymentSettings = {
-  instapay: { handle: 'heba@instapay', name: 'هبة الشريف' },
-  wallet: { number: '01000000000', provider: 'فودافون كاش' },
-  bank: { bank: 'البنك الأهلي المصري', iban: 'EG000000000000000000000000000', name: 'هبة الشريف' },
+const defaultSettings: PaymentSettings = {
+  instapay: null,
+  wallet: null,
+  bank: null,
   expiryHours: 72,
 }
 
-const hasEnv = () =>
-  Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+const hasEnv = hasSupabasePublicConfig
 
 export async function getPaymentSettings(): Promise<PaymentSettings> {
-  if (!hasEnv()) return fallbackSettings
+  if (!hasEnv()) return defaultSettings
   try {
     const supabase = await getServerClient()
     const { data } = await supabase
@@ -102,15 +103,15 @@ export async function getPaymentSettings(): Promise<PaymentSettings> {
       instapay: map.payment_instapay ?? null,
       wallet: map.payment_wallet ?? null,
       bank: map.payment_bank ?? null,
-      expiryHours: map.order_expiry_hours?.hours ?? fallbackSettings.expiryHours,
+      expiryHours: map.order_expiry_hours?.hours ?? defaultSettings.expiryHours,
     }
   } catch {
-    return fallbackSettings
+    return defaultSettings
   }
 }
 
-async function fallbackProduct(type: ProductType, slug: string): Promise<CheckoutProduct | null> {
-  const base = { id: null, type, slug, currency: 'EGP', offerLabel: null }
+async function getCatalogProduct(type: ProductType, slug: string): Promise<CheckoutProduct | null> {
+  const base = { id: null, type, slug, currency: 'EGP', offerLabel: null, variants: [] }
   if (type === 'course') {
     const c = (await listCourses()).find((x) => x.slug === slug)
     return c ? { ...base, title: c.title, subtitle: c.subtitle, price: c.price, compareAtPrice: c.compareAtPrice } : null
@@ -133,17 +134,17 @@ async function fallbackProduct(type: ProductType, slug: string): Promise<Checkou
 export async function getCheckoutProduct(type: string, slug: string): Promise<CheckoutProduct | null> {
   if (!PRODUCT_TYPES.includes(type as ProductType)) return null
   const t = type as ProductType
-  if (!hasEnv()) return fallbackProduct(t, slug)
+  if (!hasEnv()) return getCatalogProduct(t, slug)
   try {
     const supabase = await getServerClient()
     const { data } = await supabase
       .from('products')
-      .select('id, type, slug, title, subtitle, price, compare_at_price, currency')
+      .select('id, type, slug, title, subtitle, price, compare_at_price, currency, product_variants(id, name, price, is_active)')
       .eq('slug', slug)
       .eq('type', t)
       .eq('is_published', true)
       .maybeSingle()
-    // Live database: unknown product → 404 (fallbacks are for no-env demo only).
+    // Unknown products remain absent rather than producing an invented purchasable item.
     if (!data) return null
     const listPrice = Number(data.price)
     const offer = await resolveActiveOffer(data.id, t)
@@ -159,8 +160,9 @@ export async function getCheckoutProduct(type: string, slug: string): Promise<Ch
       compareAtPrice: offer && effective < listPrice ? listPrice : data.compare_at_price ? Number(data.compare_at_price) : null,
       currency: data.currency,
       offerLabel: offer ? (offer.badgeText ? `${offer.badgeText} — ${offer.title}` : offer.title) : null,
+      variants: (data.product_variants ?? []).filter((variant) => variant.is_active).map((variant) => ({ id: variant.id, name: variant.name, price: applyOffer(Number(variant.price), offer) })),
     }
   } catch {
-    return fallbackProduct(t, slug)
+    return getCatalogProduct(t, slug)
   }
 }

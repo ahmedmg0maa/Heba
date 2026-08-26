@@ -1,44 +1,111 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Self-hosted Arabic subsets keep production builds and first paint independent
+   of a third-party font request. See public/fonts/README.md for attribution. */
+@font-face { font-family: 'Amiri Local'; font-style: normal; font-weight: 400; font-display: swap; src: url('/fonts/amiri-arabic-400.woff2') format('woff2'); }
+@font-face { font-family: 'Amiri Local'; font-style: normal; font-weight: 700; font-display: swap; src: url('/fonts/amiri-arabic-700.woff2') format('woff2'); }
+@font-face { font-family: 'IBM Plex Arabic Local'; font-style: normal; font-weight: 300; font-display: swap; src: url('/fonts/ibm-plex-sans-arabic-300.woff2') format('woff2'); }
+@font-face { font-family: 'IBM Plex Arabic Local'; font-style: normal; font-weight: 400; font-display: swap; src: url('/fonts/ibm-plex-sans-arabic-400.woff2') format('woff2'); }
+@font-face { font-family: 'IBM Plex Arabic Local'; font-style: normal; font-weight: 500; font-display: swap; src: url('/fonts/ibm-plex-sans-arabic-500.woff2') format('woff2'); }
+@font-face { font-family: 'IBM Plex Arabic Local'; font-style: normal; font-weight: 600; font-display: swap; src: url('/fonts/ibm-plex-sans-arabic-600.woff2') format('woff2'); }
+@font-face { font-family: 'IBM Plex Arabic Local'; font-style: normal; font-weight: 700; font-display: swap; src: url('/fonts/ibm-plex-sans-arabic-700.woff2') format('woff2'); }
 
 @theme {
   /* Brand palette — mirror of src/styles/tokens.ts */
-  --color-ivory: #F7F2EA;
-  --color-soft-white: #FFFDF8;
-  --color-sand: #D8D0BE;
-  --color-taupe: #9C9484;
-  --color-khaki: #A79C82;
-  --color-deep-teal: #0E3440;
-  --color-teal-hover: #123F4C;
-  --color-burgundy: #7A1F2B;
-  --color-burgundy-soft: #B45A64;
-  --color-cobalt: #2F6FA8;
-  --color-antique-gold: #B59A65;
-  --color-muted-gold: #D5C49E;
+  --color-ivory: #F5F0E7;
+  --color-soft-white: #FAF7F1;
+  --color-surface: #F5F0E7;
+  --color-surface-raised: #FAF7F1;
+  --color-on-dark: #FFFDF8;
+  --color-sand: #D8C3A5;
+  --color-taupe: #8D8173;
+  --color-khaki: #B5A58F;
+  --color-deep-teal: #2F6173;
+  --color-teal-hover: #274F5D;
+  --color-burgundy: #2F6173;
+  --color-burgundy-soft: #5CB7B4;
+  --color-cobalt: #5CB7B4;
+  --color-antique-gold: #D8C3A5;
+  --color-muted-gold: #EADBC2;
   /* «بذرة نقية» logo hues */
-  --color-aqua: #6FC4B4;
-  --color-aqua-deep: #2E8D91;
-  --color-ink: #1F1E1C;
-  --color-text-soft: #6E675D;
-  --color-line: #E6DDCF;
+  --color-aqua: #5CB7B4;
+  --color-aqua-deep: #2F6173;
+  --color-ink: #26383D;
+  --color-text-soft: #6D6A63;
+  --color-line: #EADBC2;
 
   /* Typography */
   --font-heading: var(--font-amiri), serif;
-  --font-decorative: var(--font-aref-ruqaa), serif;
-  --font-body: var(--font-plex-arabic), var(--font-cairo), sans-serif;
+  --font-decorative: var(--font-amiri), serif;
+  --font-body: var(--font-plex-arabic), sans-serif;
 
   /* Elevation */
-  --shadow-card: 0 1px 3px rgb(31 30 28 / 0.06), 0 6px 24px rgb(31 30 28 / 0.05);
-  --shadow-card-hover: 0 2px 6px rgb(31 30 28 / 0.08), 0 12px 36px rgb(31 30 28 / 0.09);
+  --shadow-card: 0 1px 2px rgb(31 30 28 / 0.04), 0 7px 22px rgb(31 30 28 / 0.045);
+  --shadow-card-hover: 0 2px 5px rgb(31 30 28 / 0.06), 0 14px 34px rgb(31 30 28 / 0.075);
   --shadow-sidebar: -4px 0 24px rgb(14 52 64 / 0.12);
 }
 
 :root {
   color-scheme: light;
+  --font-amiri: 'Amiri Local';
+  --font-plex-arabic: 'IBM Plex Arabic Local';
+}
+
+/* True dark palette: surfaces are remapped while brand accents stay recognizable. */
+html.dark {
+  color-scheme: dark;
+  --color-ivory: #071C23;
+  --color-soft-white: #0D2932;
+  --color-surface: #071C23;
+  --color-surface-raised: #0D2932;
+  --color-on-dark: #FFFDF8;
+  --color-sand: #24414A;
+  --color-taupe: #AAA096;
+  --color-khaki: #B8AD98;
+  --color-ink: #F7F2EA;
+  --color-text-soft: #C7BFB4;
+  --color-line: #294650;
+  --shadow-card: 0 1px 3px rgb(0 0 0 / 0.22), 0 8px 28px rgb(0 0 0 / 0.18);
+  --shadow-card-hover: 0 2px 6px rgb(0 0 0 / 0.28), 0 14px 40px rgb(0 0 0 / 0.24);
+}
+
+html.dark .text-deep-teal {
+  color: #8BD3C8;
+}
+
+html.dark .hover\:text-deep-teal:hover {
+  color: #A9E4DB;
+}
+
+html.dark img {
+  filter: brightness(.92) saturate(.92);
+}
+
+html.dark input,
+html.dark textarea,
+html.dark select {
+  color-scheme: dark;
 }
 
 html {
   scroll-behavior: smooth;
   -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+.heritage-paper {
+  background-image:
+    radial-gradient(circle at 12% 18%, color-mix(in srgb, var(--color-antique-gold) 5%, transparent) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 72% 64%, color-mix(in srgb, var(--color-antique-gold) 4%, transparent) 0 1px, transparent 1.5px);
+  background-size: 34px 34px, 42px 42px;
+}
+
+.dashboard-canvas {
+  background-image:
+    linear-gradient(to bottom, color-mix(in srgb, var(--color-surface-raised) 72%, transparent), transparent 180px),
+    radial-gradient(circle at 14% 8%, color-mix(in srgb, var(--color-antique-gold) 8%, transparent), transparent 26%);
 }
 
 /* Notch/home-indicator safe areas (viewport-fit=cover) */
@@ -80,15 +147,15 @@ html {
 
 /* Hero entrance */
 @keyframes fade-up {
-  from { opacity: 0; transform: translateY(28px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { transform: translateY(16px); }
+  to { transform: translateY(0); }
 }
 .animate-fade-up {
-  animation: fade-up 0.8s ease-out both;
+  animation: fade-up 0.4s ease-out both;
 }
-.delay-1 { animation-delay: 0.12s; }
-.delay-2 { animation-delay: 0.24s; }
-.delay-3 { animation-delay: 0.36s; }
+.delay-1 { animation-delay: 0.05s; }
+.delay-2 { animation-delay: 0.1s; }
+.delay-3 { animation-delay: 0.15s; }
 
 /* Gentle float for ornaments/portrait */
 @keyframes float-soft {
@@ -154,9 +221,18 @@ html {
 
 body {
   background-color: var(--color-ivory);
+  background-image:
+    radial-gradient(circle at 8% 7%, color-mix(in srgb, var(--color-antique-gold) 9%, transparent), transparent 26rem),
+    radial-gradient(circle at 92% 22%, color-mix(in srgb, var(--color-aqua) 5%, transparent), transparent 30rem);
+  background-attachment: fixed;
   color: var(--color-ink);
   font-family: var(--font-body);
   text-rendering: optimizeLegibility;
+}
+
+/* Fixed backgrounds are expensive and can jitter behind the iOS/Android browser chrome. */
+@media (max-width: 767px) {
+  body { background-attachment: scroll; }
 }
 
 h1, h2, h3, h4, h5, h6 {

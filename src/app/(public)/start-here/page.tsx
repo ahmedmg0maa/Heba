@@ -4,6 +4,7 @@ import { PageHero } from '@/components/catalog/PageHero'
 import { Section } from '@/components/ui/Section'
 import { Card } from '@/components/ui/Card'
 import { CTARibbon } from '@/components/catalog/CTARibbon'
+import { StartHereQuiz } from '@/components/catalog/StartHereQuiz'
 
 export const metadata: Metadata = {
   title: 'ابدئي من هنا',
@@ -13,25 +14,25 @@ export const metadata: Metadata = {
 const paths = [
   {
     title: 'أشعر بالاستنزاف ولا أعرف من أين أبدأ',
-    text: 'ابدئي برحلة العناية الواعية بالذات — البرنامج التأسيسي الذي يعيد ترتيب علاقتك بنفسك.',
-    href: '/courses/conscious-selfcare',
-    cta: 'اذهبي للدورة',
+    text: 'استعرضي الدورات المنشورة واقرئي وصف كل مسار قبل اختيار ما يناسبك.',
+    href: '/courses',
+    cta: 'استكشفي الدورات',
   },
   {
     title: 'أعاني من قول «لا» ومن حدود مهزوزة',
-    text: 'دورة فن الحدود الهادئة مصممة خصيصًا لهذا — قوالب حوار جاهزة وتمارين واقعية.',
-    href: '/courses/calm-boundaries',
-    cta: 'اذهبي للدورة',
+    text: 'تصفحي المقالات والدورات المنشورة؛ التفاصيل الفعلية فقط هي ما يظهر قبل الاختيار.',
+    href: '/articles',
+    cta: 'اقرئي المقالات',
   },
   {
     title: 'أفضّل البدء بشيء صغير وخفيف',
-    text: 'كتاب صباح الوعي: ٩٠ تأملًا صباحيًا قصيرًا — ٥ دقائق يوميًا تكفي.',
-    href: '/books/sabah-alwaey',
-    cta: 'اذهبي للكتاب',
+    text: 'تظهر الكتب المنشورة هنا مع وصفها وتفاصيل الوصول الخاصة بكل كتاب.',
+    href: '/books',
+    cta: 'تصفحي الكتب',
   },
   {
     title: 'أحتاج من يسمعني ويساعدني أرتب أفكاري',
-    text: 'جلسة الوضوح الفردية: ٦٠ دقيقة لك وحدك، تخرجين منها بخطة واضحة.',
+    text: 'تظهر خدمات الجلسات ومواعيدها فقط عند نشرها وتفعيل التوافر من الإدارة.',
     href: '/booking',
     cta: 'احجزي جلستك',
   },
@@ -43,8 +44,12 @@ export default function StartHerePage() {
       <PageHero
         eyebrow="ابدئي من هنا"
         title="أين أنتِ الآن؟"
-        lead="اختاري الجملة الأقرب لحالك اليوم، وسنرشدك لنقطة البداية الأنسب."
+        lead="اختاري الجملة الأقرب لحالك اليوم لتحصلي على ترشيح إرشادي لمسار عام، وليس توصية شخصية أو علاجية."
       />
+
+      <section className="bg-ivory px-6 pt-14">
+        <StartHereQuiz />
+      </section>
 
       <Section>
         <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-2">
@@ -65,7 +70,7 @@ export default function StartHerePage() {
 
       <CTARibbon
         title="ما زلتِ محتارة؟"
-        lead="راسلينا وسنقترح عليك نقطة البداية الأنسب — بلا أي التزام."
+        lead="استخدمي نموذج التواصل عند تهيئته إذا احتجتِ إلى سؤال عن خدمة منشورة."
         ctaLabel="تواصلي معنا"
         ctaHref="/contact"
       />

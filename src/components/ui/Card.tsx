@@ -1,4 +1,4 @@
-import { cn } from '@/lib/cn'
+﻿import { cn } from '@/lib/cn'
 
 type CardProps = {
   className?: string
@@ -11,8 +11,8 @@ export function Card({ className, hover = false, as: Tag = 'div', children }: Ca
   return (
     <Tag
       className={cn(
-        'rounded-2xl border border-line bg-soft-white p-6 shadow-card',
-        hover && 'transition-all duration-300 hover:-translate-y-1 hover:border-antique-gold/50 hover:shadow-card-hover',
+        'rounded-xl border border-line bg-surface-raised/92 p-6 shadow-card backdrop-blur-[2px]',
+        hover && 'transition-all duration-300 hover:-translate-y-0.5 hover:border-antique-gold/70 hover:shadow-card-hover',
         className,
       )}
     >

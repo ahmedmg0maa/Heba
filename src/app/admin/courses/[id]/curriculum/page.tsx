@@ -2,17 +2,19 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getServerClient } from '@/lib/supabase/server'
+import { hasSupabasePublicConfig } from '@/lib/supabase/public-key'
 import { Card, CardTitle } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { ModuleForm, LessonForm } from '@/components/admin/CurriculumForms'
+import { ProtectedDeliveryUpload } from '@/components/admin/ProtectedDeliveryUpload'
+import { LessonEditor, ModuleEditor } from '@/components/admin/CurriculumItemEditors'
 
 export const metadata: Metadata = { title: 'منشئ المنهج — الإدارة' }
 
 type Props = { params: Promise<{ id: string }> }
 
-const hasEnv = () =>
-  Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+const hasEnv = hasSupabasePublicConfig
 
 export default async function CurriculumBuilderPage({ params }: Props) {
   const { id } = await params
@@ -61,12 +63,14 @@ export default async function CurriculumBuilderPage({ params }: Props) {
           {modules.map((m) => (
             <Card key={m.id} className="space-y-4">
               <CardTitle>{m.title}</CardTitle>
+              <ModuleEditor id={m.id} courseId={course.id} title={m.title} sort={m.sort}/>
               {(m.course_lessons ?? []).length > 0 && (
                 <ul className="divide-y divide-line/70 rounded-xl border border-line">
                   {m.course_lessons
                     .sort((a, b) => a.sort - b.sort)
                     .map((l) => (
-                      <li key={l.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
+                      <li key={l.id} className="space-y-3 px-4 py-3 text-sm">
+                        <div className="flex items-center justify-between gap-3">
                         <span className="flex items-center gap-2 text-ink">
                           {l.title}
                           {l.is_preview && <Badge tone="cobalt">معاينة</Badge>}
@@ -75,6 +79,9 @@ export default async function CurriculumBuilderPage({ params }: Props) {
                         <span className="tnum text-taupe">
                           {Math.round(l.duration_seconds / 60).toLocaleString('ar-EG')} د
                         </span>
+                        </div>
+                        <div className="grid gap-2 md:grid-cols-2"><ProtectedDeliveryUpload kind="lesson-video" entityId={l.id} label="رفع فيديو الدرس" /><ProtectedDeliveryUpload kind="lesson-resource" entityId={l.id} label="إضافة مورد للدرس" /></div>
+                        <LessonEditor id={l.id} courseId={course.id} title={l.title} minutes={Math.round(l.duration_seconds/60)} sort={l.sort} preview={l.is_preview}/>
                       </li>
                     ))}
                 </ul>
