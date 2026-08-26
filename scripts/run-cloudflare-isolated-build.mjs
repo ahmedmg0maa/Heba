@@ -8,6 +8,12 @@ const root = process.cwd()
 const tempRoot = mkdtempSync(join(tmpdir(), 'heba-cloudflare-isolated-build-'))
 const buildRoot = join(tempRoot, 'app')
 const outputRoot = join(root, 'dist')
+const buildEnvArgument = process.argv.find((argument) => argument.startsWith('--env='))
+const cloudflareBuildEnvironment = buildEnvArgument?.slice('--env='.length) ?? ''
+
+if (cloudflareBuildEnvironment && cloudflareBuildEnvironment !== 'staging') {
+  throw new Error('Only the isolated staging Worker build is supported by this script.')
+}
 const excludedRoots = new Set([
   '.git', '.next', 'dist', '.vinext', '.wrangler', '.launch-backups', '.launch-tools', '.namecheap-standalone',
   'node_modules', '.pnpm-store', 'release', 'coverage', 'playwright-report', 'test-results', 'reports', 'exports',
@@ -42,7 +48,10 @@ if (!pnpmCli) throw new Error('pnpm CLI path is unavailable')
 function runPnpm(args) {
   const result = spawnSync(process.execPath, [pnpmCli, ...args], {
     cwd: buildRoot,
-    env: { ...process.env, ...blocked },
+    // The Cloudflare Vite plugin consumes this value while producing its
+    // generated Wrangler config. It is intentionally an explicit argument,
+    // never an ambient environment value or a value from an .env file.
+    env: { ...process.env, ...blocked, CLOUDFLARE_ENV: cloudflareBuildEnvironment },
     stdio: 'inherit',
   })
   if (result.error) throw result.error

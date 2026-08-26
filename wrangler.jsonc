@@ -13,5 +13,13 @@
   },
   "cache": {
     "enabled": true
+  },
+  "env": {
+    "staging": {
+      "name": "heba-elsherif-platform-staging",
+      "vars": {
+        "HEBA_DEPLOYMENT_ENV": "staging"
+      }
+    }
   }
 }

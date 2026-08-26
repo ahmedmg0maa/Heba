@@ -11,13 +11,14 @@
     "build": "next build",
     "build:isolated": "node scripts/run-isolated-build.mjs",
     "build:cloudflare:isolated": "node scripts/run-cloudflare-isolated-build.mjs",
+    "build:cloudflare:staging:isolated": "node scripts/run-cloudflare-isolated-build.mjs --env=staging",
     "start": "next start",
     "lint": "eslint",
     "type-check": "node scripts/run-isolated-typecheck.mjs",
     "test:e2e": "playwright test",
     "test:e2e:desktop": "playwright test --project=desktop-chromium",
     "test:e2e:public": "playwright test tests/e2e/public.spec.ts --project=desktop-chromium --project=mobile-chromium",
-    "test:e2e:cloudflare": "playwright test tests/e2e/public.spec.ts --config playwright.cloudflare.config.ts",
+    "test:e2e:cloudflare": "pnpm build:cloudflare:isolated && playwright test tests/e2e/public.spec.ts --config playwright.cloudflare.config.ts",
     "verify:booking": "node --env-file=.env scripts/verify-booking-rpc.mjs",
     "verify:booking-local": "node scripts/verify-booking-local.mjs",
     "verify:booking-permissions-local": "node scripts/verify-booking-permissions-local.mjs",
@@ -55,7 +56,8 @@
     "dev:vinext": "vinext dev --port 3001",
     "build:vinext": "vinext build",
     "start:vinext": "wrangler dev --config dist/server/wrangler.json",
-    "deploy:vinext": "vinext-cloudflare deploy --config dist/server/wrangler.json"
+    "deploy:vinext": "vinext-cloudflare deploy --config dist/server/wrangler.json",
+    "deploy:cloudflare:staging": "pnpm build:cloudflare:staging:isolated && wrangler deploy --config dist/server/wrangler.json --keep-vars"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",
