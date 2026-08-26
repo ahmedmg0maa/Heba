@@ -1,0 +1,9 @@
+DO NOT ZIP OR DELIVER THE WORKSPACE DIRECTORY.
+
+It can contain local environment variables, build caches, test artifacts, and
+linked Supabase CLI metadata. Create the reviewed source archive only with:
+
+  pnpm deliver
+
+The deliver command runs the security/release gates and writes the safe archive
+to release/hebaelsherif-source.tgz.
