@@ -353,25 +353,21 @@ export async function saveOperationalSettings(form: FormData): Promise<AdminActi
   const bankName = text(form, 'bank_name')
   const bankIban = text(form, 'bank_iban').replace(/\s+/g, '').toUpperCase()
   const bankOwner = text(form, 'bank_owner')
+  const emailEnabled = form.get('email_enabled') === 'on'
   if (instapayHandle && (instapayHandle.length < 3 || !instapayName)) return { ok: false, error: 'أكملي عنوان InstaPay واسم صاحبة الحساب.' }
   if (walletNumber && (!/^\+?[0-9]{8,18}$/.test(walletNumber.replace(/[\s-]/g, '')) || !walletProvider)) return { ok: false, error: 'راجعي رقم المحفظة واسم مقدم الخدمة.' }
   if (bankIban && (!/^[A-Z]{2}[A-Z0-9]{13,32}$/.test(bankIban) || !bankName || !bankOwner)) return { ok: false, error: 'راجعي اسم البنك وIBAN واسم صاحبة الحساب.' }
-  const rows: { key: string; value: Record<string, unknown> | null; is_public: boolean; updated_by: string }[] = [
-    { key: 'order_expiry_hours', value: { hours: expiryHours }, is_public: true, updated_by: admin.id },
-    { key: 'booking_policy', value: bookingPolicy, is_public: true, updated_by: admin.id },
-    { key: 'payment_instapay', value: instapayHandle ? { handle: instapayHandle, name: instapayName } : null, is_public: true, updated_by: admin.id },
-    { key: 'payment_wallet', value: walletNumber ? { number: walletNumber, provider: walletProvider } : null, is_public: true, updated_by: admin.id },
-    { key: 'payment_bank', value: bankIban ? { bank: bankName, iban: bankIban, name: bankOwner } : null, is_public: true, updated_by: admin.id },
-  ]
-  const service = getServiceClient()
-  for (const row of rows) {
-    if (row.value === null) await service.from('site_settings').delete().eq('key', row.key)
-    else {
-      const { error } = await service.from('site_settings').upsert({ ...row, value: row.value }, { onConflict: 'key' })
-      if (error) return { ok: false, error: message(error) }
-    }
-  }
-  await audit(admin.id, 'settings.operational_updated', 'site_settings', 'payments', { methods: { instapay: Boolean(instapayHandle), wallet: Boolean(walletNumber), bank: Boolean(bankIban) }, expiryHours })
+  if (emailEnabled && (!process.env.RESEND_API_KEY?.trim() || !process.env.RESEND_FROM_EMAIL?.trim())) return { ok: false, error: 'أكملي اسمي إعدادات Resend في بيئة الاستضافة قبل تفعيل الإرسال.' }
+  const { error } = await getServiceClient().rpc('save_operational_settings', {
+    p_actor_id: admin.id,
+    p_expiry_hours: expiryHours,
+    p_booking_policy: bookingPolicy,
+    p_instapay: instapayHandle ? { handle: instapayHandle, name: instapayName } : null,
+    p_wallet: walletNumber ? { number: walletNumber, provider: walletProvider } : null,
+    p_bank: bankIban ? { bank: bankName, iban: bankIban, name: bankOwner } : null,
+    p_email_enabled: emailEnabled,
+  })
+  if (error) return { ok: false, error: error.code === 'PGRST202' ? 'يلزم تطبيق تحديث إعدادات التشغيل على Staging أولًا.' : message(error) }
   revalidatePath('/admin/settings'); revalidatePath('/checkout'); revalidatePath('/booking'); return { ok: true }
 }
 

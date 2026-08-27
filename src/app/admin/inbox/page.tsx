@@ -3,7 +3,7 @@ import { adminList } from '@/lib/data/cms'
 import { CONTACT_PURPOSE_LABELS, type ContactPurpose } from '@/lib/contact/intake'
 import { Card, CardTitle } from '@/components/ui/Card'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { MessageWorkspace, SubscriberControls } from '@/components/admin/InboxControls'
+import { MessageWorkspace, OutboxRetryControl, SubscriberControls } from '@/components/admin/InboxControls'
 
 export const metadata: Metadata = { title: 'الرسائل والقائمة البريدية — الإدارة' }
 
@@ -38,9 +38,9 @@ export default async function AdminInboxPage() {
     ),
     adminList<Subscriber>('newsletter_subscribers', 'id,email,status,consent_at,consent_version,source,created_at', { orderBy: 'created_at', limit: 500 }),
     adminList<{ user_id: string; role: string }>('admin_roles', 'user_id,role', { limit: 100 }),
-    adminList<{ id: string; to_email: string; subject: string; status: string; created_at: string; last_error: string | null }>(
+    adminList<{ id: string; to_email: string; subject: string; status: string; created_at: string; last_error: string | null; attempts: number; next_attempt_at: string | null }>(
       'email_outbox',
-      'id,to_email,subject,status,created_at,last_error',
+      'id,to_email,subject,status,created_at,last_error,attempts,next_attempt_at',
       { orderBy: 'created_at', limit: 100 },
     ),
   ])
@@ -110,13 +110,15 @@ export default async function AdminInboxPage() {
         </Card>
         <Card>
           <CardTitle>صندوق البريد الصادر</CardTitle>
-          <p className="mt-1 text-xs text-text-soft">الحالة disabled تعني أن الرسالة محفوظة ولم تغادر المنصة لأن المزود غير مهيأ.</p>
+          <p className="mt-1 text-xs leading-relaxed text-text-soft">الحالة disabled تعني أن الرسالة محفوظة ولم تغادر المنصة. الإرسال يستخدم claim ذريًا ومفتاح idempotency ثابتًا لكل رسالة، ولا يعرض خطأ المزود الخام.</p>
           <div className="mt-4 space-y-3">
             {outbox.map((row) => (
               <div key={row.id} className="rounded-lg bg-ivory/50 p-3 text-sm">
                 <div className="flex justify-between gap-3"><b>{row.subject}</b><span>{row.status}</span></div>
                 <p dir="ltr" className="text-xs text-taupe">{row.to_email}</p>
-                {row.last_error && <p className="text-xs text-burgundy">{row.last_error}</p>}
+                <p className="text-xs text-taupe">المحاولات: {row.attempts.toLocaleString('ar-EG')}{row.next_attempt_at ? ` · التالية ${date.format(new Date(row.next_attempt_at))}` : ''}</p>
+                {row.last_error && <p className="text-xs text-burgundy">رمز آمن: {row.last_error}</p>}
+                <OutboxRetryControl id={row.id} status={row.status}/>
               </div>
             ))}
           </div>

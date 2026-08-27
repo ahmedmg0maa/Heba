@@ -190,7 +190,7 @@ export async function getContentReadiness(): Promise<ContentReadinessItem[]> {
       { id: 'payments', title: 'وسيلة دفع مفعّلة', detail: 'تُفحص بعد ربط مشروع الإنتاج الصحيح؛ الشراء والحجز محجوبان بلا وسيلة دفع.', status: 'unconfigured', href: '/admin/settings' },
       { id: 'articles', title: 'مقال منشور', detail: 'تُفحص بعد ربط مشروع الإنتاج الصحيح.', status: 'unconfigured', href: '/admin/articles' },
       { id: 'legal', title: 'سياسات قانونية معتمدة', detail: 'تتطلب اعتماد المالكة ومراجعة قانونية؛ النصوص الحالية مسودات غير منشورة.', status: 'blocked', href: '/admin/pages' },
-      { id: 'database-change', title: 'ترحيلات التشغيل والحوكمة', detail: '044–056 مصدرية محلية فقط ولم تُقبل على Staging؛ 043 وحدها هي آخر حالة Production موثقة.', status: 'blocked', href: '/admin/system' },
+      { id: 'database-change', title: 'ترحيلات التشغيل والحوكمة', detail: '044–057 مصدرية محلية فقط ولم تُقبل على Staging؛ 043 وحدها هي آخر حالة Production موثقة.', status: 'blocked', href: '/admin/system' },
       { id: 'recovery', title: 'نسخة احتياطية وخطة رجوع مجرّبة', detail: 'لا توجد نقطة استعادة موثقة ولا تجربة رجوع على staging.', status: 'blocked', href: '/admin/system' },
       { id: 'auth-redirects', title: 'روابط Auth والنطاق القانوني', detail: 'يلزم اعتماد النطاق الأساسي ثم التحقق من Site URL وقائمة redirect URLs في Supabase وبيئة الاستضافة.', status: 'blocked', href: '/admin/settings' },
     ]
@@ -234,7 +234,7 @@ export async function getContentReadiness(): Promise<ContentReadinessItem[]> {
         : approvedLegal.count === 5
           ? { id: 'legal', title: 'سياسات قانونية معتمدة', detail: 'الخصوصية والشروط والاسترداد وإخلاء المسؤولية وسياسة الجلسة منشورة بإصدار وتاريخ سريان معتمدين.', status: 'ready', href: '/admin/pages' }
           : { id: 'legal', title: 'سياسات قانونية معتمدة', detail: `${(approvedLegal.count ?? 0).toLocaleString('ar-EG')} من ٥ سياسات فقط مستوفية للاعتماد والإصدار وتاريخ السريان.`, status: 'blocked', href: '/admin/pages' },
-      { id: 'database-change', title: 'ترحيلات التشغيل والحوكمة', detail: '044–056 محلية فقط؛ يلزم Recovery ثم تطبيقها بالترتيب على Staging قبل أي إطلاق.', status: 'blocked', href: '/admin/system' },
+      { id: 'database-change', title: 'ترحيلات التشغيل والحوكمة', detail: '044–057 محلية فقط؛ يلزم Recovery ثم تطبيقها بالترتيب على Staging قبل أي إطلاق.', status: 'blocked', href: '/admin/system' },
       { id: 'recovery', title: 'نسخة احتياطية وخطة رجوع مجرّبة', detail: 'يلزم إثبات نقطة استعادة حديثة وتجربة rollback على staging قبل الترحيلات.', status: 'blocked', href: '/admin/system' },
       { id: 'auth-redirects', title: 'روابط Auth والنطاق القانوني', detail: 'لم يتم التحقق من Site URL وredirect allow-list؛ اعتماد النطاق والتحقق الخارجي مانع إطلاق.', status: 'blocked', href: '/admin/settings' },
     ]

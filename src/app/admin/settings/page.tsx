@@ -28,7 +28,7 @@ export default async function AdminSettingsPage() {
   const ownerProfile:OwnerProfile=ownerRow?.value&&typeof ownerRow.value==='object'?{...defaultOwnerProfile,...ownerRow.value as Partial<OwnerProfile>}:defaultOwnerProfile
   const startHereRow = settings.find((setting) => setting.key === 'start_here_experience')
   const startHereContent = startHereRow ? normalizeStartHereContent(startHereRow.value) : defaultStartHereContent
-  const valueOf = (key: string) => settings.find((setting) => setting.key === key)?.value as Record<string, string | number> | undefined
+  const valueOf = (key: string) => settings.find((setting) => setting.key === key)?.value as Record<string, unknown> | undefined
   const operational: OperationalSettings = {
     expiryHours: Number(valueOf('order_expiry_hours')?.hours ?? 72),
     booking: {
@@ -43,8 +43,9 @@ export default async function AdminSettingsPage() {
     instapay: valueOf('payment_instapay') ? { handle: String(valueOf('payment_instapay')?.handle ?? ''), name: String(valueOf('payment_instapay')?.name ?? '') } : null,
     wallet: valueOf('payment_wallet') ? { number: String(valueOf('payment_wallet')?.number ?? ''), provider: String(valueOf('payment_wallet')?.provider ?? '') } : null,
     bank: valueOf('payment_bank') ? { bank: String(valueOf('payment_bank')?.bank ?? ''), iban: String(valueOf('payment_bank')?.iban ?? ''), name: String(valueOf('payment_bank')?.name ?? '') } : null,
+    emailEnabled: valueOf('email_delivery')?.enabled === true && valueOf('email_delivery')?.provider === 'resend',
   }
-  const typedKeys = new Set(['home_copy','owner_profile','start_here_experience', 'order_expiry_hours', 'booking_policy', 'payment_instapay', 'payment_wallet', 'payment_bank'])
+  const typedKeys = new Set(['home_copy','owner_profile','start_here_experience', 'order_expiry_hours', 'booking_policy', 'payment_instapay', 'payment_wallet', 'payment_bank', 'email_delivery'])
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">

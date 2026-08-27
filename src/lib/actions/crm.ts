@@ -4,8 +4,9 @@ import { createHash, randomUUID } from 'node:crypto'
 import { revalidatePath } from 'next/cache'
 import { requirePermission } from '@/lib/auth/permissions'
 import { getServiceClient } from '@/lib/supabase/server'
+import { deliverResendOutbox } from '@/lib/email/resend'
 
-type Result = { ok: true } | { ok: false; error: string }
+type Result = { ok: true; notice?: string } | { ok: false; error: string }
 
 export async function addCustomerNote(userId: string, note: string): Promise<Result> {
   const admin = await requirePermission('users.manage')
@@ -46,7 +47,7 @@ export async function manageInboxMessage(
   const reply = input.reply?.trim() ?? ''
   if (note.length > 2000 || reply.length > 10000) return { ok: false, error: 'النص أطول من الحد المسموح.' }
 
-  const { error } = await getServiceClient().rpc('manage_contact_message', {
+  const { data, error } = await getServiceClient().rpc('manage_contact_message', {
     p_message_id: messageId,
     p_actor_id: admin.userId,
     p_status: input.status,
@@ -57,8 +58,25 @@ export async function manageInboxMessage(
     p_reply: reply || null,
   })
   if (error) return { ok: false, error: 'تعذّر حفظ متابعة الرسالة.' }
+  const delivery = data && typeof data === 'object' && !Array.isArray(data) ? data as { replyDelivery?: unknown; outboxId?: unknown } : null
+  let notice: string | undefined
+  if (reply && delivery?.replyDelivery === 'queued' && typeof delivery.outboxId === 'string') {
+    const sent = await deliverResendOutbox(delivery.outboxId, admin.userId)
+    notice = sent.ok ? 'حُفظت المتابعة وأُرسل الرد.' : sent.status === 'not-due' ? 'حُفظت المتابعة؛ الإرسال قيد التنفيذ أو لم يحن موعد محاولته.' : sent.status === 'disabled' ? 'حُفظت المتابعة؛ البريد غير مهيأ ولم يُرسل الرد.' : 'حُفظت المتابعة، لكن تعذّر الإرسال وسُجلت حالة آمنة لإعادة المحاولة.'
+  } else if (reply && delivery?.replyDelivery === 'disabled') notice = 'حُفظت المتابعة، وبقي الرد معطلًا لأن إرسال البريد غير مفعّل.'
   revalidatePath('/admin/inbox')
-  return { ok: true }
+  return { ok: true, notice }
+}
+
+export async function retryOutboxEmail(outboxId: string): Promise<Result> {
+  const admin = await requirePermission('inbox.manage')
+  if (!admin?.userId || !/^[0-9a-f-]{36}$/i.test(outboxId)) return { ok: false, error: 'تعذّر بدء محاولة الإرسال.' }
+  const delivery = await deliverResendOutbox(outboxId, admin.userId)
+  revalidatePath('/admin/inbox')
+  if (delivery.ok) return { ok: true, notice: 'أُرسلت الرسالة.' }
+  if (delivery.status === 'disabled') return { ok: false, error: 'إرسال البريد غير مفعّل أو غير مكتمل التهيئة.' }
+  if (delivery.status === 'not-due') return { ok: false, error: 'المحاولة قيد التنفيذ أو لم يحن موعد إعادة المحاولة.' }
+  return { ok: false, error: 'تعذّر الإرسال؛ حُفظت الحالة الآمنة للمراجعة.' }
 }
 
 export async function createUnsubscribeLink(subscriberId: string): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
