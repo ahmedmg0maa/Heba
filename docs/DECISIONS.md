@@ -411,3 +411,27 @@
 - **Logical recovery is a hard gate.** An absent executor-only Production connection prevents the runner from creating a backup, target or artifact. This is a correct `RESTORE DRILL BLOCKED` result, not a permission to approximate a backup from source migrations.
 - **Restore targets and artifacts are temporary.** The runner derives organization/region from the authoritative healthy Production project, creates a distinct Nano target, and deletes the target plus its custom dump/globals artifacts after the drill. It never uses the persistent Staging project as a restore target.
 - **Baseline is not parity evidence by itself.** Applying 000–043 to a blank project must follow a successful drill and be compared read-only to the Production-043 metadata before 044–047, Auth identities, or application writes are allowed.
+
+## 2026-08-27 — Code X source, comparison, and governed-home decisions
+
+- **The missing archive name is resolved by evidence, not assumption.** `hebaelsherif.zip` is the accepted renamed primary because all 413 tracked source files match the pre-owner-commit baseline byte-for-byte. Its environment, Supabase temp, build, test, and log entries remain excluded and are not extracted into the working tree.
+- **Comparison code is not merged wholesale.** The two comparison archives use older or incompatible database/hosting abstractions. Only the needs for a report export and a governed session policy were accepted, and both were reimplemented against the current RBAC, audit, CMS, and Cloudflare/Supabase architecture.
+- **Administrative report exports are privileged mutations.** Export is POST-only, same-origin, fresh-AAL2 protected, dataset-permission scoped, date/row bounded, formula-neutralized, privately cached, and audited before bytes are returned. Audit failure denies the export.
+- **Homepage composition uses a fixed section registry.** Admin can manage structured safe fields, visibility, order, preview, and publication without raw HTML/component injection. Required hero/pathways/final-CTA sections fail publication closed; unknown legacy sections are preserved rather than reinterpreted or deleted.
+- **A session policy is not published law by default.** The fallback is explicitly nonbinding and non-indexable; it can become public only through the same owner-approved governed-content state as the other legal pages.
+
+## 2026-08-27 — Guided discovery and catalog publication
+
+- **Search is a published-consumer aggregation, not a privileged index.** The public search reads the same published-only catalog/article functions, normalizes common Arabic variants, requires meaningful terms, bounds results, and is `noindex`. It never uses Admin/service-role search or indexes customer/private delivery data.
+- **Journey analytics remain absent until consent is approved.** The governed start journey stores no intimate free text and emits no tracking event. Its interim typed `site_settings` record is revisioned and audited; formal 049 version/event tables remain behind the migration-order gate.
+- **Catalog publication is fail-closed.** A publish request validates complete public facts, linked domain/product state, actual learning/delivery/availability data, and 046 rights evidence. A missing 046 contract blocks publication rather than treating an unverified URL as licensed media.
+- **Domain and financial publication states are one operation.** Course/book/workshop/service visibility cannot intentionally diverge from its linked product; linked update failure restores the previous state. Public queries independently require both states as defense in depth.
+- **Unavailable inventory never reaches checkout.** Ended/full/zero-capacity workshops and services without availability are denied even when a stale published product row exists.
+
+## 2026-08-27 — Admin recovery and operational usability
+
+- **Revision restore never republishes content.** Restoring a page or article creates a checkpoint of the current row, applies only allowlisted fields, returns the entity to draft, and requires a later explicit publish. A restored page section is hidden. Fresh AAL2 and a fail-closed audit-with-rollback boundary protect the mutation; raw revision snapshots are not rendered in the Admin list.
+- **Saved operational filters are device-local and PII-minimized.** The booking agenda may store only period and status in versioned local storage. Customer search text, names, email and notes are deliberately omitted, the view is never shareable through a URL, and the UI says it is local to that browser.
+- **Publication guidance does not weaken server authority.** Catalog editors show the owner the applicable facts/rights/content/availability checklist, while every actual publish attempt re-runs the database-backed readiness contract server-side and fails closed when 046 rights evidence or domain requirements are absent.
+- **Hydration readiness is explicit in cross-runtime keyboard tests.** The start journey exposes a DOM marker set only after its client effect. Worker E2E waits for that marker before keyboard interaction, avoiding a vinext hydration race without retries, sleeps or weakened accessibility assertions.
+- **Local Worker parity is not remote Staging acceptance.** A credential-empty vinext build and 52/52 local Worker tests prove runtime compatibility only. The current worktree must still be deployed to the separate protected Worker and exercised against the accepted separate Supabase Staging project before it earns live points.

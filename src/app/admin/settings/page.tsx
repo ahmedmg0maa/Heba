@@ -7,6 +7,8 @@ import { HomeCopyEditor } from '@/components/admin/HomeCopyEditor'
 import { defaultHomeCopy, defaultOwnerProfile, type HomeCopy, type OwnerProfile } from '@/lib/data/cms'
 import { OwnerProfileEditor } from '@/components/admin/OwnerProfileEditor'
 import { OperationalSettingsForm, type OperationalSettings } from '@/components/admin/OperationalSettingsForm'
+import { StartHereExperienceEditor } from '@/components/admin/StartHereExperienceEditor'
+import { defaultStartHereContent, normalizeStartHereContent } from '@/lib/start-here/content'
 
 export const metadata: Metadata = { title: 'الإعدادات — الإدارة' }
 
@@ -24,6 +26,8 @@ export default async function AdminSettingsPage() {
     : defaultHomeCopy
   const ownerRow=settings.find(setting=>setting.key==='owner_profile')
   const ownerProfile:OwnerProfile=ownerRow?.value&&typeof ownerRow.value==='object'?{...defaultOwnerProfile,...ownerRow.value as Partial<OwnerProfile>}:defaultOwnerProfile
+  const startHereRow = settings.find((setting) => setting.key === 'start_here_experience')
+  const startHereContent = startHereRow ? normalizeStartHereContent(startHereRow.value) : defaultStartHereContent
   const valueOf = (key: string) => settings.find((setting) => setting.key === key)?.value as Record<string, string | number> | undefined
   const operational: OperationalSettings = {
     expiryHours: Number(valueOf('order_expiry_hours')?.hours ?? 72),
@@ -40,7 +44,7 @@ export default async function AdminSettingsPage() {
     wallet: valueOf('payment_wallet') ? { number: String(valueOf('payment_wallet')?.number ?? ''), provider: String(valueOf('payment_wallet')?.provider ?? '') } : null,
     bank: valueOf('payment_bank') ? { bank: String(valueOf('payment_bank')?.bank ?? ''), iban: String(valueOf('payment_bank')?.iban ?? ''), name: String(valueOf('payment_bank')?.name ?? '') } : null,
   }
-  const typedKeys = new Set(['home_copy','owner_profile', 'order_expiry_hours', 'booking_policy', 'payment_instapay', 'payment_wallet', 'payment_bank'])
+  const typedKeys = new Set(['home_copy','owner_profile','start_here_experience', 'order_expiry_hours', 'booking_policy', 'payment_instapay', 'payment_wallet', 'payment_bank'])
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
@@ -63,6 +67,12 @@ export default async function AdminSettingsPage() {
         <OperationalSettingsForm settings={operational} />
       </Card>
       <Card className="space-y-6 p-8"><CardTitle>تعريف هبة والقيم</CardTitle><p className="text-sm text-text-soft">هذه النصوص هي المصدر الفعلي لصفحة «عن هبة». لا تُضاف ادعاءات أو مؤهلات غير مؤكدة تلقائيًا.</p><OwnerProfileEditor profile={ownerProfile}/></Card>
+
+      <Card className="space-y-6 p-8">
+        <CardTitle>رحلة «ابدئي من هنا»</CardTitle>
+        <p className="text-sm leading-loose text-text-soft">تحكم منظم في مقدمة الصفحة وأسئلة الاختبار ونتائجه وبطاقات الحالات والدعوة الختامية. الروابط داخلية فقط، والحفظ مسجل في المراجعات والتدقيق.</p>
+        <StartHereExperienceEditor content={startHereContent} />
+      </Card>
 
       <Card className="space-y-6 p-8">
         <CardTitle>إعدادات متقدمة</CardTitle>

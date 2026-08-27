@@ -49,6 +49,39 @@ const labels: Record<Kind, { singular: string; create: string }> = {
   service: { singular: 'الخدمة', create: 'إضافة خدمة جلسة' },
 }
 
+const publicationRequirements: Record<Kind, string[]> = {
+  course: [
+    'عنوان ورابط ووصف واضح وسعر وعملة.',
+    'غلاف من مكتبة الوسائط مع إثبات الحقوق بعد اعتماد مخطط 046.',
+    'مدة ووحدة ودرس واحد على الأقل، وكل درس يملك فيديوًا أو نصًا تعليميًا كافيًا.',
+  ],
+  book: [
+    'عنوان ورابط ووصف واضح وسعر وعملة وعدد صفحات.',
+    'غلاف من مكتبة الوسائط مع إثبات الحقوق بعد اعتماد مخطط 046.',
+    'نسخة كتاب نشطة وملف تسليم محمي مكتمل الفحص.',
+  ],
+  workshop: [
+    'عنوان ورابط ووصف واضح وسعر وعملة.',
+    'غلاف موثّق الحقوق وموعد مستقبلي ونهاية لاحقة للبداية.',
+    'سعة موجبة ومكان أو رابط لقاء صالح حسب نوع الحضور.',
+  ],
+  service: [
+    'عنوان ورابط ووصف واضح وسعر وعملة ومدة جلسة.',
+    'غلاف موثّق الحقوق وسياسة حجز متسقة مع وضع الدفع.',
+    'قاعدة توافر منشورة واحدة على الأقل قبل إتاحة الحجز.',
+  ],
+}
+
+function PublicationChecklist({ kind }: { kind: Kind }) {
+  return <details className="rounded-xl border border-antique-gold/30 bg-antique-gold/5 p-4">
+    <summary className="cursor-pointer font-bold text-deep-teal">قائمة الجاهزية قبل النشر</summary>
+    <p className="mt-2 text-xs leading-6 text-text-soft">يعيد الخادم فحص هذه الشروط وبيانات الربط عند كل محاولة نشر؛ لا يكفي تحديد مربع النشر.</p>
+    <ul className="mt-2 list-disc space-y-1 pe-5 text-xs leading-6 text-ink">
+      {publicationRequirements[kind].map((requirement) => <li key={requirement}>{requirement}</li>)}
+    </ul>
+  </details>
+}
+
 function Field({ prefix, label, name, defaultValue, type = 'text', required = false, min, step, dir }: {
   prefix: string; label: string; name: string; defaultValue?: string | number | null; type?: string; required?: boolean; min?: number; step?: number | string; dir?: 'ltr' | 'rtl'
 }) {
@@ -161,6 +194,8 @@ function CatalogForm({ kind, item, onDone, media = [] }: { kind: Kind; item?: Ca
         <Field prefix={prefix} label="وصف المكان" name="location_text" defaultValue={item?.locationText} />
         <Field prefix={prefix} label="رابط اللقاء" name="meeting_url" defaultValue={item?.meetingUrl} dir="ltr" />
       </div>}
+
+      <PublicationChecklist kind={kind} />
 
       <label className="flex min-h-11 items-center gap-3 rounded-xl border border-line bg-ivory/55 px-4 text-sm font-bold text-deep-teal">
         <input type="checkbox" name="is_published" defaultChecked={item?.isPublished} className="h-4 w-4 accent-deep-teal" />

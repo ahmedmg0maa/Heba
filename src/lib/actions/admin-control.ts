@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { getServiceClient, hasSupabaseServerSecret } from '@/lib/supabase/server'
 import { FRESH_ADMIN_ASSURANCE_ERROR, requireFreshAdminAssurance, requirePermission, type Permission } from '@/lib/auth/permissions'
+import { catalogPublicationReadiness } from '@/lib/catalog/publication-readiness'
 
 export type AdminActionResult = { ok: true; id?: string } | { ok: false; error: string }
 type CatalogKind = 'course' | 'book' | 'workshop' | 'service'
@@ -97,6 +98,27 @@ export async function saveCatalogItem(kind: CatalogKind, id: string | null, form
     await revision(admin.id, kind, id, { domain, product })
   }
 
+  if (isPublished) {
+    const readiness = await catalogPublicationReadiness(kind, id, {
+      title,
+      slug,
+      subtitle: text(form, 'subtitle'),
+      description,
+      price,
+      currency: text(form, 'currency') || 'EGP',
+      coverAssetId: text(form, 'cover_asset_id'),
+      durationMinutes: number(form, 'duration_minutes'),
+      pagesCount: optionalNumber(form, 'pages_count'),
+      startsAt: optionalDate(form, 'starts_at'),
+      endsAt: optionalDate(form, 'ends_at'),
+      seatsTotal: number(form, 'seats_total'),
+      locationKind: text(form, 'location_kind'),
+      locationText: text(form, 'location_text'),
+      bookingPaymentMode: text(form, 'booking_payment_mode'),
+    })
+    if (!readiness.ready) return { ok: false, error: `لا يمكن النشر: ${readiness.issues.join(' ')}` }
+  }
+
   const productPayload = {
     type: kind === 'service' ? 'session' : kind,
     title,
@@ -105,7 +127,7 @@ export async function saveCatalogItem(kind: CatalogKind, id: string | null, form
     description,
     price,
     compare_at_price: optionalNumber(form, 'compare_at_price'),
-    currency: text(form, 'currency') || 'EGP',
+    currency: (text(form, 'currency') || 'EGP').toUpperCase(),
     cover_url: text(form, 'cover_url') || null,
     is_published: isPublished,
     sort: number(form, 'sort'),

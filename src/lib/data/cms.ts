@@ -1,5 +1,6 @@
 import { getServerClient } from '@/lib/supabase/server'
 import { hasSupabasePublicConfig } from '@/lib/supabase/public-key'
+import { defaultHomeSections, normalizeHomeSections, type HomeSection } from '@/lib/home/sections'
 
 const hasEnv = hasSupabasePublicConfig
 
@@ -26,7 +27,7 @@ export async function getPublishedCmsPage(slug: string): Promise<PublishedCmsPag
       .eq('is_published', true)
       .maybeSingle()
     if (!data) return null
-    if (['privacy','terms','refund','disclaimer'].includes(slug) && (data.legal_review_status !== 'approved' || !data.legal_version || !data.effective_at)) return null
+    if (['privacy','terms','refund','disclaimer','session-policy'].includes(slug) && (data.legal_review_status !== 'approved' || !data.legal_version || !data.effective_at)) return null
     return { title: data.title, updatedAt: data.updated_at, legalVersion: data.legal_version, effectiveAt: data.effective_at, sections: [...(data.page_sections ?? [])].sort((a, b) => a.sort - b.sort) }
   } catch { return null }
 }
@@ -54,6 +55,21 @@ export async function getHomeCopy(): Promise<HomeCopy> {
     const { data } = await supabase.from('site_settings').select('value').eq('key', 'home_copy').maybeSingle()
     return data?.value && typeof data.value === 'object' ? { ...defaultHomeCopy, ...(data.value as Partial<HomeCopy>) } : defaultHomeCopy
   } catch { return defaultHomeCopy }
+}
+
+export async function getPublishedHomeSections(): Promise<HomeSection[]> {
+  if (!hasEnv()) return defaultHomeSections()
+  try {
+    const supabase = await getServerClient()
+    const { data, error } = await supabase.from('pages')
+      .select('page_sections(id,name,kind,sort,is_visible,content)')
+      .eq('slug', 'home')
+      .eq('status', 'published')
+      .eq('is_published', true)
+      .maybeSingle()
+    if (error || !data) return defaultHomeSections()
+    return normalizeHomeSections(data.page_sections ?? [])
+  } catch { return defaultHomeSections() }
 }
 export type OwnerProfile={eyebrow:string;title:string;lead:string;method:string;values:{title:string;text:string}[]}
 export const defaultOwnerProfile:OwnerProfile={eyebrow:'عن هبة',title:'مساحة إنسانية للتعلّم والنمو',lead:'أنا هبة الشريف. أقدّم محتوى وبرامج ومساحات خاصة تساعدك على الفهم والتطبيق بخطوات واضحة.',method:'منهج هادئ: معرفة موثوقة، أدوات عملية، ومساحة تحترم إيقاعك.',values:[{title:'الوضوح',text:'نشرح ما نقدمه وحدوده بلغة مباشرة.'},{title:'التطبيق',text:'نحوّل المعرفة إلى خطوات قابلة للتجربة.'},{title:'الخصوصية',text:'نحترم بياناتك ومساحتك الشخصية.'}]}

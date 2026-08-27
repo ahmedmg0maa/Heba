@@ -1,5 +1,14 @@
 # PROJECT STATE
-Last session: 2026-08-26 | Current program: Master Launch Execution | BLOCKED — CLOUDFLARE OWNER SETUP AND STAGING ACCEPTANCE REQUIRED; 043 live read-only evidence exists, while 044–047 remain local-only and no external write is authorized
+Last session: 2026-08-27 | Current program: Code X competitor-superiority execution | BLOCKED — SECURE RECOVERY INPUT AND STAGING ACCEPTANCE REQUIRED; current local Worker parity passes, while the exact worktree is not deployed and no external write is authorized
+
+## Code X local execution checkpoint — 2026-08-27
+- The active primary is the current `D:/claude` Git worktree on `codex/master-merge-2026-08-27`, baseline HEAD `57820ab`. The missing requested archive name was not guessed: `D:/0000/hebaelsherif.zip` was proven to contain all 413 baseline tracked source files byte-for-byte but also unsafe private/generated material, so it was not extracted. Comparison archives were idea sources only and no application was replaced.
+- Homepage, published-only Arabic search, structured `start-here`, catalog publication completeness, secure report export, revision recovery, responsive preview and privacy-safe Admin agenda views are implemented locally through fixed schemas/actions/permissions/audits and real public/customer consumers. Formal Press/Resources/assessment-version/consent domains remain behind the 048–050 order gate and owner facts; no decorative or fake data substitute was created.
+- Booking, manual-payment/entitlement and protected-delivery local contracts pass. They remain explicitly distinct from Staging RLS/RPC/Auth/Storage/provider evidence because the separate Supabase Staging project is not connected in this executor and 044–047 were not applied.
+- `pnpm check:deploy` passed after the current changes: isolated type/build, lint, 62-page build, **52/52** ordinary public Playwright and all source/security/Admin/media/commerce/catalog/booking/database/launch audits. `pnpm test:e2e:cloudflare` initially exposed a real hydration-timing race in the start-journey keyboard test; after a client-readiness signal and deterministic wait, the rebuilt Worker suite passed **52/52** with retries disabled.
+- `pnpm package:release` then passed a recursive **463-file** local archive inspection with no secret/build/test artifact, followed by a final `pnpm audit:security` pass. The archive stays local and is not a deployment or publication artifact.
+- Evidence: `docs/SOURCE_OF_TRUTH_AND_INTAKE_2026-08-27.md`, `docs/MASTER_COMPARISON_AND_MERGE_PLAN_2026-08-27.md`, `docs/SUPABASE_STAGING_SCHEMA_RLS_AUTH_EVIDENCE_2026-08-27.md`, `docs/CLOUDFLARE_WORKERS_STAGING_RUNTIME_EVIDENCE_2026-08-27.md`, `docs/END_TO_END_CUSTOMER_AND_ADMIN_ACCEPTANCE_2026-08-27.md`, and `docs/FINAL_PREPRODUCTION_AUDIT_AND_SCORE_2026-08-27.md`.
+- Status remains **`BLOCKED`**, official evidence score **59/100**. Exact next task: the owner configures only `HEBA_LAUNCH_PRODUCTION_DATABASE_URL` in the secure executor environment (never chat/Git); then run the full logical backup and isolated restore drill before any separately authorized Staging migration. No push, remote Worker update, Production, DNS or migration write occurred.
 
 ## Cloudflare Staging deployment checkpoint — 2026-08-26
 - A separate Workers.dev-only Worker, `heba-elsherif-platform-staging`, is deployed from commit `6be490a7912d685e2c090600e5a4eb5dfae97ed2` on `codex/cloudflare-compatibility-spike`. It uses `HEBA_DEPLOYMENT_ENV=staging`, a separate Worker name, `nodejs_compat`, and only the static `ASSETS` binding. No DNS, domain, Production Worker, Production Supabase, migration, or production setting changed.
@@ -164,3 +173,33 @@ Last session: 2026-08-26 | Current program: Master Launch Execution | BLOCKED �
 3. (owner) Approve the content and legal pack; then the controlled Staging and Production gates can proceed in their documented order.
 ## Blockers / needs user input
 - The Compatibility Spike is locally complete. Cloudflare/Supabase/Resend/Sentry account access, DNS nameserver delegation and legal/content approval remain external prerequisites; they are consolidated into one request rather than separate prompts.
+
+## 2026-08-27 — Code X competitor-superiority execution
+
+- **Current phase:** Phase 2 implementation is in progress after Phase 0 source-of-truth and comparison acceptance completed locally.
+- **Baseline:** `codex/master-merge-2026-08-27` starts from remote `57820ab`; the renamed primary archive was accepted only after a 413-file tracked-source match. Comparison archives remain reference-only.
+- **Implemented slice:** secure Admin CSV report export with fresh AAL2, least privilege, fixed columns, bounded dates/rows, spreadsheet-injection protection, fail-closed audit, and private caching.
+- **Implemented slice:** governed nonbinding session-policy route, included in the legal approval gate and excluded from indexing while unapproved.
+- **Implemented slice:** typed homepage section registry, structured Admin CRUD, revision/audit integration, safe internal links, completeness gate, public renderer, private preview renderer, final CTA, and legacy-section preservation.
+- **Verification completed for the slice:** `pnpm type-check`, `pnpm lint`, `pnpm verify:report-export-local`, `pnpm verify:home-cms-local`, and `pnpm audit:cms-local` pass. Full `check:deploy` and updated visual evidence are the current next gate.
+- **External boundaries unchanged:** no public push, Cloudflare deployment, Supabase write, DNS change, Production migration, or secret access was performed.
+
+### Next 3 actions (Code X)
+
+1. Run the full local deployment gate and inspect updated desktop/390px homepage evidence.
+2. Implement Phase 3 published-only search and improve the guided-start journey without introducing post-047 schema.
+3. Continue catalog/customer/Admin parity work, while recording 044–047 and Staging-dependent evidence as `unverified` until the authorized recovery/schema gates exist.
+
+### Phase 3–4 checkpoint
+
+- **Phase 3 local implementation complete:** published-only Arabic-tolerant search with bounded results and `noindex`; desktop/mobile navigation entry; a structured Admin-governed start journey with revisions, audit, internal-link validation, deterministic results and assistive-technology state. Consent analytics were intentionally not added because that boundary is not approved. Formal 049 storage remains deferred until the Staging migration prerequisite.
+- **Phase 4 local core implementation complete:** all four domain queries require both domain and product publication; course filters and Arabic catalog search are real-data driven; approved catalog covers are consumed; old/full/zero-capacity workshops cannot enter checkout; direct checkout denies unpublished/unavailable domain targets.
+- **Publication gate:** catalog publish validates text, price/currency, 046 media rights/reference, course curriculum/content, protected book file, future workshop/capacity/place, and service availability/payment consistency. Product/domain publish states synchronize with rollback.
+- **Current verification:** targeted type-check/lint and the search/start-here/catalog contract checks pass. Updated full build and E2E are the current phase-boundary gate.
+- **Deferred by hard order:** Resources/Press/consent-complete Testimonials and formal assessment tables require reviewed 048–050 only after 044–047 Staging acceptance; no premature migration was created.
+
+### Next 3 actions (after Phase 4 local gate)
+
+1. Run full build, public E2E (including keyboard start journey and search), security and catalog audits.
+2. Audit Phases 6–9 against existing booking/commerce/dashboard/Admin implementations and close all remaining source-level gaps that do not need provider writes.
+3. Prepare recovery/schema/runtime evidence as `unverified`, then stop only at the single external recovery/Staging credential gate.

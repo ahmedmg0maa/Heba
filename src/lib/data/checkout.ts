@@ -146,6 +146,16 @@ export async function getCheckoutProduct(type: string, slug: string): Promise<Ch
       .maybeSingle()
     // Unknown products remain absent rather than producing an invented purchasable item.
     if (!data) return null
+    if (t === 'course' && !(await listCourses()).some((item) => item.slug === slug)) return null
+    if (t === 'book' && !(await listBooks()).some((item) => item.slug === slug)) return null
+    if (t === 'workshop') {
+      const workshop = (await listWorkshops()).find((item) => item.slug === slug)
+      if (!workshop || new Date(workshop.endsAt).getTime() <= Date.now() || workshop.seatsTotal < 1 || workshop.seatsReserved >= workshop.seatsTotal) return null
+    }
+    if (t === 'session') {
+      const session = (await listServices()).find((item) => item.slug === slug)
+      if (!session || session.availability.length === 0) return null
+    }
     const listPrice = Number(data.price)
     const offer = await resolveActiveOffer(data.id, t)
     const effective = applyOffer(listPrice, offer)

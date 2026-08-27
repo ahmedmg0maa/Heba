@@ -6,6 +6,9 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { PublishToggle } from '@/components/admin/AdminControls'
 import { CmsPageCreator, CmsPageEditor, CmsSectionEditor, NavigationEditor } from '@/components/admin/CmsStructureManager'
 import { PreviewButton } from '@/components/admin/PreviewButton'
+import { HomeSectionManager } from '@/components/admin/HomeSectionManager'
+import { HomeCopyEditor } from '@/components/admin/HomeCopyEditor'
+import { getHomeCopy } from '@/lib/data/cms'
 
 export const metadata: Metadata = { title: 'الصفحات — الإدارة' }
 
@@ -28,10 +31,13 @@ type Row = {
 type NavRow={id:string;menu:string;label:string;href:string;sort:number;is_visible:boolean}
 
 export default async function AdminPagesPage() {
-  const pages = await adminList<Row>('pages', 'id, slug, title, seo_title, seo_description, is_published, status, publish_at, canonical_url, og_image_url, legal_review_status, legal_version, effective_at, page_sections(id,name,kind,sort,is_visible,content)', {
-    orderBy: 'slug',
-    ascending: true,
-  })
+  const [pages, homeCopy] = await Promise.all([
+    adminList<Row>('pages', 'id, slug, title, seo_title, seo_description, is_published, status, publish_at, canonical_url, og_image_url, legal_review_status, legal_version, effective_at, page_sections(id,name,kind,sort,is_visible,content)', {
+      orderBy: 'slug',
+      ascending: true,
+    }),
+    getHomeCopy(),
+  ])
   const navigation=await adminList<NavRow>('navigation_items','id,menu,label,href,sort,is_visible',{orderBy:'sort',ascending:true,limit:200})
 
   return (
@@ -64,7 +70,8 @@ export default async function AdminPagesPage() {
                 </div>
               </div>
               <CmsPageEditor page={p}/>
-              <details className="rounded-xl border border-line"><summary className="cursor-pointer list-none px-4 py-3 font-bold text-deep-teal">بنية الصفحة ({p.page_sections.length.toLocaleString('ar-EG')} أقسام)</summary><div className="space-y-3 border-t border-line p-4">{p.page_sections.sort((a,b)=>a.sort-b.sort).map(section=><CmsSectionEditor key={section.id} pageId={p.id} section={section}/>)}<CmsSectionEditor pageId={p.id}/></div></details>
+              {p.slug === 'home' && <div className="space-y-3 rounded-xl border border-line p-4"><h3 className="font-bold text-deep-teal">نصوص Hero</h3><HomeCopyEditor copy={homeCopy} /></div>}
+              <details className="rounded-xl border border-line"><summary className="cursor-pointer list-none px-4 py-3 font-bold text-deep-teal">بنية الصفحة ({p.page_sections.length.toLocaleString('ar-EG')} أقسام)</summary><div className="space-y-3 border-t border-line p-4">{p.slug === 'home' ? <HomeSectionManager pageId={p.id} sections={p.page_sections} /> : <>{p.page_sections.sort((a,b)=>a.sort-b.sort).map(section=><CmsSectionEditor key={section.id} pageId={p.id} section={section}/>)}<CmsSectionEditor pageId={p.id}/></>}</div></details>
             </Card>
           ))}
         </div>

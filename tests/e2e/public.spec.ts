@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 
-const publicRoutes = ['/', '/start-here', '/courses', '/books', '/workshops', '/services', '/booking', '/about', '/contact', '/faq']
+const publicRoutes = ['/', '/start-here', '/search', '/courses', '/books', '/workshops', '/services', '/booking', '/about', '/contact', '/faq']
 const visit = (page: Page, route: string) => page.goto(route, { waitUntil: 'domcontentloaded', timeout: 60_000 })
 
 test.describe('public experience', () => {
@@ -88,6 +88,26 @@ test.describe('public experience', () => {
     await expect(page.getByRole('link', { name: 'تصفحي الكتب' }).first()).toHaveAttribute('href', '/books')
   })
 
+  test('start-here flow completes by keyboard with an announced deterministic result', async ({ page }) => {
+    await visit(page, '/start-here')
+    await expect(page.locator('[data-start-here-quiz]')).toHaveAttribute('data-hydrated', 'true')
+    for (const label of ['تشتت واحتياج لوضوح', 'جلسة مركزة وشخصية', 'تفكيك سؤال شخصي']) {
+      const option = page.getByRole('button', { name: label })
+      await option.focus()
+      await option.press('Enter')
+      await expect(option).toHaveAttribute('aria-pressed', 'true')
+    }
+    await expect(page.getByRole('status').filter({ hasText: 'قد يناسبك استكشاف الجلسات المنشورة' })).toBeVisible()
+    await expect(page.getByRole('link', { name: 'استكشفي الجلسات' })).toHaveAttribute('href', '/booking')
+  })
+
+  test('search is discoverable, published-only, and honest when no source is configured', async ({ page }) => {
+    await visit(page, '/search?q=حدود')
+    await expect(page.getByRole('search')).toBeVisible()
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/)
+    await expect(page.getByRole('heading', { name: 'لا توجد نتائج منشورة' })).toBeVisible()
+  })
+
   test('captures the truthful local states for visual QA', async ({ page }, testInfo) => {
     const mobile = testInfo.project.name.includes('mobile')
     await page.setViewportSize(mobile ? { width: 390, height: 844 } : { width: 1440, height: 900 })
@@ -149,12 +169,12 @@ test.describe('public experience', () => {
   })
 
   test('draft legal routes are noindex and absent from the sitemap', async ({ page }) => {
-    for (const route of ['/privacy', '/terms', '/refund', '/disclaimer']) {
+    for (const route of ['/privacy', '/terms', '/refund', '/disclaimer', '/session-policy']) {
       await visit(page, route)
       await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/)
     }
     await visit(page, '/sitemap.xml')
     const sitemap = await page.locator('body').innerText()
-    for (const route of ['/privacy', '/terms', '/refund', '/disclaimer']) expect(sitemap).not.toContain(route)
+    for (const route of ['/privacy', '/terms', '/refund', '/disclaimer', '/session-policy']) expect(sitemap).not.toContain(route)
   })
 })

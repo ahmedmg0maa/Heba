@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/Badge'
 import { Countdown } from '@/components/ui/Countdown'
 import type { HomeOffer } from '@/lib/data/home'
 
-export function OfferBlock({ offer }: { offer: HomeOffer | null }) {
+export function OfferBlock({ offer, ctaLabel = 'استفيدي من العرض الآن' }: { offer: HomeOffer | null; ctaLabel?: string }) {
   if (!offer?.endsAt) return null
   const endsAt = offer.endsAt
 
@@ -19,7 +19,7 @@ export function OfferBlock({ offer }: { offer: HomeOffer | null }) {
         <p className="max-w-2xl leading-loose text-text-soft">{offer.description}</p>
         <Countdown target={endsAt} />
         <Button href="/courses" size="lg">
-          استفيدي من العرض الآن
+          {ctaLabel}
         </Button>
       </div>
     </section>

@@ -3,14 +3,15 @@
 import { useMemo, useState } from 'react'
 import type { CatalogBook } from '@/lib/data/catalog'
 import { ProductCard } from './ProductCard'
+import { normalizeArabicSearch } from '@/lib/search/normalize'
 
 export function BookLibrary({ books }: { books: CatalogBook[] }) {
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState('featured')
 
   const filtered = useMemo(() => {
-    const normalized = query.trim().toLocaleLowerCase('ar')
-    const result = books.filter((book) => !normalized || `${book.title} ${book.subtitle} ${book.description}`.toLocaleLowerCase('ar').includes(normalized))
+    const normalized = normalizeArabicSearch(query)
+    const result = books.filter((book) => !normalized || normalizeArabicSearch(`${book.title} ${book.subtitle} ${book.description}`).includes(normalized))
     return [...result].sort((a, b) => {
       if (sort === 'price-low') return a.price - b.price
       if (sort === 'price-high') return b.price - a.price
@@ -50,6 +51,7 @@ export function BookLibrary({ books }: { books: CatalogBook[] }) {
               price={book.price}
               compareAtPrice={book.compareAtPrice}
               coverKind="book"
+              coverUrl={book.coverUrl}
               badge={book.compareAtPrice ? { label: 'سعر مخفّض', tone: 'burgundy' } : undefined}
               meta={[book.pagesCount ? `${book.pagesCount.toLocaleString('ar-EG')} صفحة` : 'كتاب رقمي', 'يظهر بعد تأكيد الدفع', 'محفوظ داخل حسابك']}
             />

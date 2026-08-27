@@ -7,6 +7,8 @@ const paymentActions = read('src/lib/actions/admin.ts')
 const cmsActions = read('src/lib/actions/cms.ts')
 const controlActions = read('src/lib/actions/admin-control.ts')
 const mfaPage = read('src/app/(public)/auth/admin/mfa/page.tsx')
+const reportExport = read('src/app/admin/reports/export/route.ts')
+const revisionActions = read('src/lib/actions/revisions.ts')
 
 assert.match(permissions, /FRESH_ADMIN_ASSURANCE_MAX_AGE_MS\s*=\s*10\s*\*\s*60\s*\*\s*1000/, 'freshness window must be ten minutes')
 assert.match(permissions, /function hasFreshMfaAssurance\(amr: unknown/, 'AMR freshness checker missing')
@@ -20,6 +22,7 @@ for (const [source, action] of [
   [cmsActions, 'revokeRole'],
   [cmsActions, 'setRolePermissions'],
   [controlActions, 'saveOperationalSettings'],
+  [revisionActions, 'restoreContentRevision'],
 ]) {
   const start = source.indexOf(`export async function ${action}`)
   assert.notEqual(start, -1, `${action} missing`)
@@ -35,5 +38,6 @@ assert.match(refundBody, /status === 'refunded'[\s\S]*requireFreshAdminAssurance
 assert.match(mfaPage, /const requiresFreshCode = params\.get\('reauth'\) === '1'/, 'MFA route must recognize reauth mode')
 assert.match(mfaPage, /aal2' && !requiresFreshCode/, 'existing AAL2 must not skip a requested fresh challenge')
 assert.match(mfaPage, /if \(requiresFreshCode\)[\s\S]*establishAdminSession\(\)/, 'fresh TOTP success must establish the admin session before redirect')
+assert.match(reportExport, /requireFreshAdminAssurance\('reports\.export'\)/, 'report export must require fresh assurance')
 
-console.log('verify:fresh-admin-assurance passed — fresh TOTP AMR is enforced for payment, refund, role, and payment-setting mutations; reauth cannot auto-skip an existing AAL2 session')
+console.log('verify:fresh-admin-assurance passed — fresh TOTP AMR is enforced for payment, refund, role, export, revision-restore and payment-setting mutations; reauth cannot auto-skip an existing AAL2 session')

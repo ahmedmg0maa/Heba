@@ -21,11 +21,11 @@ if (manifest.admin.length > 0) {
   const privilegedActionFiles = [
     'src/lib/actions/admin.ts', 'src/lib/actions/admin-tools.ts', 'src/lib/actions/admin-control.ts',
     'src/lib/actions/booking-admin.ts', 'src/lib/actions/cms.ts', 'src/lib/actions/marketing.ts',
-    'src/lib/actions/reports.ts',
+    'src/lib/actions/reports.ts', 'src/lib/actions/revisions.ts',
   ]
   for (const file of privilegedActionFiles) {
     if (!existsSync(file)) failures.push(`${file}: privileged action module missing`)
-    else if (!/requirePermission\(/.test(read(file))) failures.push(`${file}: actions do not use centralized requirePermission()`)
+    else if (!/require(?:Permission|FreshAdminAssurance)\(/.test(read(file))) failures.push(`${file}: actions do not use a centralized permission/assurance gate`)
   }
 
   const freshGateTargets = [
@@ -35,6 +35,7 @@ if (manifest.admin.length > 0) {
     ['src/lib/actions/cms.ts', 'revokeRole'],
     ['src/lib/actions/cms.ts', 'setRolePermissions'],
     ['src/lib/actions/admin-control.ts', 'saveOperationalSettings'],
+    ['src/lib/actions/revisions.ts', 'restoreContentRevision'],
   ]
   for (const [file, action] of freshGateTargets) {
     const source = read(file)
@@ -50,10 +51,13 @@ if (manifest.admin.length > 0) {
   if (!/state: 'ready' \| 'unconfigured' \| 'error'/.test(reports)) failures.push('reports source lacks explicit readiness state')
   if (!/state !== 'ready'/.test(reportsPage)) failures.push('reports page can render unavailable source data as KPIs')
   if (!/reports\.state !== 'ready'/.test(reportActions)) failures.push('report snapshots are not blocked when data is unavailable')
+  const reportExport = read('src/app/admin/reports/export/route.ts')
+  if (!/requireFreshAdminAssurance\('reports\.export'\)/.test(reportExport)) failures.push('report export lacks fresh-AAL2 protection')
+  if (!/action: 'report\.exported'/.test(reportExport)) failures.push('report export lacks fail-closed audit evidence')
 
   const permissionLayouts = [
     'payments', 'orders', 'bookings', 'memberships', 'users', 'inbox', 'products', 'courses', 'books',
-    'workshops', 'articles', 'pages', 'media', 'reviews', 'offers', 'coupons', 'reports', 'roles',
+    'workshops', 'articles', 'pages', 'revisions', 'media', 'reviews', 'offers', 'coupons', 'reports', 'roles',
     'audit-logs', 'security', 'settings', 'system',
   ]
   for (const route of permissionLayouts) {

@@ -1,15 +1,14 @@
 import type { Metadata } from 'next'
-import { listCourses, listBooks, listWorkshops, listServices, formatDuration } from '@/lib/data/catalog'
-import { lessonsLabel } from '@/lib/format'
+import { listCourses, listBooks, listWorkshops, listServices } from '@/lib/data/catalog'
 import { getHomeData } from '@/lib/data/home'
 import { PageHero } from '@/components/catalog/PageHero'
 import { CategoryStrip } from '@/components/catalog/CategoryStrip'
-import { ProductCard } from '@/components/catalog/ProductCard'
 import { CTARibbon } from '@/components/catalog/CTARibbon'
 import { OfferBlock } from '@/components/home/OfferBlock'
 import { Testimonials } from '@/components/home/Testimonials'
 import { Section } from '@/components/ui/Section'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { CourseLibrary } from '@/components/catalog/CourseLibrary'
 
 export const metadata: Metadata = {
   title: 'الدورات التدريبية',
@@ -72,23 +71,7 @@ export default async function CoursesPage() {
             actionHref="/start-here"
           />
         )}
-        <div className="grid gap-8 md:grid-cols-2">
-          {courses.map((c) => (
-            <ProductCard
-              key={c.slug}
-              href={`/courses/${c.slug}`}
-              title={c.title}
-              subtitle={c.subtitle}
-              description={c.description}
-              price={c.price}
-              compareAtPrice={c.compareAtPrice}
-              coverKind="course"
-              badge={c.compareAtPrice ? { label: 'سعر مخفّض', tone: 'burgundy' } : undefined}
-              rating={{ value: c.rating, count: c.ratingCount }}
-              meta={[lessonsLabel(c.lessonsCount), formatDuration(c.durationMinutes), 'وصول محفوظ داخل حسابك']}
-            />
-          ))}
-        </div>
+        <CourseLibrary courses={courses} />
       </Section>
 
       <OfferBlock offer={home.offer} />

@@ -11,7 +11,7 @@ const required = [
 for (const path of required) if (!existsSync(path)) failures.push(`missing remediation artifact: ${path}`)
 
 const sitemap = read('src/app/sitemap.ts')
-for (const route of ['/privacy', '/terms', '/refund', '/disclaimer']) {
+for (const route of ['/privacy', '/terms', '/refund', '/disclaimer', '/session-policy']) {
   if (sitemap.includes(`'${route}'`)) failures.push(`draft legal route remains indexable in sitemap: ${route}`)
 }
 
@@ -20,6 +20,7 @@ for (const path of [
   'src/app/(public)/terms/page.tsx',
   'src/app/(public)/refund/page.tsx',
   'src/app/(public)/disclaimer/page.tsx',
+  'src/app/(public)/session-policy/page.tsx',
 ]) {
   if (!read(path).includes("robots: { index: false, follow: false }")) failures.push(`draft legal route lacks noindex metadata: ${path}`)
 }

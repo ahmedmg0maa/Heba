@@ -5,6 +5,8 @@ import { Card, CardTitle } from '@/components/ui/Card'
 import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table'
 import { StatCard } from '@/components/ui/StatCard'
 import { SnapshotButton } from '@/components/admin/SnapshotButton'
+import { ReportExportPanel } from '@/components/admin/ReportExportPanel'
+import { requirePermission } from '@/lib/auth/permissions'
 
 export const metadata: Metadata = { title: 'التقارير — الإدارة' }
 
@@ -31,6 +33,7 @@ const bookingLabels: Record<string, string> = {
 
 export default async function AdminReportsPage() {
   const { state, revenue, enrollments, bookings, memberships, snapshots } = await getReports()
+  const exportPermission = await requirePermission('reports.export')
 
   if (state !== 'ready') {
     const unavailable = state === 'unconfigured'
@@ -56,6 +59,14 @@ export default async function AdminReportsPage() {
         <StatCard label="إجمالي الحجوزات" value={bookings.total.toLocaleString('ar-EG')} accent="burgundy" />
         <StatCard label="الاشتراكات النشطة" value={memberships.active.toLocaleString('ar-EG')} accent="teal" />
       </div>
+
+      {exportPermission?.userId && (() => {
+        const formatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Cairo', year: 'numeric', month: '2-digit', day: '2-digit' })
+        const now = new Date()
+        const start = new Date(now)
+        start.setUTCDate(start.getUTCDate() - 29)
+        return <ReportExportPanel defaultStart={formatter.format(start)} defaultEnd={formatter.format(now)} />
+      })()}
 
       <div className="grid gap-6 xl:grid-cols-2">
         <Card>

@@ -10,6 +10,7 @@ import { Stars } from '@/components/catalog/Stars'
 import { CTARibbon } from '@/components/catalog/CTARibbon'
 import { MobileBuyBar } from '@/components/catalog/MobileBuyBar'
 import { getPaymentSettings } from '@/lib/data/checkout'
+import { CatalogCoverImage } from '@/components/catalog/CatalogCoverImage'
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -34,7 +35,7 @@ export default async function CourseDetailPage({ params }: Props) {
   const orderingAvailable = Boolean(paymentSettings.instapay || paymentSettings.wallet || paymentSettings.bank)
 
   const includes = [
-    `${lessonsLabel(course.lessonsCount)} بالفيديو`,
+    `${lessonsLabel(course.lessonsCount)} مرتبة داخل المنهج`,
     formatDuration(course.durationMinutes),
     'وصول محفوظ داخل حسابك',
     'تتبّع واضح للتقدم',
@@ -45,6 +46,7 @@ export default async function CourseDetailPage({ params }: Props) {
       <section className="border-b border-line bg-surface-raised">
         <div className="mx-auto grid max-w-6xl items-start gap-10 px-6 py-14 lg:grid-cols-[1.5fr_1fr]">
           <div>
+            <CatalogCoverImage url={course.coverUrl} title={course.title} className="mb-7 aspect-[16/7] w-full" />
             <p className="mb-2 text-sm font-semibold tracking-widest text-antique-gold">{course.subtitle}</p>
             <h1 className="text-4xl font-bold text-deep-teal">{course.title}</h1>
             {course.ratingCount > 0 && <Stars rating={course.rating} count={course.ratingCount} className="mt-3" />}

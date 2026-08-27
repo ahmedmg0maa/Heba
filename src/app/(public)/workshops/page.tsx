@@ -7,6 +7,8 @@ import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { CatalogCoverImage } from '@/components/catalog/CatalogCoverImage'
+import { serverNowEpochMs } from '@/lib/time/server-now'
 
 export const metadata: Metadata = {
   title: 'ورش العمل',
@@ -19,7 +21,8 @@ const dateFmt = new Intl.DateTimeFormat('ar-EG', { weekday: 'long', day: 'numeri
 const timeFmt = new Intl.DateTimeFormat('ar-EG', { hour: 'numeric', minute: '2-digit' })
 
 export default async function WorkshopsPage() {
-  const workshops = await listWorkshops()
+  const now = serverNowEpochMs()
+  const workshops = (await listWorkshops()).filter((workshop) => new Date(workshop.endsAt).getTime() > now)
 
   return (
     <main>
@@ -44,6 +47,7 @@ export default async function WorkshopsPage() {
               const seatsLeft = w.seatsTotal - w.seatsReserved
               return (
                 <Card key={w.slug} hover as="article" className="flex flex-col gap-6 md:flex-row md:items-center">
+                  <CatalogCoverImage url={w.coverUrl} title={w.title} className="aspect-[4/3] w-full shrink-0 md:w-36" />
                   <div className="flex h-24 w-24 shrink-0 flex-col items-center justify-center rounded-2xl bg-deep-teal text-on-dark">
                     <span className="tnum text-3xl font-bold">{starts.toLocaleDateString('ar-EG', { day: 'numeric' })}</span>
                     <span className="text-sm text-muted-gold">{starts.toLocaleDateString('ar-EG', { month: 'long' })}</span>
@@ -54,12 +58,12 @@ export default async function WorkshopsPage() {
                       {seatsLeft > 0 && seatsLeft <= 15 && (
                         <Badge tone="burgundy">{`باقٍ ${seatsLeft.toLocaleString('ar-EG')} مقعدًا`}</Badge>
                       )}
-                      {seatsLeft <= 0 && <Badge tone="sand">اكتمل العدد</Badge>}
+                      {(w.seatsTotal < 1 || seatsLeft <= 0) && <Badge tone="sand">اكتمل العدد</Badge>}
                     </div>
                     <p className="mt-1 text-sm text-antique-gold">{w.subtitle}</p>
                     <p className="mt-2 text-sm leading-relaxed text-text-soft">{w.description}</p>
                     <p className="tnum mt-3 text-sm text-taupe">
-                      {dateFmt.format(starts)} · {timeFmt.format(starts)} · {w.locationKind === 'online' ? 'أونلاين مباشر' : 'حضوري'}
+                      {dateFmt.format(starts)} · {timeFmt.format(starts)} · {w.locationKind === 'online' ? 'أونلاين مباشر' : w.locationKind === 'hybrid' ? 'حضوري وأونلاين' : 'حضوري'}
                     </p>
                   </div>
                   <div className="flex shrink-0 flex-col items-center gap-3">

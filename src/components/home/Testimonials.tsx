@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/cn'
 import type { HomeTestimonial } from '@/lib/data/home'
+import { DEFAULT_HOME_CONTENT, type TestimonialsContent } from '@/lib/home/sections'
 
 function Stars({ rating }: { rating: number }) {
   return (
@@ -16,7 +17,7 @@ function Stars({ rating }: { rating: number }) {
   )
 }
 
-export function Testimonials({ testimonials }: { testimonials: HomeTestimonial[] }) {
+export function Testimonials({ testimonials, content = DEFAULT_HOME_CONTENT.testimonials as TestimonialsContent }: { testimonials: HomeTestimonial[]; content?: TestimonialsContent }) {
   const [index, setIndex] = useState(0)
 
   useEffect(() => {
@@ -33,10 +34,10 @@ export function Testimonials({ testimonials }: { testimonials: HomeTestimonial[]
       <div className="mx-auto max-w-5xl text-center">
         <p className="mb-3 flex items-center justify-center gap-3 text-sm font-medium tracking-widest text-antique-gold">
           <span className="h-px w-10 bg-current opacity-60" aria-hidden />
-          قالوا عن التجربة
+          {content.eyebrow}
           <span className="h-px w-10 bg-current opacity-60" aria-hidden />
         </p>
-        <h2 className="text-3xl font-bold text-deep-teal md:text-4xl">شهادات متعلّماتنا</h2>
+        <h2 className="text-3xl font-bold text-deep-teal md:text-4xl">{content.heading}</h2>
 
         <figure className="relative mt-9 flex min-h-52 flex-col items-center justify-center gap-5 overflow-hidden rounded-xl border border-antique-gold/35 bg-surface-raised p-9 shadow-card">
           <span className="absolute start-0 top-0 h-20 w-20 rounded-ee-full border-ee border-antique-gold/20 bg-antique-gold/5" />

@@ -13,6 +13,7 @@ export type CatalogCourse = {
   lessonsCount: number
   rating: number
   ratingCount: number
+  coverUrl: string | null
   modules: { title: string; lessons: { title: string; durationSeconds: number; isPreview: boolean }[] }[]
 }
 
@@ -24,6 +25,7 @@ export type CatalogBook = {
   price: number
   compareAtPrice: number | null
   pagesCount: number | null
+  coverUrl: string | null
 }
 
 export type CatalogWorkshop = {
@@ -38,6 +40,7 @@ export type CatalogWorkshop = {
   seatsTotal: number
   seatsReserved: number
   locationKind: string
+  coverUrl: string | null
 }
 
 export type CatalogService = {
@@ -48,6 +51,7 @@ export type CatalogService = {
   price: number
   durationMinutes: number
   availability: { weekday: number; startTime: string; endTime: string }[]
+  coverUrl: string | null
 }
 
 export type CatalogArticle = {
@@ -69,9 +73,10 @@ export async function listCourses(): Promise<CatalogCourse[]> {
     const { data } = await supabase
       .from('courses')
       .select(
-        'slug, title, description, level, duration_minutes, products!inner(subtitle, price, compare_at_price, is_published), course_modules(title, sort, course_lessons(title, duration_seconds, sort, is_preview))',
+        'slug, title, description, level, duration_minutes, cover_url, products!inner(subtitle, price, compare_at_price, is_published), course_modules(title, sort, course_lessons(title, duration_seconds, sort, is_preview))',
       )
       .eq('is_published', true)
+      .eq('products.is_published', true)
     if (!data) return []
     return data.map((c) => {
       const product = Array.isArray(c.products) ? c.products[0] : c.products
@@ -95,6 +100,7 @@ export async function listCourses(): Promise<CatalogCourse[]> {
         lessonsCount: modules.reduce((n, m) => n + m.lessons.length, 0),
         rating: 5,
         ratingCount: 0,
+        coverUrl: c.cover_url,
         modules,
       }
     })
@@ -114,8 +120,9 @@ export async function listBooks(): Promise<CatalogBook[]> {
     const supabase = await getServerClient()
     const { data } = await supabase
       .from('books')
-      .select('slug, title, description, pages_count, products!inner(subtitle, price, compare_at_price)')
+      .select('slug, title, description, pages_count, cover_url, products!inner(subtitle, price, compare_at_price, is_published)')
       .eq('is_published', true)
+      .eq('products.is_published', true)
     if (!data) return []
     return data.map((b) => {
       const product = Array.isArray(b.products) ? b.products[0] : b.products
@@ -127,6 +134,7 @@ export async function listBooks(): Promise<CatalogBook[]> {
         price: Number(product?.price ?? 0),
         compareAtPrice: product?.compare_at_price ? Number(product.compare_at_price) : null,
         pagesCount: b.pages_count,
+        coverUrl: b.cover_url,
       }
     })
   } catch {
@@ -146,9 +154,10 @@ export async function listWorkshops(): Promise<CatalogWorkshop[]> {
     const { data } = await supabase
       .from('workshops')
       .select(
-        'slug, title, description, starts_at, ends_at, seats_total, seats_reserved, location_kind, products!inner(subtitle, price, compare_at_price)',
+        'slug, title, description, starts_at, ends_at, seats_total, seats_reserved, location_kind, cover_url, products!inner(subtitle, price, compare_at_price, is_published)',
       )
       .eq('is_published', true)
+      .eq('products.is_published', true)
       .order('starts_at', { ascending: true })
     if (!data) return []
     return data.map((w) => {
@@ -165,6 +174,7 @@ export async function listWorkshops(): Promise<CatalogWorkshop[]> {
         seatsTotal: w.seats_total,
         seatsReserved: w.seats_reserved,
         locationKind: w.location_kind,
+        coverUrl: w.cover_url,
       }
     })
   } catch {
@@ -183,8 +193,9 @@ export async function listServices(): Promise<CatalogService[]> {
     const supabase = await getServerClient()
     const { data } = await supabase
       .from('services')
-      .select('slug, title, description, duration_minutes, price, products!inner(subtitle), availability_rules(weekday, start_time, end_time)')
+      .select('slug, title, description, duration_minutes, price, products!inner(subtitle, is_published, cover_url), availability_rules(weekday, start_time, end_time)')
       .eq('is_active', true)
+      .eq('products.is_published', true)
     if (!data) return []
     return data.map((s) => {
       const product = Array.isArray(s.products) ? s.products[0] : s.products
@@ -200,6 +211,7 @@ export async function listServices(): Promise<CatalogService[]> {
           startTime: r.start_time,
           endTime: r.end_time,
         })),
+        coverUrl: product?.cover_url ?? null,
       }
     })
   } catch {

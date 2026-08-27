@@ -59,6 +59,9 @@ export function PublicHeader({ flags = {}, items = [] }: { flags?: Record<string
 
         <div className="hidden items-center gap-2 justify-self-end lg:flex">
           <ThemeToggle compact />
+          <Link href="/search" aria-label="البحث في الموقع" aria-current={pathname === '/search' ? 'page' : undefined} className="flex h-10 w-10 items-center justify-center rounded-lg border border-line text-deep-teal transition-colors hover:border-antique-gold hover:bg-surface-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep-teal">
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4" strokeLinecap="round"/></svg>
+          </Link>
           <Button href="/auth/login" size="sm" className="min-w-32 rounded-lg">تسجيل الدخول</Button>
         </div>
 
@@ -94,6 +97,7 @@ export function PublicHeader({ flags = {}, items = [] }: { flags?: Record<string
           </ul>
           <div className="mt-4 flex items-center gap-3 border-t border-line pt-4">
             <ThemeToggle compact className="shrink-0" />
+            <Button href="/search" size="sm" variant="secondary" className="rounded-lg">البحث</Button>
             <Button href="/auth/login" size="sm" className="flex-1 rounded-lg">تسجيل الدخول</Button>
           </div>
         </nav>

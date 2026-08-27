@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { CTARibbon } from '@/components/catalog/CTARibbon'
 import { MobileBuyBar } from '@/components/catalog/MobileBuyBar'
 import { getPaymentSettings } from '@/lib/data/checkout'
+import { CatalogCoverImage } from '@/components/catalog/CatalogCoverImage'
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -34,6 +35,7 @@ export default async function BookDetailPage({ params }: Props) {
         <div className="mx-auto grid max-w-6xl items-start gap-10 px-6 py-14 lg:grid-cols-[1fr_1.4fr]">
           {/* branded cover substitute */}
           <div className="mx-auto w-full max-w-xs">
+            {book.coverUrl ? <CatalogCoverImage url={book.coverUrl} title={book.title} className="aspect-3/4 w-full" /> :
             <div className="flex aspect-3/4 flex-col justify-between rounded-2xl bg-linear-to-br from-burgundy to-burgundy-soft p-8 shadow-card-hover">
               <span className="h-px w-12 bg-muted-gold" aria-hidden />
               <div>
@@ -41,7 +43,7 @@ export default async function BookDetailPage({ params }: Props) {
                 <p className="mt-2 text-sm text-on-dark/70">{book.subtitle}</p>
               </div>
               <p className="text-sm font-semibold tracking-widest text-muted-gold">هبة الشريف</p>
-            </div>
+            </div>}
           </div>
 
           <div>

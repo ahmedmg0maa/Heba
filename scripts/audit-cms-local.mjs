@@ -6,6 +6,8 @@ const required = [
   'src/lib/actions/cms.ts',
   'src/components/admin/CmsStructureManager.tsx',
   'supabase/migrations/036_structured_cms.sql',
+  'src/lib/home/sections.ts',
+  'src/components/admin/HomeSectionManager.tsx',
 ]
 for (const file of required) if (!existsSync(file)) failures.push(`${file}: missing`)
 if (existsSync(required[0])) {
@@ -13,6 +15,10 @@ if (existsSync(required[0])) {
   for (const token of ['SECTION_KINDS', 'validateSectionContent', 'safeLink', 'content_revisions', 'requireAdminUser']) {
     if (!source.includes(token)) failures.push(`CMS server actions missing ${token}`)
   }
+}
+if (existsSync('src/lib/home/sections.ts')) {
+  const source = read('src/lib/home/sections.ts')
+  for (const token of ['HOME_SECTION_KINDS', 'normalizeHomeContent', 'defaultHomeSections']) if (!source.includes(token)) failures.push(`home section registry missing ${token}`)
 }
 if (existsSync(required[1])) {
   const source = read(required[1])

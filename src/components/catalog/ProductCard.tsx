@@ -17,6 +17,7 @@ type ProductCardProps = {
   meta?: string[]
   coverKind?: 'course' | 'book' | 'workshop' | 'session'
   ctaLabel?: string
+  coverUrl?: string | null
 }
 
 // One original no-person editorial still life, cropped per product kind for a
@@ -52,19 +53,20 @@ export function ProductCard({
   meta,
   coverKind = 'course',
   ctaLabel = 'اعرفي التفاصيل',
+  coverUrl,
 }: ProductCardProps) {
   const art = coverArt[coverKind]
   return (
     <Card hover as="article" className="group flex flex-col overflow-hidden p-0">
       <div className="relative flex h-44 items-end overflow-hidden">
-        <Image
+        {coverUrl ? <span role="img" aria-label={`غلاف ${title}`} className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-[1.04]" style={{ backgroundImage: `url(${coverUrl})` }} /> : <Image
           src="/brand/catalog-still-life.webp"
           alt=""
           fill
           sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
           className="object-cover transition-transform duration-700 group-hover:scale-[1.04]"
           style={{ objectPosition: art.position }}
-        />
+        />}
         <span className="absolute inset-0 bg-linear-to-t from-deep-teal/65 via-deep-teal/5 to-transparent" />
         <span className="relative m-4 flex h-11 w-11 items-center justify-center rounded-full border border-on-dark/35 bg-deep-teal/75 text-on-dark shadow-card backdrop-blur-sm">
           <svg viewBox="0 0 40 40" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>

@@ -3,11 +3,12 @@ import { Section } from '@/components/ui/Section'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import type { HomeArticle } from '@/lib/data/home'
+import { DEFAULT_HOME_CONTENT, type ArticlesContent } from '@/lib/home/sections'
 
-export function FeaturedArticles({ articles }: { articles: HomeArticle[] }) {
+export function FeaturedArticles({ articles, content = DEFAULT_HOME_CONTENT.articles as ArticlesContent }: { articles: HomeArticle[]; content?: ArticlesContent }) {
   if (articles.length === 0) return null
   return (
-    <Section tone="white" eyebrow="قراءات منتقاة" title="مقالات تعيد ترتيب الفكرة" lead="مساحات قصيرة للتأمل والفهم والتطبيق.">
+    <Section tone="white" eyebrow={content.eyebrow} title={content.heading} lead={content.lead}>
       <div className="grid gap-6 md:grid-cols-3">
         {articles.map((a) => (
           <Card key={a.slug} hover as="article" className="relative flex flex-col overflow-hidden pt-8">
@@ -26,7 +27,7 @@ export function FeaturedArticles({ articles }: { articles: HomeArticle[] }) {
       </div>
       <div className="mt-10 text-center">
         <Button href="/articles" variant="secondary">
-          جميع المقالات
+          {content.ctaLabel}
         </Button>
       </div>
     </Section>

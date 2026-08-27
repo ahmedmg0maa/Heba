@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { adminList } from '@/lib/data/cms'
+import { adminList, getPublicMediaOptions } from '@/lib/data/cms'
 import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table'
 import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -61,7 +61,7 @@ const statusMap: Record<string, { label: string; tone: 'success' | 'pending' | '
 }
 
 export default async function AdminBookingsPage() {
-  const [bookings, serviceRows] = await Promise.all([
+  const [bookings, serviceRows, media] = await Promise.all([
     adminList<Row>('bookings', 'id, starts_at, ends_at, status, customer_notes, meeting_url, admin_notes, services(title), profiles(full_name), booking_events(id,event,created_at), booking_reschedule_requests(id,proposed_starts_at,status,reason,created_at)', {
       orderBy: 'starts_at',
       ascending: false,
@@ -70,6 +70,7 @@ export default async function AdminBookingsPage() {
       orderBy: 'created_at',
       ascending: true,
     }),
+    getPublicMediaOptions(),
   ])
   return (
     <div className="mx-auto max-w-5xl space-y-8">
@@ -78,11 +79,11 @@ export default async function AdminBookingsPage() {
         <p className="mt-1 text-text-soft">إدارة الخدمة والتوافر والحجوزات بتوقيت القاهرة. تُسجّل التغييرات في السجل التشغيلي.</p>
       </header>
 
-      <CatalogCreatePanel kind="service" />
+      <CatalogCreatePanel kind="service" media={media} />
 
       {serviceRows.length > 0 && <Card><CardTitle>الخدمات والسياسات</CardTitle><div className="mt-5 grid gap-4 md:grid-cols-2">{serviceRows.map((service) => {
         const product = Array.isArray(service.products) ? service.products[0] : service.products
-        return <div key={service.id} className="rounded-xl border border-line bg-ivory/45 p-4"><div className="mb-3"><h3 className="font-bold text-deep-teal">{service.title}</h3><p className="text-sm text-text-soft">{Number(service.price).toLocaleString('ar-EG')} EGP · {service.duration_minutes.toLocaleString('ar-EG')} دقيقة · {service.booking_payment_mode === 'free' ? 'مجاني' : 'يتطلب دفعًا'}</p></div><CatalogEditPanel kind="service" item={{ id: service.id, title: service.title, slug: service.slug, description: service.description, price: Number(service.price), compareAtPrice: product?.compare_at_price, currency: product?.currency, subtitle: product?.subtitle, coverUrl: product?.cover_url, sort: product?.sort, isPublished: service.is_active, durationMinutes: service.duration_minutes, bookingPaymentMode: service.booking_payment_mode, bufferBeforeMinutes: service.buffer_before_minutes, bufferAfterMinutes: service.buffer_after_minutes, minimumNoticeMinutes: service.minimum_notice_minutes, bookingWindowDays: service.booking_window_days, holdMinutes: service.hold_minutes, cancellationNoticeHours: service.cancellation_notice_hours, rescheduleNoticeHours: service.reschedule_notice_hours, maxReschedules: service.max_reschedules, bookingPolicyNote: service.booking_policy_note }} /></div>
+        return <div key={service.id} className="rounded-xl border border-line bg-ivory/45 p-4"><div className="mb-3"><h3 className="font-bold text-deep-teal">{service.title}</h3><p className="text-sm text-text-soft">{Number(service.price).toLocaleString('ar-EG')} EGP · {service.duration_minutes.toLocaleString('ar-EG')} دقيقة · {service.booking_payment_mode === 'free' ? 'مجاني' : 'يتطلب دفعًا'}</p></div><CatalogEditPanel kind="service" media={media} item={{ id: service.id, title: service.title, slug: service.slug, description: service.description, price: Number(service.price), compareAtPrice: product?.compare_at_price, currency: product?.currency, subtitle: product?.subtitle, coverUrl: product?.cover_url, sort: product?.sort, isPublished: service.is_active, durationMinutes: service.duration_minutes, bookingPaymentMode: service.booking_payment_mode, bufferBeforeMinutes: service.buffer_before_minutes, bufferAfterMinutes: service.buffer_after_minutes, minimumNoticeMinutes: service.minimum_notice_minutes, bookingWindowDays: service.booking_window_days, holdMinutes: service.hold_minutes, cancellationNoticeHours: service.cancellation_notice_hours, rescheduleNoticeHours: service.reschedule_notice_hours, maxReschedules: service.max_reschedules, bookingPolicyNote: service.booking_policy_note }} /></div>
       })}</div></Card>}
 
       <Card>
