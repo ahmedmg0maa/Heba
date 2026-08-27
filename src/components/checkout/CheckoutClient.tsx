@@ -66,9 +66,13 @@ export function CheckoutClient({ product, settings }: { product: CheckoutProduct
   const [order, setOrder] = useState<(CreatedOrder & { hoursLeft: number }) | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [checkoutRequestId, setCheckoutRequestId] = useState<string | null>(null)
+  const [freeFulfilled, setFreeFulfilled] = useState(false)
 
   const selectedVariant = product.variants.find((variant) => variant.id === variantId)
   const selectedPrice = selectedVariant?.price ?? product.price
+  const selectedCompareAtPrice = selectedVariant?.compareAtPrice ?? product.compareAtPrice
+  const selectedOfferLabel = selectedVariant?.offerLabel ?? product.offerLabel
   const total = Math.max(0, selectedPrice - (coupon?.discount ?? 0))
   const demoMode = product.id === null
 
@@ -79,13 +83,15 @@ export function CheckoutClient({ product, settings }: { product: CheckoutProduct
     if (!code) return
     setBusy(true)
     setCouponMsg(null)
-    const res = await validateCoupon(code, product.id, selectedPrice)
+    const res = await validateCoupon(code, product.id, variantId || undefined)
     if (res.ok) {
       setCoupon({ code: res.data.code, discount: res.data.discount })
       setCouponMsg(`تم تطبيق الكوبون — وفّرتِ ${formatPrice(res.data.discount)}`)
+      setCheckoutRequestId(null)
     } else {
       setCoupon(null)
       setCouponMsg(res.error)
+      setCheckoutRequestId(null)
     }
     setBusy(false)
   }
@@ -97,11 +103,15 @@ export function CheckoutClient({ product, settings }: { product: CheckoutProduct
     }
     setBusy(true)
     setError(null)
-    const res = await createOrder({ productId: product.id, variantId: variantId || undefined, couponCode: coupon?.code, method })
+    const requestId = checkoutRequestId ?? crypto.randomUUID()
+    if (!checkoutRequestId) setCheckoutRequestId(requestId)
+    const res = await createOrder({ productId: product.id, variantId: variantId || undefined, couponCode: coupon?.code, method, requestId })
     if (res.ok) {
       const hoursLeft = Math.round((new Date(res.data.expiresAt).getTime() - Date.now()) / 3_600_000)
       setOrder({ ...res.data, hoursLeft })
-      setStep(2)
+      const fulfilledWithoutPayment = res.data.status === 'paid' && res.data.total === 0
+      setFreeFulfilled(fulfilledWithoutPayment)
+      setStep(fulfilledWithoutPayment ? 3 : 2)
       track('order_created', { product: product.slug, type: product.type, method, total: res.data.total })
     } else {
       setError(res.error)
@@ -162,23 +172,23 @@ export function CheckoutClient({ product, settings }: { product: CheckoutProduct
             <div>
               <p className="text-xs font-semibold tracking-wide text-antique-gold">{product.subtitle}</p>
               <h1 className="mt-1 text-2xl font-bold text-deep-teal">{product.title}</h1>
-              {product.offerLabel && (
+              {selectedOfferLabel && (
                 <span className="mt-2 inline-block rounded-full bg-burgundy/10 px-3 py-1 text-xs font-bold text-burgundy">
-                  {product.offerLabel}
+                  {selectedOfferLabel}
                 </span>
               )}
             </div>
             <div className="text-end">
               <p className="tnum text-2xl font-bold text-burgundy">{formatPrice(total)}</p>
-              {(product.compareAtPrice || coupon) && (
+              {(selectedCompareAtPrice || coupon) && (
                 <p className="tnum text-sm text-taupe line-through">
-                  {formatPrice(product.compareAtPrice ?? product.price)}
+                  {formatPrice(selectedCompareAtPrice ?? selectedPrice)}
                 </p>
               )}
             </div>
           </div>
 
-          {product.variants.length > 0 && <label className="block text-sm font-bold text-deep-teal">اختاري النسخة<select value={variantId} onChange={(event) => { setVariantId(event.target.value); setCoupon(null); setCouponMsg(null) }} className="mt-2 min-h-11 w-full rounded-xl border border-line bg-surface-raised px-4 text-ink">{product.variants.map((variant) => <option key={variant.id} value={variant.id}>{variant.name} — {formatPrice(variant.price)}</option>)}</select></label>}
+          {product.variants.length > 0 && <label className="block text-sm font-bold text-deep-teal">اختاري النسخة<select value={variantId} onChange={(event) => { setVariantId(event.target.value); setCoupon(null); setCouponMsg(null); setCheckoutRequestId(null) }} className="mt-2 min-h-11 w-full rounded-xl border border-line bg-surface-raised px-4 text-ink">{product.variants.map((variant) => <option key={variant.id} value={variant.id}>{variant.name} — {formatPrice(variant.price)}</option>)}</select></label>}
 
           <form onSubmit={onApplyCoupon} className="flex items-end gap-3">
             <FormField label="كوبون خصم (اختياري)" name="coupon" dir="ltr" className="flex-1" />
@@ -210,7 +220,7 @@ export function CheckoutClient({ product, settings }: { product: CheckoutProduct
                     name="method"
                     value={m.id}
                     checked={method === m.id}
-                    onChange={() => setMethod(m.id)}
+                    onChange={() => { setMethod(m.id); setCheckoutRequestId(null) }}
                     className="sr-only"
                   />
                   <span className="block font-bold text-deep-teal">{m.label}</span>
@@ -226,7 +236,8 @@ export function CheckoutClient({ product, settings }: { product: CheckoutProduct
             </p>
           )}
 
-          <Button size="lg" className="w-full" onClick={onCreateOrder} disabled={busy}>
+          {methods.length === 0 && total > 0 && <p className="rounded-xl bg-burgundy/10 px-4 py-3 text-sm font-medium text-burgundy" role="status">لا توجد وسيلة دفع يدوية مهيأة حاليًا، لذلك لن ننشئ طلبًا غير قابل للإكمال.</p>}
+          <Button size="lg" className="w-full" onClick={onCreateOrder} disabled={busy || (methods.length === 0 && total > 0)}>
             {busy ? 'لحظات…' : 'متابعة لتعليمات الدفع'}
           </Button>
           <p className="text-center text-xs text-taupe">
@@ -292,9 +303,11 @@ export function CheckoutClient({ product, settings }: { product: CheckoutProduct
             <circle cx="24" cy="24" r="21" strokeOpacity="0.3" />
             <path d="M15 25l6 6 12-13" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <h1 className="text-2xl font-bold text-deep-teal">استلمنا إيصالك</h1>
+          <h1 className="text-2xl font-bold text-deep-teal">{freeFulfilled ? 'تم تفعيل وصولك' : 'استلمنا إيصالك'}</h1>
           <p className="mx-auto max-w-sm leading-loose text-text-soft">
-            طلبك الآن قيد المراجعة. سنفعّل وصولك ونرسل لك إشعارًا فور اعتماد الإيصال.
+            {freeFulfilled
+              ? 'هذا العنصر مجاني، لذلك اكتمل الطلب وفُعّل الوصول مباشرة من دون طلب تحويل أو إيصال.'
+              : 'طلبك الآن قيد المراجعة. سنفعّل وصولك ونرسل لك إشعارًا فور اعتماد الإيصال.'}
           </p>
           <div className="flex flex-wrap justify-center gap-3 pt-2">
             <Button href="/dashboard/payments">تابعي حالة الدفع</Button>

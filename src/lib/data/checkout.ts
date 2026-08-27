@@ -16,7 +16,7 @@ export type CheckoutProduct = {
   compareAtPrice: number | null
   currency: string
   offerLabel: string | null // e.g. "خصم ٣٠٪ — عرض الإطلاق"
-  variants: { id: string; name: string; price: number }[]
+  variants: { id: string; name: string; price: number; compareAtPrice: number | null; offerLabel: string | null }[]
 }
 
 export type ActiveOffer = {
@@ -28,7 +28,7 @@ export type ActiveOffer = {
 }
 
 // Find the best active offer targeting this product (by id, type, or global target row).
-export async function resolveActiveOffer(productId: string, productType: string): Promise<ActiveOffer | null> {
+export async function resolveActiveOffer(productId: string, productType: string, listPrice: number): Promise<ActiveOffer | null> {
   try {
     const supabase = await getServerClient()
     const nowIso = new Date().toISOString()
@@ -48,10 +48,16 @@ export async function resolveActiveOffer(productId: string, productType: string)
     })
     if (matching.length === 0) return null
 
-    // Best offer = biggest percent first, then biggest fixed.
+    // Match the database checkout contract: choose the greatest monetary saving
+    // for the exact base/variant price, then keep deterministic ID ordering.
     matching.sort((a, b) => {
-      if (a.discount_kind === b.discount_kind) return Number(b.discount_value) - Number(a.discount_value)
-      return a.discount_kind === 'percent' ? -1 : 1
+      const saving = (offer: typeof a) => Math.min(
+        listPrice,
+        offer.discount_kind === 'percent'
+          ? listPrice * Number(offer.discount_value) / 100
+          : Number(offer.discount_value),
+      )
+      return saving(b) - saving(a) || a.id.localeCompare(b.id)
     })
     const best = matching[0]
     return {
@@ -160,8 +166,20 @@ export async function getCheckoutProduct(type: string, slug: string): Promise<Ch
       if (!session || session.availability.length === 0) return null
     }
     const listPrice = Number(data.price)
-    const offer = await resolveActiveOffer(data.id, t)
+    const offer = await resolveActiveOffer(data.id, t, listPrice)
     const effective = applyOffer(listPrice, offer)
+    const variants = await Promise.all((data.product_variants ?? []).filter((variant) => variant.is_active).map(async (variant) => {
+      const variantListPrice = Number(variant.price)
+      const variantOffer = await resolveActiveOffer(data.id, t, variantListPrice)
+      const variantPrice = applyOffer(variantListPrice, variantOffer)
+      return {
+        id: variant.id,
+        name: variant.name,
+        price: variantPrice,
+        compareAtPrice: variantOffer && variantPrice < variantListPrice ? variantListPrice : null,
+        offerLabel: variantOffer ? (variantOffer.badgeText ? `${variantOffer.badgeText} — ${variantOffer.title}` : variantOffer.title) : null,
+      }
+    }))
     return {
       id: data.id,
       type: t,
@@ -173,7 +191,7 @@ export async function getCheckoutProduct(type: string, slug: string): Promise<Ch
       compareAtPrice: offer && effective < listPrice ? listPrice : data.compare_at_price ? Number(data.compare_at_price) : null,
       currency: data.currency,
       offerLabel: offer ? (offer.badgeText ? `${offer.badgeText} — ${offer.title}` : offer.title) : null,
-      variants: (data.product_variants ?? []).filter((variant) => variant.is_active).map((variant) => ({ id: variant.id, name: variant.name, price: applyOffer(Number(variant.price), offer) })),
+      variants,
     }
   } catch {
     return getCatalogProduct(t, slug)

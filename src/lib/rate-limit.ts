@@ -1,6 +1,6 @@
 import { getServerClient } from '@/lib/supabase/server'
 
-type RateLimitScope = 'coupon' | 'payment_proof'
+type RateLimitScope = 'coupon' | 'payment_proof' | 'checkout'
 
 export async function rateLimit(
   scope: RateLimitScope,

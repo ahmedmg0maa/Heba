@@ -9,6 +9,7 @@ const anon = createClient(url, publicKey, { auth: { persistSession: false } })
 const marker = crypto.randomUUID()
 const password = `T!${crypto.randomUUID()}a9`
 const proofPaths = []
+const proofIntentIds = []
 let userId, productId, bundleProductId, variantId, courseId, approvedOrderId, approvedPaymentId, rejectedOrderId, rejectedPaymentId
 
 async function createOrderAndPayment(status = 'awaiting_review') {
@@ -27,13 +28,13 @@ try {
   const { data: created, error: userError } = await service.auth.admin.createUser({ email, password, email_confirm: true })
   if (userError || !created.user) throw userError ?? new Error('Could not create test user')
   userId = created.user.id
-  const { data: product, error: productError } = await service.from('products').insert({ type: 'course', slug: `commerce-${marker}`, title: 'Atomic commerce verification', price: 125, currency: 'EGP', is_published: true }).select('id').single()
+  const { data: product, error: productError } = await service.from('products').insert({ type: 'course', slug: `commerce-${marker}`, title: 'Atomic commerce verification', subtitle: 'Controlled test course', description: 'Disposable governed commerce verification product for the isolated Staging test only.', price: 125, currency: 'EGP', is_published: true }).select('id').single()
   if (productError) throw productError
   productId = product.id
-  const { data: course, error: courseError } = await service.from('courses').insert({ product_id: productId, slug: `commerce-${marker}`, title: 'Atomic commerce verification' }).select('id').single()
+  const { data: course, error: courseError } = await service.from('courses').insert({ product_id: productId, slug: `commerce-${marker}`, title: 'Atomic commerce verification', is_published: true }).select('id').single()
   if (courseError) throw courseError
   courseId = course.id
-  const { data: bundle, error: bundleError } = await service.from('products').insert({ type: 'bundle', slug: `bundle-${marker}`, title: 'Atomic bundle verification', price: 140, currency: 'EGP', is_published: true }).select('id').single()
+  const { data: bundle, error: bundleError } = await service.from('products').insert({ type: 'bundle', slug: `bundle-${marker}`, title: 'Atomic bundle verification', subtitle: 'Controlled bundle test', description: 'Disposable governed bundle used only for isolated checkout concurrency verification.', price: 140, currency: 'EGP', is_published: true }).select('id').single()
   if (bundleError) throw bundleError
   bundleProductId = bundle.id
   const { error: childError } = await service.from('product_bundles').insert({ bundle_product_id: bundleProductId, child_product_id: productId })
@@ -45,9 +46,10 @@ try {
   const customer = createClient(url, publicKey, { auth: { persistSession: false } })
   const { error: signInError } = await customer.auth.signInWithPassword({ email, password })
   if (signInError) throw signInError
+  const checkoutRequestId = crypto.randomUUID()
   const concurrentOrders = await Promise.all([
-    customer.rpc('create_product_order_v2', { p_product_id: bundleProductId, p_variant_id: variantId, p_coupon_code: '', p_method: 'instapay' }),
-    customer.rpc('create_product_order_v2', { p_product_id: bundleProductId, p_variant_id: variantId, p_coupon_code: '', p_method: 'instapay' }),
+    service.rpc('create_product_order_v3', { p_actor_id: userId, p_product_id: bundleProductId, p_variant_id: variantId, p_coupon_code: '', p_method: 'instapay', p_request_id: checkoutRequestId }),
+    service.rpc('create_product_order_v3', { p_actor_id: userId, p_product_id: bundleProductId, p_variant_id: variantId, p_coupon_code: '', p_method: 'instapay', p_request_id: checkoutRequestId }),
   ])
   if (concurrentOrders.some((result) => result.error)) throw concurrentOrders.find((result) => result.error).error
   const orderOutcomes = concurrentOrders.map((result) => result.data?.outcome).sort()
@@ -57,20 +59,27 @@ try {
   const { data: variantItem } = await service.from('order_items').select('variant_id, total').eq('order_id', approvedOrderId).single()
   if (variantItem.variant_id !== variantId || Number(variantItem.total) !== 150) throw new Error('Variant price was not authoritative in checkout')
 
-  proofPaths.push(`${userId}/${approvedOrderId}/${crypto.randomUUID()}.png`, `${userId}/${approvedOrderId}/${crypto.randomUUID()}.png`)
-  for (const path of proofPaths) {
-    const { error } = await service.storage.from('payment-proofs').upload(path, Buffer.from('proof'), { contentType: 'image/png' })
+  const proofBody = Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex')
+  for (let index = 0; index < 2; index += 1) {
+    const requestId = crypto.randomUUID()
+    const { data: intent, error: intentError } = await service.rpc('begin_payment_proof_upload_intent', {
+      p_actor_id: userId, p_order_id: approvedOrderId, p_method: 'instapay',
+      p_declared_mime: 'image/png', p_declared_size: proofBody.length, p_request_id: requestId,
+    })
+    if (intentError || !intent?.intentId || !intent?.storagePath) throw intentError ?? new Error('Proof intent was not issued')
+    proofIntentIds.push(intent.intentId); proofPaths.push(intent.storagePath)
+    const { error } = await service.storage.from('payment-proofs').upload(intent.storagePath, proofBody, { contentType: 'image/png' })
     if (error) throw error
   }
   const concurrentProofs = await Promise.all([
-    customer.rpc('submit_payment_proof_atomic', { p_order_id: approvedOrderId, p_method: 'instapay', p_storage_path: proofPaths[0] }),
-    customer.rpc('submit_payment_proof_atomic', { p_order_id: approvedOrderId, p_method: 'instapay', p_storage_path: proofPaths[1] }),
+    service.rpc('complete_payment_proof_upload_intent', { p_actor_id: userId, p_intent_id: proofIntentIds[0], p_storage_path: proofPaths[0], p_observed_mime: 'image/png', p_observed_size: proofBody.length, p_magic_valid: true }),
+    service.rpc('complete_payment_proof_upload_intent', { p_actor_id: userId, p_intent_id: proofIntentIds[1], p_storage_path: proofPaths[1], p_observed_mime: 'image/png', p_observed_size: proofBody.length, p_magic_valid: true }),
   ])
   if (concurrentProofs.some((result) => result.error)) throw concurrentProofs.find((result) => result.error).error
   const proofOutcomes = concurrentProofs.map((result) => result.data?.outcome).sort()
   if (proofOutcomes.join(',') !== 'existing,submitted') throw new Error(`Unexpected proof outcomes: ${proofOutcomes.join(',')}`)
-  approvedPaymentId = concurrentProofs[0].data.payment_id
-  if (approvedPaymentId !== concurrentProofs[1].data.payment_id) throw new Error('Proof idempotency returned different payments')
+  approvedPaymentId = concurrentProofs[0].data.paymentId
+  if (approvedPaymentId !== concurrentProofs[1].data.paymentId) throw new Error('Proof idempotency returned different payments')
   const { data: reviewProof, error: reviewProofError } = await service.rpc('get_payment_proof_for_review', { p_actor_id: owner.user_id, p_payment_id: approvedPaymentId })
   if (reviewProofError || !reviewProof?.storagePath || !reviewProof?.proofId) throw reviewProofError ?? new Error('Governed proof lookup failed')
   const { error: signedReviewError } = await service.storage.from('payment-proofs').createSignedUrl(reviewProof.storagePath, 60)
@@ -136,6 +145,8 @@ try {
 
   const { error: anonError } = await anon.rpc('approve_payment_governed', { p_payment_id: approvedPaymentId, p_actor_id: owner.user_id })
   if (!anonError) throw new Error('Anonymous caller could execute privileged payment RPC')
+  const { error: browserCheckoutError } = await customer.rpc('create_product_order_v3', { p_actor_id: userId, p_product_id: bundleProductId, p_variant_id: variantId, p_coupon_code: '', p_method: 'instapay', p_request_id: crypto.randomUUID() })
+  if (!browserCheckoutError) throw new Error('Authenticated browser could execute service-only checkout RPC')
 } finally {
   if (approvedPaymentId || rejectedPaymentId || approvedOrderId || rejectedOrderId) await service.from('audit_logs').delete().in('entity_id', [approvedPaymentId, rejectedPaymentId, approvedOrderId, rejectedOrderId].filter(Boolean))
   if (approvedOrderId || rejectedOrderId) {
@@ -149,6 +160,7 @@ try {
   if (approvedOrderId) await service.from('orders').delete().eq('id', approvedOrderId)
   if (rejectedOrderId) await service.from('orders').delete().eq('id', rejectedOrderId)
   if (proofPaths.length) await service.storage.from('payment-proofs').remove(proofPaths)
+  if (proofIntentIds.length) await service.from('payment_proof_upload_intents').delete().in('id', proofIntentIds)
   if (bundleProductId) await service.from('products').delete().eq('id', bundleProductId)
   if (productId) await service.from('products').delete().eq('id', productId)
   if (userId) await service.auth.admin.deleteUser(userId)
