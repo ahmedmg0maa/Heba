@@ -1,5 +1,6 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import { getServerClient, getServiceClient, hasSupabaseServerSecret } from '@/lib/supabase/server'
 import { requirePermission } from '@/lib/auth/permissions'
 import { hasSupabasePublicConfig } from '@/lib/supabase/public-key'
@@ -87,28 +88,40 @@ export async function adminSearch(q: string): Promise<ActionResult<SearchHit[]>>
 }
 
 // Send a personal in-app notification to one customer (support tool).
-export async function sendUserNotification(userId: string, title: string, body: string): Promise<ActionResult> {
+export async function sendUserNotification(input: {
+  userId: string
+  title: string
+  body: string
+  kind: string
+  link: string
+  requestId: string
+}): Promise<ActionResult> {
   if (!hasEnv()) return { ok: false, error: NO_ENV }
   const admin = await requirePermission('notifications.send')
   if (!admin) return { ok: false, error: NOT_ADMIN }
-  const t = title.trim()
-  if (t.length < 3) return { ok: false, error: 'اكتبي عنوان الرسالة.' }
+  const title = input.title.trim()
+  const body = input.body.trim()
+  const kinds = ['info', 'success', 'warning', 'error']
+  const links = ['/dashboard/notifications', '/dashboard/orders', '/dashboard/payments', '/dashboard/bookings', '/dashboard/courses', '/dashboard/books', '/dashboard/workshops']
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+  if (!uuid.test(input.userId) || !uuid.test(input.requestId)) return { ok: false, error: 'تعذّر التحقق من طلب الإرسال.' }
+  if (title.length < 3 || title.length > 120 || /[\u0000-\u001f\u007f]/.test(title)) return { ok: false, error: 'العنوان يجب أن يكون بين ٣ و١٢٠ حرفًا.' }
+  if (body.length > 1000 || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(body)) return { ok: false, error: 'نص الرسالة غير صالح أو يتجاوز ١٠٠٠ حرف.' }
+  if (!kinds.includes(input.kind) || !links.includes(input.link)) return { ok: false, error: 'نوع الإشعار أو وجهته غير معتمد.' }
 
   const service = getServiceClient()
-  const { error } = await service.from('notifications').insert({
-    user_id: userId,
-    title: t,
-    body: body.trim(),
-    kind: 'info',
-    link: '/dashboard/notifications',
+  const { error } = await service.rpc('send_admin_notification', {
+    p_actor_id: admin.userId,
+    p_customer_id: input.userId,
+    p_title: title,
+    p_body: body,
+    p_request_id: input.requestId,
+    p_kind: input.kind,
+    p_link: input.link,
   })
   if (error) return { ok: false, error: 'تعذّر الإرسال.' }
-  await service.from('audit_logs').insert({
-    actor_id: admin.userId,
-    action: 'notification.sent',
-    entity_type: 'user',
-    entity_id: userId,
-    meta: { title: t },
-  })
+  revalidatePath(`/admin/users/${input.userId}`)
+  revalidatePath('/admin/users')
+  revalidatePath('/dashboard/notifications')
   return { ok: true, data: null }
 }

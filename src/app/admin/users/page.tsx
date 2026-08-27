@@ -20,9 +20,14 @@ export default async function AdminUsersPage({ searchParams }: Props) {
   if (!admin?.userId) throw new Error('ADMIN_CUSTOMER_DIRECTORY_ACCESS_UNAVAILABLE')
   const query = q?.trim() ?? ''
   if (query.length > 100 || /[\u0000-\u001f\u007f]/.test(query)) throw new Error('ADMIN_CUSTOMER_SEARCH_INVALID')
-  const { data, error } = await getServiceClient().rpc('search_admin_users', { p_actor_id: admin.userId, p_query: query })
+  const service = getServiceClient()
+  const [{ data, error }, sendPermission] = await Promise.all([
+    service.rpc('search_admin_users', { p_actor_id: admin.userId, p_query: query }),
+    service.rpc('has_permission', { permission_name: 'notifications.send', uid: admin.userId }),
+  ])
   if (error) throw new Error('ADMIN_CUSTOMER_DIRECTORY_READ_UNAVAILABLE')
   const users = (Array.isArray(data) ? data : []) as Row[]
+  const canNotify = !sendPermission.error && sendPermission.data === true
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">
@@ -30,7 +35,7 @@ export default async function AdminUsersPage({ searchParams }: Props) {
         <div>
           <h1 className="text-3xl font-bold text-deep-teal">العملاء</h1>
           <p className="mt-1 text-text-soft">
-            {q ? `نتائج البحث عن «${q}»` : 'أحدث ٢٠٠ حساب — ويمكنك مراسلة أي عميلة بإشعار مباشر.'}
+            {q ? `نتائج البحث عن «${q}»` : `أحدث ٢٠٠ حساب${canNotify ? ' — ويمكنك مراسلة أي عميلة بإشعار مباشر.' : '.'}`}
           </p>
         </div>
         <form className="flex gap-2">
@@ -76,7 +81,7 @@ export default async function AdminUsersPage({ searchParams }: Props) {
                 <TD>{u.phone ? <span dir="ltr">{u.phone}</span> : '—'}</TD>
                 <TD>{dateFmt.format(new Date(u.created_at))}</TD>
                 <TD>
-                  <NotifyUser userId={u.id} userName={u.full_name || u.email} />
+                  {canNotify ? <NotifyUser userId={u.id} userName={u.full_name || u.email} /> : '—'}
                 </TD>
               </TR>
             ))}

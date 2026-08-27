@@ -9,6 +9,7 @@ import {
   CustomerNoteControl,
   CustomerTagControl,
 } from '@/components/admin/Customer360Actions'
+import { NotifyUser } from '@/components/admin/NotifyUser'
 
 type Props = { params: Promise<{ id: string }> }
 type Timed = { created_at: string }
@@ -42,13 +43,15 @@ export default async function Customer360Page({ params }: Props) {
   if (!admin?.userId) throw new Error('ADMIN_CUSTOMER_ACCESS_UNAVAILABLE')
 
   const service = getServiceClient()
-  const [{ data, error }, managePermission] = await Promise.all([
+  const [{ data, error }, managePermission, notifyPermission] = await Promise.all([
     service.rpc('get_admin_customer_360', { p_actor_id: admin.userId, p_customer_id: id }),
     service.rpc('has_permission', { permission_name: 'users.manage', uid: admin.userId }),
+    service.rpc('has_permission', { permission_name: 'notifications.send', uid: admin.userId }),
   ])
   if (error?.code === 'P0002') notFound()
   if (error || !isCustomerPayload(data)) throw new Error('ADMIN_CUSTOMER_READ_UNAVAILABLE')
   const canManage = !managePermission.error && managePermission.data === true
+  const canNotify = !notifyPermission.error && notifyPermission.data === true
   const activeNotes = data.notes.filter((note) => !note.archived_at)
   const archivedNotes = data.notes.filter((note) => note.archived_at)
   const events = [
@@ -72,7 +75,7 @@ export default async function Customer360Page({ params }: Props) {
         </div>
       </header>
 
-      {canManage && <Card><Customer360Actions userId={id} /></Card>}
+      {(canManage || canNotify) && <Card><div className="flex flex-wrap items-start justify-between gap-4">{canManage && <Customer360Actions userId={id} />}{canNotify && <NotifyUser userId={id} userName={data.profile.fullName || data.profile.email} />}</div></Card>}
 
       <div className="grid gap-6 lg:grid-cols-3">
         <Card>

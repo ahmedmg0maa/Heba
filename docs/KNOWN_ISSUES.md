@@ -2,6 +2,7 @@
 
 | # | Severity | Issue | Status |
 |---|----------|-------|--------|
+| 59 | P1 | Manual Admin notification delivery was a direct insert followed by a separate audit write, copied the title into audit metadata, lacked idempotency, and rendered a send control to customer viewers who did not hold `notifications.send`. | **Locally closed:** migration 059 provides one permission-checked/idempotent delivery-and-audit transaction with bounded content and destination allowlists; the UI uses its real permission, exposes truthful options/feedback and no longer duplicates message content into audit. Persistence/RLS and repeat-submit evidence remain `STAGING EXTERNAL GATE`. |
 | 58 | P1 | Sentry previously had variable-name readiness only, and isolated builds did not explicitly neutralize monitoring/provider credentials inherited from the shell. | **Locally closed:** official matching Worker/browser SDKs, a custom Worker wrapper, awaited Next error capture, strict PII scrub and secret-shadowed isolated commands are executable and pass both 70/70 suites. A controlled Staging event plus alert receipt remains `STAGING EXTERNAL GATE`; configuration presence is not live proof. |
 | 1 | low | Official logo, original botanical SVG system, and an optimized original no-person catalog/editorial still life are integrated. Personal photography is intentionally not required by the approved direction. | closed |
 | 2 | low | Four reference screenshots were supplied and translated into V2.4/V2.5 system rules; desktop/mobile/light/dark comparison pass completed. | closed |

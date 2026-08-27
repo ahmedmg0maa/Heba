@@ -1,5 +1,11 @@
 # PROJECT STATE
-Last session: 2026-08-27 | Current program: Code X development-first execution | LOCAL DEVELOPMENT IN PROGRESS — STAGING EXTERNAL GATE remains for recovery, provider migration and live acceptance only
+Last session: 2026-08-28 | Current program: Code X development-first execution | LOCAL DEVELOPMENT IN PROGRESS — STAGING EXTERNAL GATE remains for recovery, provider migration and live acceptance only
+
+## P1 governed Admin notification checkpoint — 2026-08-28
+- Manual customer notifications no longer use a direct table insert followed by a separate audit insert. Forward-only local migration 059 exposes a service-role-only transaction that rechecks `notifications.send`, verifies the target profile, validates bounded title/body, allowlists notification kinds and Dashboard destinations, then couples delivery and a content-free audit record.
+- Each Admin send carries an opaque UUID idempotency identity protected by a transaction advisory lock and a unique partial index. Repeating an identical request returns the existing notification without a second delivery or audit; reusing an identity for different content, actor or customer fails closed.
+- The Admin control now exposes the real kind/destination options and field bounds with accessible success/error feedback. `/admin/users` and Customer 360 query the authoritative permission before rendering it, so `users.view` alone no longer produces a fake action; successful delivery is visible in the customer's bounded timeline and Dashboard notification source.
+- `pnpm check:deploy` passed type-check, lint, the 68-page production build, public Playwright **70/70** and every local contract/audit. The isolated vinext/Workers build and Cloudflare runtime suite passed **70/70** with retries disabled. Migration 059 remains source-only and has not been applied externally.
 
 ## P1 privacy-safe Sentry monitoring checkpoint — 2026-08-27
 - The Next.js/Cloudflare runtime now uses matching pinned official Sentry browser and Worker SDKs. The generated Worker enters through a local `withSentry` wrapper, while Next server errors use the awaited instrumentation hook and browser errors use an optional client initializer; the integration stays dormant when its DSNs are absent.
