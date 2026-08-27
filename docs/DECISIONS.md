@@ -435,3 +435,9 @@
 - **Publication guidance does not weaken server authority.** Catalog editors show the owner the applicable facts/rights/content/availability checklist, while every actual publish attempt re-runs the database-backed readiness contract server-side and fails closed when 046 rights evidence or domain requirements are absent.
 - **Hydration readiness is explicit in cross-runtime keyboard tests.** The start journey exposes a DOM marker set only after its client effect. Worker E2E waits for that marker before keyboard interaction, avoiding a vinext hydration race without retries, sleeps or weakened accessibility assertions.
 - **Local Worker parity is not remote Staging acceptance.** A credential-empty vinext build and 52/52 local Worker tests prove runtime compatibility only. The current worktree must still be deployed to the separate protected Worker and exercised against the accepted separate Supabase Staging project before it earns live points.
+
+## 2026-08-27 — Recovery connection boundary
+
+- **A credential disclosed in chat is never used.** The disclosed database password is classified as compromised and must be rotated before any connection attempt. Reports record only the credential name/state, never its value.
+- **Recovery uses Supabase Session pooler on IPv4-only execution networks.** The direct project endpoint resolves only to IPv6 here and failed the read-only reachability check. The official Session pooler URL on port 5432 is required for `pg_dump`/restore; transaction mode on 6543 is rejected.
+- **The isolated restore target reuses the approved pooler host.** Because it is created in the same region, the runner selects it using the tenant-qualified `postgres.<target-ref>` username and a generated one-process password. It does not guess a pooler host, print a credential or persist the source/target URLs.

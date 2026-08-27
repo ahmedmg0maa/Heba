@@ -24,6 +24,9 @@ const required = [
   'docs/FINAL_INDEPENDENT_ACCEPTANCE_AUDIT_AND_SCORE_POST_REMEDIATION_2026-08-25.md',
   'docs/PRODUCTION_LAUNCH_CLOSURE_2026-08-26.md',
   'scripts/verify-booking-staging-contract.mjs',
+  'scripts/run-launch-recovery-drill.ps1',
+  'scripts/run-launch-recovery-drill-interactive.ps1',
+  'scripts/verify-recovery-runner-local.mjs',
 ]
 
 const failures = required.filter((f) => !existsSync(f)).map((f) => `missing required file: ${f}`)

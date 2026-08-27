@@ -61,4 +61,4 @@ These 41 points are awarded only when their environment-specific acceptance test
 
 ## Single next external action
 
-Configure `HEBA_LAUNCH_PRODUCTION_DATABASE_URL` directly in the secure executor environment—never in chat, GitHub or a repository file—and confirm only that the variable is present. This unlocks the approved full logical backup and isolated restore drill. It does not authorize Production migration, DNS, deployment or any other Production write.
+Rotate the Production database password that was disclosed in chat, then run `powershell -ExecutionPolicy Bypass -File scripts/run-launch-recovery-drill-interactive.ps1` from `D:/claude`. Use the new Supabase **Session pooler** template on port 5432 and enter the new password only at the hidden prompt. This unlocks the approved full logical backup and isolated restore drill; it does not authorize Production migration, DNS, deployment or any other Production write.

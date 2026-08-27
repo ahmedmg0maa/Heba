@@ -12,7 +12,7 @@ This record covers the current Code X worktree only. It does not convert histori
 |---|---|---|
 | Production project | known historically as masked ref `zfbw…jidc` | not queried in this execution |
 | Separate empty Staging project | known historically as masked ref `uecv…cphp` | not configured in the current executor; no keys or database password are present |
-| Production logical-backup source | `BLOCKED` | the executor variable `HEBA_LAUNCH_PRODUCTION_DATABASE_URL` is absent; its value was neither requested nor read |
+| Production logical-backup source | `BLOCKED` | a password was disclosed in chat and intentionally not used; it must be rotated. The direct IPv6 host is unreachable here, so the new Session pooler URL is required |
 | Full logical backup | `not-run-by-design` | fail-closed runner must not connect without the secure executor-only source |
 | Isolated restore drill | `not-run-by-design` | cannot start before the logical backup source exists |
 | Staging recovery point | `unverified` | no provider or restored target evidence in this execution |
@@ -46,4 +46,4 @@ Production remains untouched and 043 must not be reapplied. Migrations 044–047
 
 ## Exact unblock
 
-The next external action is to configure `HEBA_LAUNCH_PRODUCTION_DATABASE_URL` in the secure executor environment only—not in chat, `.env`, GitHub or a report. Once present, `scripts/run-launch-recovery-drill.ps1` can create an isolated disposable restore target, record sanitized evidence and clean the temporary target/artifacts before any Staging migration request proceeds.
+Rotate the disclosed Production database password. Then run `powershell -ExecutionPolicy Bypass -File scripts/run-launch-recovery-drill-interactive.ps1` from `D:/claude`. Paste the new **Session pooler** URL template with `[YOUR-PASSWORD]` intact and enter the new password only at the hidden Terminal prompt. The script sets the value for that process, creates an isolated disposable restore target, records sanitized evidence, deletes the target and temporary artifacts, and clears the secret before any Staging migration proceeds.

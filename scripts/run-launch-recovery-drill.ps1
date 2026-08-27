@@ -8,6 +8,16 @@ if ([string]::IsNullOrWhiteSpace($productionConnection)) {
 }
 
 $productionRef = 'zfbwpubsnuijybxjuidc'
+$sourceUri = $null
+try { $sourceUri = [Uri]$productionConnection } catch { throw 'The secure database connection is not a valid URL. No value was logged.' }
+$sourceUser = [Uri]::UnescapeDataString(($sourceUri.UserInfo -split ':', 2)[0])
+if ($sourceUri.Scheme -notin @('postgres', 'postgresql') -or
+    $sourceUri.Host -notlike '*.pooler.supabase.com' -or
+    $sourceUri.Port -ne 5432 -or
+    $sourceUser -ne "postgres.$productionRef" -or
+    [string]::IsNullOrWhiteSpace($sourceUri.UserInfo)) {
+  throw 'Use the Production Session pooler URL from Supabase Connect (port 5432 and postgres.<project-ref> user). Direct IPv6 and transaction-pooler URLs are rejected.'
+}
 $prefix = 'hebaelsherif-restore-'
 $projectResponse = @(supabase projects list --output-format json | ConvertFrom-Json)
 $before = @($projectResponse.projects)
@@ -36,7 +46,10 @@ try {
   if ($created.Count -ne 1 -or $created[0].status -ne 'ACTIVE_HEALTHY') { throw 'The isolated restore target was not uniquely identified as healthy.' }
   $target = $created[0]
   $escapedPassword = [uri]::EscapeDataString($restorePassword)
-  $env:HEBA_LAUNCH_RESTORE_DATABASE_URL = "postgresql://postgres:$escapedPassword@db.$($target.ref).supabase.co:5432/postgres?sslmode=require"
+  # The target is created in the same region. Reusing the dashboard-provided
+  # Session pooler host avoids guessing a pooler region and works on IPv4-only
+  # execution networks. The tenant-qualified user selects the isolated target.
+  $env:HEBA_LAUNCH_RESTORE_DATABASE_URL = "postgresql://postgres.$($target.ref):$escapedPassword@$($sourceUri.Host):5432/postgres?sslmode=require"
   $env:HEBA_LAUNCH_CLEANUP = '1'
 
   & node scripts/launch-backup-restore.mjs
