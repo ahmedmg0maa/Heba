@@ -34,7 +34,6 @@ async function checkLessonAccess(lessonId: string) {
   if (!lesson) return null
   const mod = Array.isArray(lesson.course_modules) ? lesson.course_modules[0] : lesson.course_modules
   const courseId = mod?.course_id as string
-  if (lesson.is_preview) return { user, courseId, videoPath: lesson.video_path as string | null }
   const { data: enrollment } = await supabase
     .from('course_enrollments')
     .select('id')
@@ -106,84 +105,46 @@ export async function getResourceUrl(resourceId: string): Promise<ActionResult<{
 
 export async function markLessonComplete(lessonId: string, completed: boolean): Promise<ActionResult<{ percent: number }>> {
   if (!hasEnv()) return { ok: false, error: NO_ENV }
-  const access = await checkLessonAccess(lessonId)
-  if (!access) return { ok: false, error: NOT_ALLOWED }
-  const { supabase } = await requireUser()
-
-  const { error: upErr } = await supabase.from('lesson_progress').upsert(
-    {
-      user_id: access.user.id,
-      lesson_id: lessonId,
-      completed_at: completed ? new Date().toISOString() : null,
-    },
-    { onConflict: 'user_id,lesson_id' },
-  )
-  if (upErr) return { ok: false, error: GENERIC }
-
-  // Recompute course percent from scratch — idempotent and drift-free.
-  const { data: modules } = await supabase
-    .from('course_modules')
-    .select('id, course_lessons(id)')
-    .eq('course_id', access.courseId)
-  const lessonIds = (modules ?? []).flatMap((m) => (m.course_lessons ?? []).map((l) => l.id))
-  const total = lessonIds.length
-  let percent = 0
-  if (total > 0) {
-    const { count } = await supabase
-      .from('lesson_progress')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', access.user.id)
-      .in('lesson_id', lessonIds)
-      .not('completed_at', 'is', null)
-    percent = Math.round(((count ?? 0) / total) * 10000) / 100
+  const { user } = await requireUser()
+  if (!user) return { ok: false, error: NOT_ALLOWED }
+  const { data, error } = await getServiceClient().rpc('set_customer_lesson_completion', {
+    p_actor_id: user.id,
+    p_lesson_id: lessonId,
+    p_completed: completed,
+  })
+  if (error || typeof data?.percent !== 'number') {
+    return { ok: false, error: error?.message.includes('learning_enrollment_required') ? NOT_ALLOWED : GENERIC }
   }
-
-  const { error: progErr } = await supabase.from('course_progress').upsert(
-    {
-      user_id: access.user.id,
-      course_id: access.courseId,
-      percent,
-      last_lesson_id: lessonId,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: 'user_id,course_id' },
-  )
-  if (progErr) return { ok: false, error: GENERIC }
-
-  return { ok: true, data: { percent } }
+  return { ok: true, data: { percent: Number(data.percent) } }
 }
 
 export async function saveNote(lessonId: string, content: string, noteId?: string): Promise<ActionResult<{ id: string }>> {
   if (!hasEnv()) return { ok: false, error: NO_ENV }
-  const { supabase, user } = await requireUser()
+  const { user } = await requireUser()
   if (!user) return { ok: false, error: NOT_ALLOWED }
   const trimmed = content.trim()
   if (!trimmed) return { ok: false, error: 'اكتبي ملاحظتك أولًا.' }
-
-  if (noteId) {
-    const { error } = await supabase
-      .from('course_notes')
-      .update({ content: trimmed })
-      .eq('id', noteId)
-      .eq('user_id', user.id)
-    if (error) return { ok: false, error: GENERIC }
-    return { ok: true, data: { id: noteId } }
+  if (trimmed.length > 5000) return { ok: false, error: 'الملاحظة طويلة جدًا؛ الحد الأقصى 5000 حرف.' }
+  const { data, error } = await getServiceClient().rpc('save_customer_course_note', {
+    p_actor_id: user.id,
+    p_lesson_id: lessonId,
+    p_content: trimmed,
+    p_note_id: noteId ?? null,
+  })
+  if (error || !data?.noteId) {
+    return { ok: false, error: error?.message.includes('learning_enrollment_required') ? NOT_ALLOWED : GENERIC }
   }
-
-  const { data, error } = await supabase
-    .from('course_notes')
-    .insert({ user_id: user.id, lesson_id: lessonId, content: trimmed })
-    .select('id')
-    .single()
-  if (error || !data) return { ok: false, error: GENERIC }
-  return { ok: true, data: { id: data.id } }
+  return { ok: true, data: { id: String(data.noteId) } }
 }
 
 export async function deleteNote(noteId: string): Promise<ActionResult<null>> {
   if (!hasEnv()) return { ok: false, error: NO_ENV }
-  const { supabase, user } = await requireUser()
+  const { user } = await requireUser()
   if (!user) return { ok: false, error: NOT_ALLOWED }
-  const { error } = await supabase.from('course_notes').delete().eq('id', noteId).eq('user_id', user.id)
+  const { error } = await getServiceClient().rpc('delete_customer_course_note', {
+    p_actor_id: user.id,
+    p_note_id: noteId,
+  })
   if (error) return { ok: false, error: GENERIC }
   return { ok: true, data: null }
 }

@@ -50,6 +50,7 @@ export function LearnClient({ data }: { data: LearnData }) {
   const [noteDraft, setNoteDraft] = useState('')
   const [busy, setBusy] = useState(false)
   const [tab, setTab] = useState<'notes' | 'resources'>('notes')
+  const [actionError, setActionError] = useState<string | null>(null)
 
   const current: LearnLesson | null = flat.find((l) => l.id === currentId) ?? null
   const currentIndex = current ? flat.findIndex((l) => l.id === current.id) : -1
@@ -57,6 +58,7 @@ export function LearnClient({ data }: { data: LearnData }) {
   const lessonNotes = notes.filter((n) => n.lessonId === currentId)
 
   async function openLesson(lesson: LearnLesson) {
+    setActionError(null)
     setCurrentId(lesson.id)
     setVideoUrl(null)
     setVideoMsg(null)
@@ -72,6 +74,7 @@ export function LearnClient({ data }: { data: LearnData }) {
   async function toggleComplete() {
     if (!current) return
     setBusy(true)
+    setActionError(null)
     const target = !completed.has(current.id)
     const res = await markLessonComplete(current.id, target)
     if (res.ok) {
@@ -82,7 +85,7 @@ export function LearnClient({ data }: { data: LearnData }) {
         else next.delete(current.id)
         return next
       })
-    }
+    } else setActionError(res.error)
     setBusy(false)
   }
 
@@ -90,6 +93,7 @@ export function LearnClient({ data }: { data: LearnData }) {
     e.preventDefault()
     if (!currentId || !noteDraft.trim()) return
     setBusy(true)
+    setActionError(null)
     const res = await saveNote(currentId, noteDraft)
     if (res.ok) {
       setNotes((prev) => [
@@ -97,18 +101,24 @@ export function LearnClient({ data }: { data: LearnData }) {
         ...prev,
       ])
       setNoteDraft('')
-    }
+    } else setActionError(res.error)
     setBusy(false)
   }
 
   async function onDeleteNote(id: string) {
-    setNotes((prev) => prev.filter((n) => n.id !== id))
-    await deleteNote(id)
+    setBusy(true)
+    setActionError(null)
+    const res = await deleteNote(id)
+    if (res.ok) setNotes((prev) => prev.filter((n) => n.id !== id))
+    else setActionError(res.error)
+    setBusy(false)
   }
 
   async function onDownload(resourceId: string) {
+    setActionError(null)
     const res = await getResourceUrl(resourceId)
     if (res.ok) window.open(res.data.url, '_blank', 'noopener')
+    else setActionError(res.error)
   }
 
   return (
@@ -121,6 +131,7 @@ export function LearnClient({ data }: { data: LearnData }) {
         </div>
         <ProgressRing percent={percent} />
       </header>
+      {actionError && <p className="rounded-xl bg-burgundy/10 px-4 py-3 text-sm font-semibold text-burgundy" role="alert">{actionError}</p>}
 
       <div className="grid gap-6 xl:grid-cols-[1fr_340px]">
         {/* Player column */}
@@ -209,6 +220,7 @@ export function LearnClient({ data }: { data: LearnData }) {
                       id="note"
                       value={noteDraft}
                       onChange={(e) => setNoteDraft(e.target.value)}
+                      maxLength={5000}
                       rows={3}
                       className="w-full rounded-xl border border-line bg-ivory/50 px-4 py-3 text-sm text-ink focus:border-deep-teal focus:outline-2 focus:outline-deep-teal/20"
                     />
@@ -226,6 +238,7 @@ export function LearnClient({ data }: { data: LearnData }) {
                           <button
                             type="button"
                             onClick={() => onDeleteNote(n.id)}
+                            disabled={busy}
                             aria-label="حذف الملاحظة"
                             className="text-taupe opacity-0 transition-opacity hover:text-burgundy group-hover:opacity-100"
                           >

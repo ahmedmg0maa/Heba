@@ -39,7 +39,7 @@ export async function getLearnData(slug: string): Promise<LearnData | null> {
     } = await supabase.auth.getUser()
     if (!user) return null
 
-    const { data: course } = await supabase
+    const { data: course, error: courseError } = await supabase
       .from('courses')
       .select(
         'id, slug, title, course_modules(id, title, sort, course_lessons(id, title, description, video_path, duration_seconds, sort, is_preview, lesson_resources(id, title, kind, size_bytes)))',
@@ -47,14 +47,39 @@ export async function getLearnData(slug: string): Promise<LearnData | null> {
       .eq('slug', slug)
       .eq('is_published', true)
       .maybeSingle()
+    if (courseError) throw new Error('LEARNING_COURSE_READ_UNAVAILABLE')
     if (!course) return null
 
-    const [{ data: enrollment }, { data: progress }, { data: lessonProgress }, { data: notes }] = await Promise.all([
-      supabase.from('course_enrollments').select('id').eq('user_id', user.id).eq('course_id', course.id).maybeSingle(),
+    const lessonIds = (course.course_modules ?? []).flatMap((module) => (module.course_lessons ?? []).map((lesson) => lesson.id))
+    const { data: enrollment, error: enrollmentError } = await supabase
+      .from('course_enrollments')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('course_id', course.id)
+      .maybeSingle()
+    if (enrollmentError) throw new Error('LEARNING_ENROLLMENT_READ_UNAVAILABLE')
+    if (!enrollment) {
+      return {
+        courseId: course.id, slug: course.slug, title: course.title, enrolled: false,
+        percent: 0, modules: [], resources: {}, notes: [],
+      }
+    }
+
+    const [progressResponse, lessonProgressResponse, notesResponse] = await Promise.all([
       supabase.from('course_progress').select('percent').eq('user_id', user.id).eq('course_id', course.id).maybeSingle(),
-      supabase.from('lesson_progress').select('lesson_id, completed_at').eq('user_id', user.id),
-      supabase.from('course_notes').select('id, lesson_id, content, updated_at').eq('user_id', user.id).order('updated_at', { ascending: false }),
+      lessonIds.length > 0
+        ? supabase.from('lesson_progress').select('lesson_id, completed_at').eq('user_id', user.id).in('lesson_id', lessonIds)
+        : Promise.resolve({ data: [], error: null }),
+      lessonIds.length > 0
+        ? supabase.from('course_notes').select('id, lesson_id, content, updated_at').eq('user_id', user.id).in('lesson_id', lessonIds).order('updated_at', { ascending: false }).limit(500)
+        : Promise.resolve({ data: [], error: null }),
     ])
+    if (progressResponse.error || lessonProgressResponse.error || notesResponse.error) {
+      throw new Error('LEARNING_STATE_READ_UNAVAILABLE')
+    }
+    const progress = progressResponse.data
+    const lessonProgress = lessonProgressResponse.data
+    const notes = notesResponse.data
 
     const completedSet = new Set((lessonProgress ?? []).filter((p) => p.completed_at).map((p) => p.lesson_id))
     const resources: Record<string, LearnResource[]> = {}
@@ -89,11 +114,13 @@ export async function getLearnData(slug: string): Promise<LearnData | null> {
       courseId: course.id,
       slug: course.slug,
       title: course.title,
-      enrolled: Boolean(enrollment),
+      enrolled: true,
       percent: progress ? Number(progress.percent) : 0,
       modules,
       resources,
       notes: (notes ?? []).map((n) => ({ id: n.id, lessonId: n.lesson_id, content: n.content, updatedAt: n.updated_at })),
     }
-  } catch { return null }
+  } catch {
+    throw new Error('LEARNING_STATE_UNAVAILABLE')
+  }
 }

@@ -561,3 +561,11 @@
 - **Large proof bodies bypass the Worker, authority does not.** The browser uploads directly to private Supabase Storage with a short-lived signed token. PostgreSQL must first issue an order-owned intent, and the server must reauthorize actor/intent/path before reading or deleting the object with Service Role.
 - **Extension and declared MIME are not evidence.** Finalization observes a bounded Storage range, total size and response MIME, then validates PNG/JPEG/WebP signatures. Only an exact declared/observed match can bind a proof; invalid, expired or superseded objects remain outside payment state and are removed.
 - **063 is source-only.** The private intent ledger, SQL functions, real Storage behavior, RLS and concurrency remain unverified until the recovery-controlled Staging gate applies and exercises the migration.
+
+## 2026-08-28 — Enrollment-bound atomic customer learning state
+
+- **Preview is not an enrollment substitute inside the customer Dashboard.** Public lesson preview may support discovery, but progress, private notes, course resources and the enrolled curriculum require an actual enrollment row.
+- **Progress is one transactional fact.** A lesson toggle, full course-percentage recomputation and metadata-only audit execute under one customer/course advisory lock. Browser roles retain own-row reads but cannot write progress tables directly.
+- **Private note content stays private operational data.** Only the owning customer can create, update or delete a note through the server boundary, and each note must belong to an enrolled course lesson. Audit stores opaque identifiers and content length, never note text.
+- **Learning read failures do not imitate missing content.** A configured database failure crosses an application error boundary. Unenrolled responses serialize no curriculum, resources or notes, and enrolled note/progress reads are limited to the requested course.
+- **064 remains source-only.** Live SQL parsing, RLS denial, concurrency and persistence require the recovery-controlled `STAGING EXTERNAL GATE`; local Build or E2E success does not establish those provider facts.
