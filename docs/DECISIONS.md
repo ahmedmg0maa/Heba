@@ -569,3 +569,11 @@
 - **Private note content stays private operational data.** Only the owning customer can create, update or delete a note through the server boundary, and each note must belong to an enrolled course lesson. Audit stores opaque identifiers and content length, never note text.
 - **Learning read failures do not imitate missing content.** A configured database failure crosses an application error boundary. Unenrolled responses serialize no curriculum, resources or notes, and enrolled note/progress reads are limited to the requested course.
 - **064 remains source-only.** Live SQL parsing, RLS denial, concurrency and persistence require the recovery-controlled `STAGING EXTERNAL GATE`; local Build or E2E success does not establish those provider facts.
+
+## 2026-08-28 — Governed customer protected-delivery admission
+
+- **Entitlement is decided in PostgreSQL, not inferred by a route.** One service-only RPC binds the actor, resource kind, opaque entity and workshop slug, then repeats the current enrollment or active-registration check before any private path is returned to the server.
+- **The Worker mints links but never carries protected bodies.** Course/workshop resources use 60-second Supabase Storage URLs and recordings use 90 seconds. This preserves the direct-delivery architecture and avoids Worker body, CPU and memory limits.
+- **Minting is an auditable bounded operation.** Per actor/kind/entity advisory locks enforce 30 daily resource admissions or 60 recording admissions. Evidence contains a hashed request fingerprint and structural reason/remaining count; Storage paths, titles and external destinations are excluded.
+- **External learning resources require HTTPS.** Both the database boundary and route URL parser reject plain HTTP and non-web schemes. The redirect response remains private/no-store with a no-referrer policy.
+- **065 is source-only.** Local contracts and both 70/70 suites prove source/runtime compatibility, not live SQL, RLS, Storage or concurrency; those remain inside `STAGING EXTERNAL GATE`.
