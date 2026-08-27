@@ -19,6 +19,7 @@ const columns = [
       { href: '/about', label: 'عن هبة الشريف' },
       { href: '/start-here', label: 'ابدئي من هنا' },
       { href: '/articles', label: 'المقالات' },
+      { href: '/testimonials', label: 'تجارب موثقة' },
       { href: '/faq', label: 'الأسئلة الشائعة' },
     ],
   },

@@ -53,9 +53,12 @@ export async function getHomeData(): Promise<HomeData> {
         .limit(3),
       supabase
         .from('reviews')
-        .select('display_name, rating, comment')
+        .select('display_name, display_name_consent, rating, comment')
+        .eq('status', 'approved')
         .eq('is_approved', true)
         .eq('is_featured', true)
+        .eq('verified_purchase', true)
+        .not('publication_consent_at', 'is', null)
         .limit(6),
     ])
 
@@ -76,7 +79,7 @@ export async function getHomeData(): Promise<HomeData> {
         publishedAt: a.published_at,
       })),
       testimonials: (reviewsRes.data ?? []).map((r) => ({
-        displayName: r.display_name ?? 'متعلّمة',
+        displayName: r.display_name_consent && r.display_name ? r.display_name : 'عميلة موثقة',
         rating: r.rating,
         comment: r.comment,
       })),

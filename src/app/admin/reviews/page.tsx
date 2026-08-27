@@ -21,13 +21,18 @@ type Row = {
   moderation_reason: string | null
   owner_response: string | null
   owner_response_published: boolean
+  display_name_consent: boolean
+  publication_consent_at: string | null
+  source_type: 'purchase' | 'booking'
+  source_reference_id: string | null
+  verified_at: string | null
   products: { title: string } | { title: string }[] | null
 }
 
 export default async function AdminReviewsPage() {
   const reviews = await adminList<Row>(
     'reviews',
-    'id, display_name, rating, comment, is_approved, is_featured, verified_purchase, status, moderation_reason, owner_response, owner_response_published, created_at, products(title)',
+    'id, display_name, display_name_consent, rating, comment, is_approved, is_featured, verified_purchase, verified_at, publication_consent_at, source_type, source_reference_id, status, moderation_reason, owner_response, owner_response_published, created_at, products(title)',
     { orderBy: 'created_at' },
   )
 
@@ -35,7 +40,7 @@ export default async function AdminReviewsPage() {
     <div className="mx-auto max-w-4xl space-y-8">
       <header>
         <h1 className="text-3xl font-bold text-deep-teal">التقييمات</h1>
-        <p className="mt-1 text-text-soft">المعتمد يظهر على صفحات المنتجات؛ المميّز يظهر في الرئيسية أيضًا.</p>
+        <p className="mt-1 text-text-soft">لا يمكن اعتماد أو تمييز تجربة قبل إثبات الشراء وتسجيل موافقة النشر؛ كل قرار يُحفظ مع سجل تدقيق ذري.</p>
       </header>
 
       {reviews.length === 0 ? (
@@ -53,10 +58,17 @@ export default async function AdminReviewsPage() {
                     {r.status === 'approved' ? <Badge tone="success">معتمد</Badge> : r.status === 'rejected' ? <Badge tone="danger">مرفوض</Badge> : r.status === 'archived' ? <Badge tone="sand">مؤرشف</Badge> : <Badge tone="pending">بانتظار المراجعة</Badge>}
                     {r.is_featured && <Badge tone="gold">مميّز</Badge>}
                     {r.verified_purchase && <Badge tone="teal">شراء موثّق</Badge>}
+                    {r.verified_at && <Badge tone="success">التحقق مسجل</Badge>}
+                    {r.publication_consent_at ? <Badge tone="gold">وافقت على النشر</Badge> : <Badge tone="danger">لا توجد موافقة نشر</Badge>}
                   </div>
                   {product && <span className="text-xs text-taupe">{product.title}</span>}
                 </div>
                 <p className="leading-relaxed text-ink">{r.comment}</p>
+                <dl className="grid gap-2 rounded-lg border border-line bg-surface-raised/60 p-3 text-xs sm:grid-cols-3">
+                  <div><dt className="text-text-soft">المصدر</dt><dd className="mt-1 font-semibold text-deep-teal">{r.source_type === 'booking' ? 'حجز' : 'شراء'}</dd></div>
+                  <div><dt className="text-text-soft">اسم العرض</dt><dd className="mt-1 font-semibold text-deep-teal">{r.display_name_consent ? (r.display_name ?? 'لم يتوفر اسم أول') : 'مجهول باختيار العميلة'}</dd></div>
+                  <div><dt className="text-text-soft">مرجع داخلي</dt><dd className="mt-1 font-mono text-deep-teal">{r.source_reference_id ? `${r.source_reference_id.slice(0, 8)}…` : 'غير متوفر'}</dd></div>
+                </dl>
                 {r.moderation_reason && <p className="rounded-lg bg-sand/30 p-2 text-xs text-text-soft">سبب داخلي: {r.moderation_reason}</p>}
                 {r.owner_response && <p className="rounded-lg bg-ivory/60 p-2 text-sm text-text-soft">رد المالكة: {r.owner_response}{r.owner_response_published ? ' (منشور)' : ' (داخلي)'}</p>}
                 <ReviewControls id={r.id} approved={r.is_approved} featured={r.is_featured} status={r.status} />

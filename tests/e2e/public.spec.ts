@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 
-const publicRoutes = ['/', '/start-here', '/search', '/courses', '/books', '/workshops', '/services', '/booking', '/about', '/contact', '/faq']
+const publicRoutes = ['/', '/start-here', '/search', '/courses', '/books', '/workshops', '/services', '/booking', '/about', '/testimonials', '/contact', '/faq']
 const visit = (page: Page, route: string) => page.goto(route, { waitUntil: 'domcontentloaded', timeout: 60_000 })
 
 test.describe('public experience', () => {
@@ -80,6 +80,13 @@ test.describe('public experience', () => {
     await visit(page, '/contact')
     await expect(page.getByRole('heading', { name: 'قناة التواصل غير مهيّأة حاليًا' })).toBeVisible()
     await expect(page.getByRole('button', { name: 'أرسلي الرسالة' })).toHaveCount(0)
+  })
+
+  test('testimonials never fabricate social proof when no governed source is configured', async ({ page }) => {
+    await visit(page, '/testimonials')
+    await expect(page.getByRole('heading', { name: 'ما اختارت العميلات مشاركته' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'لا توجد تجارب موثقة منشورة في هذا القسم' })).toBeVisible()
+    await expect(page.getByText('شراء موثّق')).toHaveCount(0)
   })
 
   test('start-here recommendations link to published catalogs rather than invented product slugs', async ({ page }) => {

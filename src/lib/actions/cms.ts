@@ -50,7 +50,6 @@ const FIELD_WHITELIST: Record<string, { fields: string[]; path: string; permissi
   workshops: { fields: ['is_published'], path: '/admin/workshops', permission: 'catalog.publish' },
   articles: { fields: ['is_published'], path: '/admin/articles', permission: 'content.publish' },
   pages: { fields: ['is_published'], path: '/admin/pages', permission: 'content.publish' },
-  reviews: { fields: ['is_approved', 'is_featured'], path: '/admin/reviews', permission: 'reviews.manage' },
 }
 
 export async function adminSetField(table: string, id: string, field: string, value: boolean): Promise<ActionResult> {

@@ -15,6 +15,7 @@
     "/workshops/[slug]",
     "/articles",
     "/articles/[slug]",
+    "/testimonials",
     "/contact",
     "/faq",
     "/privacy",

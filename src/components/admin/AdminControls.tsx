@@ -11,7 +11,7 @@ import {
   grantRole,
   revokeRole,
 } from '@/lib/actions/cms'
-import { moderateReview } from '@/lib/actions/reviews'
+import { moderateReview, type ReviewModerationAction } from '@/lib/actions/reviews'
 import { Button } from '@/components/ui/Button'
 import { FormField, FormTextarea, FormSelect } from '@/components/ui/FormField'
 
@@ -63,16 +63,17 @@ export function ReviewControls({ id, featured, status = 'pending' }: { id: strin
   const [reason, setReason] = useState('')
   const [response, setResponse] = useState('')
   const [publishResponse, setPublishResponse] = useState(false)
-  const moderate = (action: 'approve' | 'reject' | 'archive' | 'restore') => run(() => moderateReview(id, action, reason, response, publishResponse))
+  const moderate = (action: ReviewModerationAction) => run(() => moderateReview(id, action, reason, response, publishResponse))
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap gap-2">
         {status !== 'approved' && <Button size="sm" variant="primary" disabled={busy} onClick={() => moderate('approve')}>اعتماد</Button>}
         {status !== 'rejected' && <Button size="sm" variant="secondary" disabled={busy} onClick={() => moderate('reject')}>رفض</Button>}
         {status === 'archived' ? <Button size="sm" variant="secondary" disabled={busy} onClick={() => moderate('restore')}>استعادة</Button> : <Button size="sm" variant="burgundy" disabled={busy} onClick={() => moderate('archive')}>أرشفة</Button>}
-        {status === 'approved' && <Button size="sm" variant={featured ? 'secondary' : 'gold'} disabled={busy} onClick={() => run(() => adminSetField('reviews', id, 'is_featured', !featured))}>
+        {status === 'approved' && <Button size="sm" variant={featured ? 'secondary' : 'gold'} disabled={busy} onClick={() => moderate(featured ? 'unfeature' : 'feature')}>
           {featured ? 'إزالة التمييز' : 'تمييز'}
         </Button>}
+        {status === 'approved' && <Button size="sm" variant="ghost" disabled={busy} onClick={() => moderate('respond')}>حفظ الرد</Button>}
       </div>
       <textarea value={reason} onChange={(event) => setReason(event.target.value)} rows={2} placeholder="سبب الرفض الداخلي (مطلوب عند الرفض)" className="w-full rounded-lg border border-line bg-surface-raised p-2 text-xs text-ink" />
       <textarea value={response} onChange={(event) => setResponse(event.target.value)} rows={2} placeholder="رد المالكة الاختياري" className="w-full rounded-lg border border-line bg-surface-raised p-2 text-xs text-ink" />
