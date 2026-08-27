@@ -21,15 +21,18 @@ export type HomeTestimonial = {
   comment: string
 }
 
+export type HomePressMention = { id: string; outlet: string; title: string; originalUrl: string; publishedOn: string }
+
 export type HomeData = {
   offer: HomeOffer | null
   articles: HomeArticle[]
   testimonials: HomeTestimonial[]
+  press: HomePressMention[]
 }
 
 // Public social proof and promotions are data-only. Missing configuration or
 // query failures render honest empty sections instead of invented fallbacks.
-const EMPTY_HOME_DATA: HomeData = { offer: null, articles: [], testimonials: [] }
+const EMPTY_HOME_DATA: HomeData = { offer: null, articles: [], testimonials: [], press: [] }
 
 const hasEnv = hasSupabasePublicConfig
 
@@ -37,7 +40,7 @@ export async function getHomeData(): Promise<HomeData> {
   if (!hasEnv()) return EMPTY_HOME_DATA
   try {
     const supabase = await getServerClient()
-    const [offerRes, articlesRes, reviewsRes] = await Promise.all([
+    const [offerRes, articlesRes, reviewsRes, pressRes] = await Promise.all([
       supabase
         .from('offers')
         .select('title, description, badge_text, ends_at')
@@ -60,6 +63,14 @@ export async function getHomeData(): Promise<HomeData> {
         .eq('verified_purchase', true)
         .not('publication_consent_at', 'is', null)
         .limit(6),
+      supabase
+        .from('press_mentions')
+        .select('id, outlet, title, original_url, published_on')
+        .eq('status', 'published')
+        .eq('is_featured', true)
+        .or(`publish_at.is.null,publish_at.lte.${new Date().toISOString()}`)
+        .order('published_on', { ascending: false })
+        .limit(3),
     ])
 
     // Missing rows remain absent and their sections hide themselves.
@@ -83,6 +94,7 @@ export async function getHomeData(): Promise<HomeData> {
         rating: r.rating,
         comment: r.comment,
       })),
+      press: (pressRes.data ?? []).map((row) => ({ id: row.id, outlet: row.outlet, title: row.title, originalUrl: row.original_url, publishedOn: row.published_on })),
     }
   } catch {
     return EMPTY_HOME_DATA

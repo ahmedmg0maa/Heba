@@ -20,6 +20,7 @@ const columns = [
       { href: '/start-here', label: 'ابدئي من هنا' },
       { href: '/articles', label: 'المقالات' },
       { href: '/testimonials', label: 'تجارب موثقة' },
+      { href: '/press', label: 'الظهور الإعلامي' },
       { href: '/faq', label: 'الأسئلة الشائعة' },
     ],
   },

@@ -16,7 +16,7 @@ const NOT_ADMIN = 'هذه العملية تتطلب صلاحية إدارية.'
 const GENERIC = 'حدث خطأ — حاولي مرة أخرى.'
 
 const hasEnv = () => hasSupabasePublicConfig() && hasSupabaseServerSecret()
-const SECTION_KINDS = ['hero','intro','trust','pathways','guided_start','editorial_feature','featured_services','books','courses','workshops','availability_preview','offer','testimonials','articles','newsletter','cta','rich_text'] as const
+const SECTION_KINDS = ['hero','intro','trust','pathways','guided_start','editorial_feature','featured_services','books','courses','workshops','availability_preview','offer','testimonials','press','articles','newsletter','cta','rich_text'] as const
 const safeLink = (value: string) => value.startsWith('/') || /^https:\/\/[^\s]+$/i.test(value)
 function validateSectionContent(value: unknown): string | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return 'محتوى القسم يجب أن يكون كائن JSON منظمًا.'
@@ -409,6 +409,10 @@ function homeSectionContentFromForm(kind: HomeSectionKind, formData: FormData): 
   if (kind === 'testimonials') {
     const content = { eyebrow: required('eyebrow', 2, 80), heading: required('heading', 3, 120) }
     return Object.values(content).some((value) => !value) ? { ok: false, error: 'أكملي عنوان قسم الآراء.' } : { ok: true, content }
+  }
+  if (kind === 'press') {
+    const content = { eyebrow: required('eyebrow', 2, 80), heading: required('heading', 3, 120), lead: required('lead', 8, 240), ctaLabel: required('cta_label', 2, 70) }
+    return Object.values(content).some((value) => !value) ? { ok: false, error: 'أكملي نصوص قسم الظهور الإعلامي.' } : { ok: true, content }
   }
   const content = { eyebrow: required('eyebrow', 2, 80), heading: required('heading', 3, 120), body: required('body', 8, 320), primaryLabel: required('primary_label', 2, 60), primaryHref: homeHref(formData, 'primary_href'), secondaryLabel: required('secondary_label', 2, 60), secondaryHref: homeHref(formData, 'secondary_href') }
   if (Object.values(content).some((value) => !value)) return { ok: false, error: 'أكملي محتوى القسم وروابطه الداخلية.' }

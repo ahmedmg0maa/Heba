@@ -1,6 +1,13 @@
 # PROJECT STATE
 Last session: 2026-08-27 | Current program: Code X development-first execution | LOCAL DEVELOPMENT IN PROGRESS — STAGING EXTERNAL GATE remains for recovery, provider migration and live acceptance only
 
+## P1 governed Press checkpoint — 2026-08-27
+- `/press` now renders only published, due source records with HTTPS original links, factual dates and an explicit classification separating independent editorial coverage from partnerships, owned channels and events. Type filters, external-link disclosure and a truthful no-source empty state are included; no logo, quote or authority claim was invented.
+- Local migration 050 adds the forward-only `press_mentions` domain, `press.manage` mappings for Admin/content/marketing roles, public-read/Admin-manager RLS, rights-aware image publication, scheduled publishing and service-only atomic create/update/delete RPCs. Published/scheduled rows must be archived before physical deletion; every mutation writes a metadata-only audit record in the same transaction.
+- `/admin/press` performs a page-level permission check, provides structured Arabic CRUD/schedule/feature fields, displays media-rights readiness and a real saved-card preview. Public images are accepted only from `public-media` with 046 rights evidence; the public consumer repeats that fail-closed filter.
+- The governed Home section registry can now add, order, revise, preview, publish or hide a Press section. It renders only featured published source rows and disappears when none exist.
+- The complete `pnpm check:deploy` gate passed: isolated type-check/lint, the 64-page production build, public Playwright **60/60** across desktop/mobile, Contact/Testimonials/Press executable contracts and every archive/delivery/booking/CMS/security/Admin/media/commerce/catalog/database/launch audit. Migration 050 remains source-only and has not been applied to any provider.
+
 ## P1 consent-complete Testimonials checkpoint — 2026-08-27
 - `/testimonials` is now a dedicated Arabic/RTL public consumer with real type filters and a truthful empty state. It renders only reviews whose product remains published and whose record proves paid entitlement, explicit publication consent and Admin approval; absence of a name-consent flag produces the neutral label `عميلة موثقة` rather than exposing profile identity.
 - The customer order dashboard now requires separate publication and first-name-display consent, validates bounded text, and explains withdrawal through the privacy/contact route. Migration 049 verifies a non-revoked entitlement linked to a paid order, stores only the first name when separately consented, resets resubmissions to pending, and audits flags/source without testimonial text or identity.

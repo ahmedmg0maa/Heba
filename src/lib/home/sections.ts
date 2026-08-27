@@ -7,6 +7,7 @@ export const HOME_SECTION_KINDS = [
   'offer',
   'articles',
   'testimonials',
+  'press',
   'cta',
 ] as const
 
@@ -39,6 +40,7 @@ export type EditorialFeatureContent = {
 }
 export type ArticlesContent = { eyebrow: string; heading: string; lead: string; ctaLabel: string }
 export type TestimonialsContent = { eyebrow: string; heading: string }
+export type PressContent = { eyebrow: string; heading: string; lead: string; ctaLabel: string }
 export type CtaContent = {
   eyebrow: string
   heading: string
@@ -58,6 +60,7 @@ export type HomeSectionContent =
   | { ctaLabel: string }
   | ArticlesContent
   | TestimonialsContent
+  | PressContent
   | CtaContent
 
 export type HomeSection = {
@@ -78,6 +81,7 @@ export const HOME_SECTION_OPTIONS: { kind: HomeSectionKind; label: string; name:
   { kind: 'offer', label: 'العرض المنشور', name: 'العرض الحالي' },
   { kind: 'articles', label: 'المقالات المختارة', name: 'أحدث المقالات' },
   { kind: 'testimonials', label: 'الآراء الموثقة', name: 'تجارب معتمدة' },
+  { kind: 'press', label: 'الظهور الإعلامي', name: 'مصادر موثقة' },
   { kind: 'cta', label: 'الدعوة الختامية', name: 'الخطوة التالية' },
 ]
 
@@ -125,6 +129,7 @@ export const DEFAULT_HOME_CONTENT: Record<HomeSectionKind, HomeSectionContent> =
   offer: { ctaLabel: 'استفيدي من العرض الآن' },
   articles: { eyebrow: 'قراءات منتقاة', heading: 'مقالات تعيد ترتيب الفكرة', lead: 'مساحات قصيرة للتأمل والفهم والتطبيق.', ctaLabel: 'جميع المقالات' },
   testimonials: { eyebrow: 'قالوا عن التجربة', heading: 'شهادات متعلّماتنا' },
+  press: { eyebrow: 'ظهور موثّق', heading: 'من المصادر الأصلية', lead: 'حوارات ومواد وروابط منشورة مع توضيح نوع المصدر.', ctaLabel: 'كل المصادر' },
   cta: {
     eyebrow: 'خطوة واحدة تكفي للبداية',
     heading: 'اختاري الباب الأقرب لما تحتاجينه الآن',
@@ -201,6 +206,10 @@ export function normalizeHomeContent(kind: HomeSectionKind, value: unknown): Hom
   if (kind === 'testimonials') {
     const base = fallback as TestimonialsContent
     return { eyebrow: text(source.eyebrow, base.eyebrow, 80), heading: text(source.heading, base.heading, 120) }
+  }
+  if (kind === 'press') {
+    const base = fallback as PressContent
+    return { eyebrow: text(source.eyebrow, base.eyebrow, 80), heading: text(source.heading, base.heading, 120), lead: text(source.lead, base.lead, 240), ctaLabel: text(source.ctaLabel, base.ctaLabel, 70) }
   }
   const base = fallback as CtaContent
   return {

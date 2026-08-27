@@ -1,6 +1,6 @@
 import type { HomeData } from '@/lib/data/home'
 import type { HomeCopy } from '@/lib/data/cms'
-import type { ArticlesContent, CtaContent, EditorialFeatureContent, GuidedStartContent, HomeSection, PathwaysContent, TestimonialsContent, TrustContent } from '@/lib/home/sections'
+import type { ArticlesContent, CtaContent, EditorialFeatureContent, GuidedStartContent, HomeSection, PathwaysContent, PressContent, TestimonialsContent, TrustContent } from '@/lib/home/sections'
 import { Hero } from '@/components/home/Hero'
 import { TrustStrip } from '@/components/home/TrustStrip'
 import { ServiceCards } from '@/components/home/ServiceCards'
@@ -9,6 +9,7 @@ import { EditorialFeature } from '@/components/home/EditorialFeature'
 import { OfferBlock } from '@/components/home/OfferBlock'
 import { FeaturedArticles } from '@/components/home/FeaturedArticles'
 import { Testimonials } from '@/components/home/Testimonials'
+import { PressHighlights } from '@/components/home/PressHighlights'
 import { FinalCta } from '@/components/home/FinalCta'
 import { Reveal } from '@/components/ui/Reveal'
 
@@ -22,6 +23,7 @@ export function HomeSectionRenderer({ section, copy, data }: { section: HomeSect
   else if (section.kind === 'offer') content = <OfferBlock offer={data.offer} ctaLabel={(section.content as { ctaLabel: string }).ctaLabel} />
   else if (section.kind === 'articles') content = <FeaturedArticles articles={data.articles} content={section.content as ArticlesContent} />
   else if (section.kind === 'testimonials') content = <Testimonials testimonials={data.testimonials} content={section.content as TestimonialsContent} />
+  else if (section.kind === 'press') content = <PressHighlights mentions={data.press} content={section.content as PressContent} />
   else if (section.kind === 'cta') content = <FinalCta content={section.content as CtaContent} />
   return content ? <Reveal>{content}</Reveal> : null
 }

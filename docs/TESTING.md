@@ -23,6 +23,7 @@ pnpm verify:revision-recovery-local
 pnpm verify:admin-operations-ux-local
 pnpm verify:contact-governance-local
 pnpm verify:testimonial-governance-local
+pnpm verify:press-governance-local
 pnpm verify:recovery-runner-local
 ```
 
@@ -41,6 +42,8 @@ The booking/CMS local checks never load `.env` or contact Supabase. They cover h
 `verify:contact-governance-local` executes the real Contact normalization contract and asserts the source boundary: no anonymous/authenticated direct insert, service-role-only RPC execution, durable device/email throttling, explicit consent, PII-minimized submission/Admin audit and an Inbox consumer wired to the atomic permission-checked RPC. It makes no claim about provider persistence, RLS or distributed concurrency until controlled Staging tests run.
 
 `verify:testimonial-governance-local` executes the real review normalization contract and asserts paid-order entitlement verification, separate text-publication/first-name consent, public RLS/query filters, an atomic permission-checked moderation RPC, privacy-minimized audit and both public/Home/Admin consumers. It does not relabel source inspection as live RLS or persistence evidence.
+
+`verify:press-governance-local` executes the real Press input validator and asserts HTTPS/date/classification limits, the `press.manage` role mapping, service-only atomic CRUD, schedule job, 046 media-rights gate, metadata-only audit and public/Admin/Home consumers with preview. It cannot prove provider cron, RLS or Storage delivery until migration 050 is accepted on controlled Staging.
 
 `verify:recovery-runner-local` proves that recovery accepts only the Supabase Session pooler on port 5432 with the tenant-qualified Production user, routes the isolated target through the same pooler host, URL-encodes the hidden password, and clears process/unmanaged secret memory. It never opens a database connection. The actual drill is started manually with `powershell -ExecutionPolicy Bypass -File scripts/run-launch-recovery-drill-interactive.ps1` only after a disclosed password has been rotated.
 

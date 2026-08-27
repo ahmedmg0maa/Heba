@@ -6,7 +6,7 @@ import { getServiceClient } from '@/lib/supabase/server'
 
 type Result = { ok: true } | { ok: false; error: string }
 type RecordValue = Record<string, unknown>
-const SECTION_KINDS = new Set(['hero','intro','trust','pathways','guided_start','editorial_feature','featured_services','books','courses','workshops','availability_preview','offer','testimonials','articles','newsletter','cta','rich_text'])
+const SECTION_KINDS = new Set(['hero','intro','trust','pathways','guided_start','editorial_feature','featured_services','books','courses','workshops','availability_preview','offer','testimonials','press','articles','newsletter','cta','rich_text'])
 
 const object = (value: unknown): RecordValue | null => value && typeof value === 'object' && !Array.isArray(value) ? value as RecordValue : null
 const safeOptionalUrl = (value: unknown) => value == null || value === '' || typeof value === 'string' && (value.startsWith('/') && !value.startsWith('//') || /^https:\/\/[^\s]+$/i.test(value))
