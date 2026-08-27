@@ -115,6 +115,7 @@ export async function getPublicMediaOptions(limit = 80): Promise<MediaOption[]> 
       .select('id, title, alt, kind, bucket, path')
       .eq('visibility', 'public')
       .eq('bucket', 'public-media')
+      .is('archived_at', null)
       .order('created_at', { ascending: false })
       .limit(limit)
     return (data ?? []).map((asset) => ({

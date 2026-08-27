@@ -53,9 +53,10 @@ export async function catalogPublicationReadiness(kind: CatalogPublicationKind, 
   }
   if (!coverAssetId) issues.push('اختاري غلافًا من مكتبة الوسائط بدل رابط خارجي غير موثق.')
   else {
-    const { data: asset, error } = await service.from('media_assets').select('id,bucket,visibility,rights_status,rights_reference,deleted_at').eq('id', coverAssetId).maybeSingle()
-    if (error) issues.push('لا يمكن التحقق من حقوق الوسيط قبل قبول migration 046 على Staging.')
-    else if (!asset || asset.deleted_at || asset.bucket !== 'public-media' || asset.visibility !== 'public') issues.push('الغلاف ليس وسيطًا عامًا صالحًا للنشر.')
+    const { data: asset, error } = await service.from('media_assets').select('id,bucket,visibility,rights_status,rights_reference,processing_status,archived_at').eq('id', coverAssetId).maybeSingle()
+    if (error) issues.push('لا يمكن التحقق من حقوق الوسيط ودورة حياته قبل قبول migration 046 و054 على Staging.')
+    else if (!asset || asset.archived_at || asset.bucket !== 'public-media' || asset.visibility !== 'public') issues.push('الغلاف ليس وسيطًا عامًا نشطًا صالحًا للنشر.')
+    else if (!['original', 'ready'].includes(asset.processing_status)) issues.push('معالجة الغلاف لم تكتمل بنجاح.')
     else if (!['owned', 'licensed', 'public_domain'].includes(asset.rights_status) || !String(asset.rights_reference ?? '').trim()) issues.push('حقوق الغلاف أو مرجعها غير معتمدين.')
   }
 
@@ -98,4 +99,3 @@ export async function catalogPublicationReadiness(kind: CatalogPublicationKind, 
 
   return { ready: issues.length === 0, issues }
 }
-

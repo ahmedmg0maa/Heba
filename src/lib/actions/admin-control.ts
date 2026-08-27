@@ -46,8 +46,8 @@ async function syncMediaUsage(actorId: string, assetId: string, entityType: stri
   const service = getServiceClient()
   await service.from('media_usages').delete().eq('entity_type', entityType).eq('entity_id', entityId).eq('field', field)
   if (!assetId) return
-  const { data: asset } = await service.from('media_assets').select('id, bucket, visibility').eq('id', assetId).maybeSingle()
-  if (!asset || asset.bucket !== 'public-media' || asset.visibility !== 'public') return
+  const { data: asset } = await service.from('media_assets').select('id, bucket, visibility, archived_at').eq('id', assetId).maybeSingle()
+  if (!asset || asset.archived_at || asset.bucket !== 'public-media' || asset.visibility !== 'public') return
   await service.from('media_usages').insert({ asset_id: asset.id, entity_type: entityType, entity_id: entityId, field, created_by: actorId })
 }
 
@@ -673,8 +673,10 @@ function validateMediaUpload(input: MediaUploadInput): ValidatedMediaUpload | { 
   const alt = input.alt?.trim() ?? ''
   if (bucket === 'public-media' && input.type.startsWith('image/') && alt.length < 3) return { error: 'اكتبي نصًا بديلًا واضحًا للصورة العامة.' }
   const rightsStatus = input.rightsStatus?.trim() || 'unverified'
+  const rightsReference = (input.rightsReference ?? '').trim().slice(0, 500)
   if (!['unverified','owned','licensed','public_domain'].includes(rightsStatus)) return { error: 'حالة حقوق الاستخدام غير صحيحة.' }
   if (bucket === 'public-media' && input.type.startsWith('image/') && rightsStatus === 'unverified') return { error: 'حددي مصدر حقوق استخدام الصورة العامة قبل رفعها.' }
+  if (bucket === 'public-media' && input.type.startsWith('image/') && !rightsReference) return { error: 'أضيفي مرجع ملكية أو ترخيص الصورة العامة.' }
   const tags = [...new Set((input.tags ?? '').split(',').map((tag) => tag.trim().toLowerCase()).filter(Boolean))].slice(0, 20)
   const folder = (input.folder?.trim() || 'uncategorized').toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80) || 'uncategorized'
   const focalX = Math.min(100, Math.max(0, Number.isFinite(input.focalX) ? Number(input.focalX) : 50))
@@ -683,7 +685,7 @@ function validateMediaUpload(input: MediaUploadInput): ValidatedMediaUpload | { 
   return {
     bucket, name: input.name.trim(), type: input.type, size: input.size, title, alt, tags, kind,
     caption: (input.caption ?? '').trim().slice(0, 500), credit: (input.credit ?? '').trim().slice(0, 200),
-    rightsStatus, rightsReference: (input.rightsReference ?? '').trim().slice(0, 500), folder, focalX, focalY,
+    rightsStatus, rightsReference, folder, focalX, focalY,
   }
 }
 
@@ -715,7 +717,7 @@ export async function finalizeMediaUpload(input: MediaUploadInput & { path: stri
     focal_x: media.focalX, focal_y: media.focalY, processing_status: 'original',
   }).select('id').single()
   if (error || !data) { await service.storage.from(media.bucket).remove([input.path]); return { ok: false, error: message(error) } }
-  await audit(admin.id, 'media.uploaded', 'media_asset', data.id, { bucket: media.bucket, path: input.path, kind: media.kind, size: media.size })
+  await audit(admin.id, 'media.uploaded', 'media_asset', data.id, { bucket: media.bucket, kind: media.kind, size: media.size, rightsStatus: media.rightsStatus })
   revalidatePath('/admin/media'); return { ok: true, id: data.id }
 }
 
@@ -735,39 +737,45 @@ export async function updateMediaMetadata(id: string, form: FormData): Promise<A
   if (title.length < 2) return { ok: false, error: 'اسم الأصل مطلوب.' }
   if (!['unverified','owned','licensed','public_domain'].includes(rightsStatus)) return { ok: false, error: 'حالة حقوق الاستخدام غير صحيحة.' }
   const service = getServiceClient()
-  const { data: previous } = await service.from('media_assets').select('id, bucket, kind, title, alt, tags, caption, credit, rights_status, rights_reference, folder, focal_x, focal_y').eq('id', id).maybeSingle()
+  const { data: previous } = await service.from('media_assets').select('id, bucket, kind, title, alt, tags, caption, credit, rights_status, rights_reference, folder, focal_x, focal_y, archived_at').eq('id', id).maybeSingle()
   if (!previous) return { ok: false, error: 'الملف غير موجود.' }
+  if (previous.archived_at) return { ok: false, error: 'استعيدي الأصل من الأرشيف قبل تعديل بياناته.' }
   if (previous.bucket === 'public-media' && previous.kind === 'image' && alt.length < 3) return { ok: false, error: 'النص البديل مطلوب للصورة العامة.' }
   if (previous.bucket === 'public-media' && previous.kind === 'image' && rightsStatus === 'unverified') return { ok: false, error: 'الصورة العامة تتطلب حالة حقوق موثقة.' }
+  if (previous.bucket === 'public-media' && previous.kind === 'image' && !rightsReference) return { ok: false, error: 'الصورة العامة تتطلب مرجع ملكية أو ترخيص.' }
   const next = { title, alt, tags, caption, credit, rights_status: rightsStatus, rights_reference: rightsReference, folder, focal_x: focalX, focal_y: focalY }
   const { error } = await service.from('media_assets').update(next).eq('id', id)
   if (error) return { ok: false, error: message(error) }
-  await audit(admin.id, 'media.metadata_updated', 'media_asset', id, { before: previous, after: next })
+  const changedFields = Object.entries(next).filter(([key, value]) => value !== previous[key as keyof typeof previous]).map(([key]) => key)
+  await audit(admin.id, 'media.metadata_updated', 'media_asset', id, { changedFields, rightsStatus, hasRightsReference: Boolean(rightsReference) })
   revalidatePath('/admin/media')
   return { ok: true, id }
 }
 
-export async function deleteMedia(id: string): Promise<AdminActionResult> {
-  const admin = await requireAdminUser('media.delete')
-  if (!admin) return { ok: false, error: 'هذه العملية تتطلب صلاحية إدارية.' }
+export async function manageMediaLifecycle(id: string, action: 'archive' | 'restore' | 'replace', replacementId?: string): Promise<AdminActionResult> {
+  const admin = await requireAdminUser('media.manage')
+  if (!admin) return { ok: false, error: 'هذه العملية تتطلب صلاحية إدارة الوسائط.' }
   const service = getServiceClient()
-  const { data } = await service.from('media_assets').select('*').eq('id', id).maybeSingle()
-  if (!data) return { ok: false, error: 'الملف غير موجود.' }
-  const { count: usageCount } = await service.from('media_usages').select('id', { count: 'exact', head: true }).eq('asset_id', id)
-  if ((usageCount ?? 0) > 0) return { ok: false, error: `لا يمكن حذف الملف لأنه مستخدم في ${(usageCount ?? 0).toLocaleString('ar-EG')} موضع. استبدليه في المحتوى أولًا.` }
-  const publicUrl = data.bucket === 'public-media' ? service.storage.from(data.bucket).getPublicUrl(data.path).data.publicUrl : null
-  const candidates = [data.path, publicUrl].filter((value): value is string => Boolean(value))
-  const referenceTables = ['products', 'courses', 'books', 'workshops', 'articles']
-  for (const table of referenceTables) {
-    for (const candidate of candidates) {
-      const { count } = await service.from(table).select('id', { count: 'exact', head: true }).eq('cover_url', candidate)
-      if ((count ?? 0) > 0) return { ok: false, error: 'لا يمكن حذف الملف لأنه مستخدم كغلاف. استبدليه أولًا.' }
-    }
+  let replacementUrl: string | null = null
+  if (action === 'replace') {
+    if (!replacementId) return { ok: false, error: 'اختاري الأصل البديل أولًا.' }
+    const { data: replacement } = await service.from('media_assets').select('id, bucket, path, archived_at').eq('id', replacementId).maybeSingle()
+    if (!replacement || replacement.archived_at) return { ok: false, error: 'الأصل البديل غير متاح.' }
+    if (replacement.bucket === 'public-media') replacementUrl = service.storage.from(replacement.bucket).getPublicUrl(replacement.path).data.publicUrl
   }
-  const { error: storageError } = await service.storage.from(data.bucket).remove([data.path])
-  if (storageError) return { ok: false, error: message(storageError) }
-  const { error } = await service.from('media_assets').delete().eq('id', id)
-  if (error) return { ok: false, error: message(error) }
-  await audit(admin.id, 'media.deleted', 'media_asset', id, { bucket: data.bucket, path: data.path })
-  revalidatePath('/admin/media'); return { ok: true }
+  const { error } = await service.rpc('manage_media_asset_lifecycle', {
+    p_asset_id: id,
+    p_action: action,
+    p_replacement_id: replacementId || null,
+    p_replacement_url: replacementUrl,
+    p_actor_id: admin.id,
+  })
+  if (error) {
+    if (error.message.includes('media_in_use_requires_replacement')) return { ok: false, error: 'هذا الأصل مستخدم؛ اختاري بديلًا متوافقًا لينتقل كل استخدام بأمان.' }
+    if (error.message.includes('media_replacement_incompatible')) return { ok: false, error: 'البديل يجب أن يطابق نوع الملف والمخزن وحالة الظهور.' }
+    if (error.message.includes('replaced_media_cannot_restore')) return { ok: false, error: 'هذا الأصل استُبدل بالفعل؛ الأصل الجديد هو المرجع التشغيلي.' }
+    return { ok: false, error: message(error) }
+  }
+  for (const path of ['/admin/media','/','/courses','/books','/workshops','/articles','/press','/resources','/programs','/search']) revalidatePath(path)
+  return { ok: true, id }
 }

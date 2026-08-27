@@ -1,6 +1,13 @@
 # PROJECT STATE
 Last session: 2026-08-27 | Current program: Code X development-first execution | LOCAL DEVELOPMENT IN PROGRESS — STAGING EXTERNAL GATE remains for recovery, provider migration and live acceptance only
 
+## P1 governed Media lifecycle checkpoint — 2026-08-27
+- `/admin/media` now has explicit active/archive/all views plus recoverable archive, restore and compatible replacement controls. Replacement moves every governed cover usage and direct Press/Resource reference to the successor inside one database transaction; the old Storage object is retained and the prior asset becomes an auditable archived record.
+- Local migration 054 adds archive/replacement state, active/archive indexes, public RLS denial for archived media and the service-role-only `manage_media_asset_lifecycle` RPC. The RPC rechecks `media.manage`, locks source/successor rows, refuses in-use archive without a replacement, validates kind/bucket/visibility parity, transfers references and writes a metadata-only audit atomically.
+- Catalog publication no longer queries the nonexistent `media_assets.deleted_at` column. It now rejects archived or failed/processing media, Admin pickers exclude archived assets, and Press/Resource public consumers repeat the archive boundary even when the current request belongs to an Admin session.
+- Public images require both a governed rights status and a non-empty owner/license reference on upload and metadata edit. Metadata audit records changed field names and evidence flags instead of copying captions, paths or rights-reference contents.
+- `pnpm check:deploy` passed the 68-page production build, public Playwright **68/68** and every local security/Admin/media/commerce/catalog/booking/database/launch gate. The isolated vinext/Workers build and Cloudflare runtime suite also passed **68/68**. Migration 054 is source-only and has not been applied externally.
+
 ## P1 governed Programs checkpoint — 2026-08-27
 - `/programs` and `/programs/[slug]` now provide a governed published-only public consumer for bundles, VIP programmes and free resources. Bundle details expose only published real course/book/workshop/session children; VIP rows require a matching active public subscription plan with identical price/currency; free-resource rows link directly to a published Resource Hub item and never enter a dead zero-value checkout.
 - Local migration 053 adds fail-closed programme readiness, normalizes legacy invalid programme rows back to draft without deleting them, and exposes service-role-only atomic publication and bundle-composition RPCs. Both RPCs recheck `products.manage` inside PostgreSQL, lock the affected rows and couple the mutation with a metadata-only audit record.

@@ -22,7 +22,7 @@ This record covers the current Code X worktree only. It does not convert histori
 
 | Contract | Result | Command/evidence |
 |---|---|---|
-| Sequential source migrations 000–053 | `PASS-local` | `pnpm audit:db` |
+| Sequential source migrations 000–054 | `PASS-local` | `pnpm audit:db` |
 | Recovery runner read-only/isolation contract | `PASS-local` | `pnpm verify:recovery-runner-local`; Production identity, Session pooler/5432, `default_transaction_read_only=on`, pre-target preflight and generated-target routing are source-asserted |
 | Mandatory booking order 044 → 045 → 046 → 047 | `PASS-local` | `pnpm verify:booking-staging-contract` |
 | Sanitized pre/post contract fixtures | `PASS-local` | `pnpm verify:booking-staging-contract-fixtures` |
@@ -34,6 +34,7 @@ This record covers the current Code X worktree only. It does not convert histori
 | 051 Resource Hub accessible media/rights/published-related gates/schedule/atomic CRUD | `PASS-local` | `pnpm verify:resource-hub-local`, `pnpm verify:public-search-local`, public E2E |
 | 052 Guided assessment immutable versions/safe mapping/atomic publication/answer non-persistence | `PASS-local` | `pnpm verify:guided-assessment-local`, `pnpm verify:start-here-cms-local`, public E2E |
 | 053 Programme readiness/bundle composition/VIP-plan parity/free-resource consumer/atomic publication | `PASS-local` | `pnpm verify:program-catalog-local`, `pnpm verify:catalog-publication-local`, public E2E |
+| 054 Media archive/restore/compatible replacement/public denial/atomic permission and audit | `PASS-local` | `pnpm verify:media-lifecycle-local`, `pnpm audit:media`, `pnpm verify:catalog-publication-local` |
 
 Fixture success is not a live schema fingerprint. It proves the validator rejects the wrong grants/policies/order; it does not prove that the provider schema matches those fixtures.
 
@@ -50,7 +51,7 @@ Fixture success is not a live schema fingerprint. It proves the validator reject
 
 ## Safety conclusion
 
-Production remains untouched and 043 must not be reapplied. Migrations 044–047 remain unapplied in this execution. Migrations 048–053 are additive development-first Contact, Testimonials, Press, Resource Hub, guided-assessment and governed-programme contracts authored locally after 047 and are also unapplied; any provider application must preserve the full 044→053 order and requires the ordered Staging gate. Later local migrations do not authorize provider writes.
+Production remains untouched and 043 must not be reapplied. Migrations 044–047 remain unapplied in this execution. Migrations 048–054 are additive development-first Contact, Testimonials, Press, Resource Hub, guided-assessment, governed-programme and media-lifecycle contracts authored locally after 047 and are also unapplied; any provider application must preserve the full 044→054 order and requires the ordered Staging gate. Later local migrations do not authorize provider writes.
 
 ## Exact unblock
 

@@ -5,6 +5,7 @@ const failures = []
 const required = [
   'supabase/migrations/021_media_library.sql',
   'supabase/migrations/046_media_governance_local_only.sql',
+  'supabase/migrations/054_media_lifecycle_local_only.sql',
   'src/components/admin/MediaManager.tsx',
   'src/components/admin/MediaPickerField.tsx',
   'src/app/admin/media/page.tsx',
@@ -21,6 +22,12 @@ if (existsSync(required[1])) {
   const sql = read(required[1])
   for (const token of ['rights_status', 'rights_reference', 'caption', 'credit', 'folder', 'focal_x', 'focal_y', 'processing_status']) {
     if (!sql.includes(token)) failures.push(`media governance migration missing ${token}`)
+  }
+}
+if (existsSync(required[2])) {
+  const sql = read(required[2])
+  for (const token of ['archived_at', 'replaced_by', 'manage_media_asset_lifecycle', 'media.archived', 'media.restored', 'media.replaced']) {
+    if (!sql.includes(token)) failures.push(`media lifecycle migration missing ${token}`)
   }
 }
 if (existsSync('src/lib/actions/admin-control.ts')) {
