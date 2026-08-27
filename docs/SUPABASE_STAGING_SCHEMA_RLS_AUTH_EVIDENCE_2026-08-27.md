@@ -4,17 +4,18 @@
 
 `ENVIRONMENT-BLOCKED — SUPABASE STAGING NOT ACCEPTED`
 
-This record covers the current Code X worktree only. It does not convert historical Production or Staging notes into current acceptance evidence. No database, Auth, Storage, migration or provider setting was written during this programme.
+This record covers the current Code X worktree only. It does not convert historical Production or Staging notes into current acceptance evidence. The Management API project inventory was read in sanitized form; no database, Auth, Storage, migration or provider setting was written during this programme.
 
 ## Environment identity and recovery gate
 
 | Check | Result | Evidence boundary |
 |---|---|---|
-| Production project | known historically as masked ref `zfbw…jidc` | not queried in this execution |
-| Separate empty Staging project | known historically as masked ref `uecv…cphp` | not configured in the current executor; no keys or database password are present |
-| Production logical-backup source | `BLOCKED` | a password was disclosed in chat and intentionally not used; it must be rotated. The direct IPv6 host is unreachable here, so the new Session pooler URL is required |
+| Production project | `PASS — management metadata only` | exactly one healthy accessible project matches full authorized ref `zfbwpubsnuijybxjuidc`; URL/account ID/credentials were not emitted |
+| Separate Staging project | `STAGING EXTERNAL GATE` | no non-Production project is currently accessible; a new isolated Staging project must be created before provider migrations or live tests |
+| Production logical-backup source | `BLOCKED` | `HEBA_LAUNCH_PRODUCTION_DATABASE_URL` is absent from the Process, Windows User and Windows Machine scopes visible to this executor; no connection was attempted |
 | Full logical backup | `not-run-by-design` | fail-closed runner must not connect without the secure executor-only source |
 | Isolated restore drill | `not-run-by-design` | cannot start before the logical backup source exists |
+| Disposable Supabase restore capacity | `AVAILABLE / DEFERRED` | only Production remains active; the owner deferred the drill and no target was created |
 | Staging recovery point | `unverified` | no provider or restored target evidence in this execution |
 
 ## Source-level migration evidence
@@ -22,6 +23,7 @@ This record covers the current Code X worktree only. It does not convert histori
 | Contract | Result | Command/evidence |
 |---|---|---|
 | Sequential source migrations 000–047 | `PASS-local` | `pnpm audit:db` |
+| Recovery runner read-only/isolation contract | `PASS-local` | `pnpm verify:recovery-runner-local`; Production identity, Session pooler/5432, `default_transaction_read_only=on`, pre-target preflight and generated-target routing are source-asserted |
 | Mandatory booking order 044 → 045 → 046 → 047 | `PASS-local` | `pnpm verify:booking-staging-contract` |
 | Sanitized pre/post contract fixtures | `PASS-local` | `pnpm verify:booking-staging-contract-fixtures` |
 | 043 protected-delivery source contracts | `PASS-local` | `pnpm verify:delivery-local`, database/media/security audits |
@@ -46,4 +48,4 @@ Production remains untouched and 043 must not be reapplied. Migrations 044–047
 
 ## Exact unblock
 
-Rotate the disclosed Production database password. Then run `powershell -ExecutionPolicy Bypass -File scripts/run-launch-recovery-drill-interactive.ps1` from `D:/claude`. Paste the new **Session pooler** URL template with `[YOUR-PASSWORD]` intact and enter the new password only at the hidden Terminal prompt. The script sets the value for that process, creates an isolated disposable restore target, records sanitized evidence, deletes the target and temporary artifacts, and clears the secret before any Staging migration proceeds.
+`STAGING EXTERNAL GATE`: when resumed, collect the rotated **Session pooler** password only through the hidden runner, prove the Production session is read-only, create/delete a uniquely identified disposable restore target, then create a new separate Staging project with no copied customer data before baseline fingerprinting or 044–047 application. This gate is intentionally deferred and does not stop local product development.

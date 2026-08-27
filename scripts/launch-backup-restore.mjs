@@ -6,6 +6,7 @@ import { spawnSync } from 'node:child_process'
 const sourceUrl = process.env.HEBA_LAUNCH_PRODUCTION_DATABASE_URL
 const restoreUrl = process.env.HEBA_LAUNCH_RESTORE_DATABASE_URL
 const cleanupTemporaryArtifacts = process.env.HEBA_LAUNCH_CLEANUP === '1'
+const preflightOnly = process.argv.includes('--preflight-only')
 const root = resolve(process.cwd(), '.launch-backups')
 
 function fail(message) {
@@ -29,7 +30,7 @@ function findTool(name) {
   return existsSync(bundled) ? scan(bundled) : null
 }
 
-function connectionEnvironment(value, label) {
+function connectionEnvironment(value, label, { readOnly = false } = {}) {
   let url
   try {
     url = new URL(value)
@@ -39,7 +40,7 @@ function connectionEnvironment(value, label) {
   if (!['postgres:', 'postgresql:'].includes(url.protocol) || !url.hostname || !url.username || !url.pathname || !url.password) {
     fail(`${label} is incomplete. No connection value was logged.`)
   }
-  return {
+  const environment = {
     ...process.env,
     PGHOST: url.hostname,
     PGPORT: url.port || '5432',
@@ -48,6 +49,11 @@ function connectionEnvironment(value, label) {
     PGDATABASE: decodeURIComponent(url.pathname.slice(1)),
     PGSSLMODE: url.searchParams.get('sslmode') || 'require',
   }
+  if (readOnly) {
+    environment.PGOPTIONS = '-c default_transaction_read_only=on -c statement_timeout=30000 -c lock_timeout=5000'
+    environment.PGAPPNAME = 'heba-launch-production-readonly'
+  }
+  return environment
 }
 
 function execute(binary, args, env, label, capture = false) {
@@ -61,21 +67,57 @@ function execute(binary, args, env, label, capture = false) {
   return capture ? result.stdout : ''
 }
 
-if (!sourceUrl || !restoreUrl) {
-  fail('Secure source and isolated restore connection values are required: HEBA_LAUNCH_PRODUCTION_DATABASE_URL and HEBA_LAUNCH_RESTORE_DATABASE_URL. Do not place them in chat or in a repository file.')
+if (!sourceUrl || (!preflightOnly && !restoreUrl)) {
+  fail('The secure Production connection and, for a restore run, the isolated restore connection are required only through the execution environment. Do not place them in chat or in a repository file.')
 }
 
 const pgDump = findTool('pg_dump')
 const pgRestore = findTool('pg_restore')
 const pgDumpAll = findTool('pg_dumpall')
-if (!pgDump || !pgRestore || !pgDumpAll) fail('The approved PostgreSQL command-line tools are unavailable.')
+const psql = findTool('psql')
+if (!pgDump || !pgRestore || !pgDumpAll || !psql) fail('The approved PostgreSQL command-line tools are unavailable.')
+
+const sourceEnv = connectionEnvironment(sourceUrl, 'HEBA_LAUNCH_PRODUCTION_DATABASE_URL', { readOnly: true })
+if (
+  sourceEnv.PGUSER !== 'postgres.zfbwpubsnuijybxjuidc' ||
+  !/^[a-z0-9-]+\.pooler\.supabase\.com$/i.test(sourceEnv.PGHOST) ||
+  sourceEnv.PGPORT !== '5432' ||
+  sourceEnv.PGDATABASE !== 'postgres'
+) {
+  fail('The Production connection identity does not match the approved project Session pooler contract.')
+}
+
+const preflightSql = "select json_build_object('read_only', current_setting('transaction_read_only') = 'on', 'database_ok', current_database() = 'postgres', 'bookings_present', to_regclass('public.bookings') is not null, 'orders_present', to_regclass('public.orders') is not null, 'audit_logs_present', to_regclass('public.audit_logs') is not null, 'migration_history_present', to_regclass('supabase_migrations.schema_migrations') is not null)::text;"
+let preflight
+try {
+  preflight = JSON.parse(execute(psql, ['-X', '-v', 'ON_ERROR_STOP=1', '-At', '-c', preflightSql], sourceEnv, 'Read-only Production preflight', true).trim())
+} catch {
+  fail('The read-only Production preflight returned an invalid sanitized result.')
+}
+if (!preflight.read_only || !preflight.database_ok || !preflight.bookings_present || !preflight.orders_present || !preflight.audit_logs_present || !preflight.migration_history_present) {
+  fail('The read-only Production preflight did not match the approved schema contract.')
+}
+const migrationSql = "select json_build_object('count', count(*), 'latest', coalesce(max(version::text), 'none'))::text from supabase_migrations.schema_migrations;"
+let migrationHistory
+try {
+  migrationHistory = JSON.parse(execute(psql, ['-X', '-v', 'ON_ERROR_STOP=1', '-At', '-c', migrationSql], sourceEnv, 'Read-only migration history preflight', true).trim())
+} catch {
+  fail('The read-only migration history preflight returned an invalid sanitized result.')
+}
+process.stdout.write(JSON.stringify({
+  result: 'PRODUCTION_READ_ONLY_PREFLIGHT_PASSED',
+  projectRef: 'zfbwpubsnuijybxjuidc',
+  transactionReadOnly: true,
+  migrationCount: Number(migrationHistory.count),
+  latestMigration: String(migrationHistory.latest),
+}) + '\n')
+if (preflightOnly) process.exit(0)
 
 mkdirSync(root, { recursive: true })
 const stamp = new Date().toISOString().replace(/[:.]/g, '-')
 const runId = randomUUID()
 const archive = join(root, `production-logical-${stamp}-${runId}.dump`)
 const globals = join(root, `production-globals-${stamp}-${runId}.sql`)
-const sourceEnv = connectionEnvironment(sourceUrl, 'HEBA_LAUNCH_PRODUCTION_DATABASE_URL')
 const restoreEnv = connectionEnvironment(restoreUrl, 'HEBA_LAUNCH_RESTORE_DATABASE_URL')
 
 try {
@@ -86,8 +128,6 @@ try {
 
   execute(pgRestore, ['--clean', '--if-exists', '--no-owner', '--no-acl', '--exit-on-error', '--dbname', restoreEnv.PGDATABASE, archive], restoreEnv, 'Isolated restore')
   const checkSql = "select (to_regclass('public.bookings') is not null and to_regclass('public.orders') is not null and to_regclass('public.audit_logs') is not null and (select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='r' and c.relrowsecurity) > 0) as restored_contract_ok;"
-  const psql = findTool('psql')
-  if (!psql) fail('The approved PostgreSQL command-line tools do not include psql.')
   const restored = execute(psql, ['-X', '-v', 'ON_ERROR_STOP=1', '-At', '-c', checkSql], restoreEnv, 'Isolated restore integrity check', true).trim()
   if (restored !== 't') fail('The isolated restore integrity contract did not pass.')
 

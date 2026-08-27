@@ -26,6 +26,12 @@ if ($production.Count -ne 1) { throw 'The authorized Production project was not 
 $organizationId = [string]$production[0].organization_id
 $region = [string]$production[0].region
 if ([string]::IsNullOrWhiteSpace($organizationId) -or [string]::IsNullOrWhiteSpace($region)) { throw 'The authorized Production project lacks organization or region metadata. No backup started.' }
+
+# Fail before creating a disposable project unless the database itself confirms
+# a read-only session and the expected schema/migration-history contract.
+& node scripts/launch-backup-restore.mjs --preflight-only
+if ($LASTEXITCODE -ne 0) { throw 'The read-only Production preflight did not pass. No restore target or backup was created.' }
+
 $bytes = New-Object byte[] 32
 [System.Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
 $restorePassword = [Convert]::ToHexString($bytes).ToLowerInvariant()

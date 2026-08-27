@@ -1,8 +1,14 @@
 [CmdletBinding()]
-param()
+param(
+  [string]$SessionPoolerTemplate
+)
 
 $ErrorActionPreference = 'Stop'
-$template = Read-Host 'Paste the NEW Supabase Session pooler URL template (port 5432) with [YOUR-PASSWORD] unchanged'
+$template = if ([string]::IsNullOrWhiteSpace($SessionPoolerTemplate)) {
+  Read-Host 'Paste the NEW Supabase Session pooler URL template (port 5432) with [YOUR-PASSWORD] unchanged'
+} else {
+  $SessionPoolerTemplate
+}
 if ($template -notmatch [regex]::Escape('[YOUR-PASSWORD]')) {
   throw 'The template must keep [YOUR-PASSWORD]. Do not paste a connection string that already contains the password.'
 }
