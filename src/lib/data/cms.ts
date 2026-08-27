@@ -75,36 +75,55 @@ export type OwnerProfile={eyebrow:string;title:string;lead:string;method:string;
 export const defaultOwnerProfile:OwnerProfile={eyebrow:'عن هبة',title:'مساحة إنسانية للتعلّم والنمو',lead:'أنا هبة الشريف. أقدّم محتوى وبرامج ومساحات خاصة تساعدك على الفهم والتطبيق بخطوات واضحة.',method:'منهج هادئ: معرفة موثوقة، أدوات عملية، ومساحة تحترم إيقاعك.',values:[{title:'الوضوح',text:'نشرح ما نقدمه وحدوده بلغة مباشرة.'},{title:'التطبيق',text:'نحوّل المعرفة إلى خطوات قابلة للتجربة.'},{title:'الخصوصية',text:'نحترم بياناتك ومساحتك الشخصية.'}]}
 export async function getOwnerProfile():Promise<OwnerProfile>{if(!hasEnv())return defaultOwnerProfile;try{const supabase=await getServerClient(),{data}=await supabase.from('site_settings').select('value').eq('key','owner_profile').maybeSingle();return data?.value&&typeof data.value==='object'?{...defaultOwnerProfile,...data.value as Partial<OwnerProfile>}:defaultOwnerProfile}catch{return defaultOwnerProfile}}
 
-const defaultFlags: FeatureFlags = { workshops: true, vip_program: false, certificates: true }
+const disabledFlags: FeatureFlags = { workshops: false, vip_program: false, certificates: false }
+export type FeatureFlagSnapshot = { state: 'ready' | 'unconfigured' | 'unavailable'; flags: FeatureFlags }
 
-export async function getFeatureFlags(): Promise<FeatureFlags> {
-  if (!hasEnv()) return defaultFlags
+export async function getFeatureFlagSnapshot(): Promise<FeatureFlagSnapshot> {
+  if (!hasEnv()) return { state: 'unconfigured', flags: disabledFlags }
   try {
     const supabase = await getServerClient()
-    const { data } = await supabase.from('feature_flags').select('key, is_enabled')
-    if (!data || data.length === 0) return defaultFlags
-    return { ...defaultFlags, ...Object.fromEntries(data.map((f) => [f.key, f.is_enabled])) }
+    const { data, error } = await supabase.from('feature_flags').select('key, is_enabled')
+    if (error) return { state: 'unavailable', flags: disabledFlags }
+    return { state: 'ready', flags: { ...disabledFlags, ...Object.fromEntries((data ?? []).map((flag) => [flag.key, flag.is_enabled])) } }
   } catch {
-    return defaultFlags
+    return { state: 'unavailable', flags: disabledFlags }
   }
 }
 
-// Generic guarded list fetch for admin tables (read-side only; RLS still applies).
+export async function getFeatureFlags(): Promise<FeatureFlags> {
+  return (await getFeatureFlagSnapshot()).flags
+}
+
+export type AdminListResult<T> = { state: 'ready' | 'unconfigured' | 'unavailable'; rows: T[] }
+
+export async function adminListResult<T>(
+  table: string,
+  columns: string,
+  opts: { orderBy?: string; ascending?: boolean; limit?: number } = {},
+): Promise<AdminListResult<T>> {
+  if (!hasEnv()) return { state: 'unconfigured', rows: [] }
+  try {
+    const supabase = await getServerClient()
+    let query = supabase.from(table).select(columns).limit(opts.limit ?? 100)
+    if (opts.orderBy) query = query.order(opts.orderBy, { ascending: opts.ascending ?? false })
+    const { data, error } = await query
+    if (error) return { state: 'unavailable', rows: [] }
+    return { state: 'ready', rows: (data ?? []) as T[] }
+  } catch {
+    return { state: 'unavailable', rows: [] }
+  }
+}
+
+// Generic guarded list fetch for Admin pages. In a configured environment a
+// failed query throws a sanitized boundary error instead of becoming fake emptiness.
 export async function adminList<T>(
   table: string,
   columns: string,
   opts: { orderBy?: string; ascending?: boolean; limit?: number } = {},
 ): Promise<T[]> {
-  if (!hasEnv()) return []
-  try {
-    const supabase = await getServerClient()
-    let query = supabase.from(table).select(columns).limit(opts.limit ?? 100)
-    if (opts.orderBy) query = query.order(opts.orderBy, { ascending: opts.ascending ?? false })
-    const { data } = await query
-    return (data ?? []) as T[]
-  } catch {
-    return []
-  }
+  const result = await adminListResult<T>(table, columns, opts)
+  if (result.state === 'unavailable') throw new Error('ADMIN_DATA_READ_UNAVAILABLE')
+  return result.rows
 }
 
 export async function getPublicMediaOptions(limit = 80): Promise<MediaOption[]> {

@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
-import { adminList, getContentReadiness, getFeatureFlags, launchLevelForStatus, type ContentReadinessItem, type ContentReadinessStatus, type LaunchReadinessLevel } from '@/lib/data/cms'
+import { adminListResult, getContentReadiness, getFeatureFlagSnapshot, launchLevelForStatus, type ContentReadinessItem, type ContentReadinessStatus, type LaunchReadinessLevel } from '@/lib/data/cms'
 import { Card, CardTitle } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { hasSupabasePublicConfig } from '@/lib/supabase/public-key'
 import { getBookingExperience } from '@/lib/data/booking'
+import { getIntegrationReadiness, type IntegrationStatus } from '@/lib/data/integrations'
 
 export const metadata: Metadata = { title: 'حالة النظام — الإدارة' }
 
@@ -41,14 +42,22 @@ const launchTone: Record<LaunchReadinessLevel, 'success' | 'pending' | 'danger'>
 const launchLabel: Record<LaunchReadinessLevel, string> = {
   ready: 'ready', warning: 'warning', blocker: 'blocker',
 }
+const integrationTone: Record<IntegrationStatus, 'cobalt' | 'pending' | 'danger' | 'sand'> = {
+  configured: 'cobalt', incomplete: 'danger', unconfigured: 'pending', 'not-applicable': 'sand',
+}
+const integrationLabel: Record<IntegrationStatus, string> = {
+  configured: 'مهيأ فقط', incomplete: 'تهيئة ناقصة', unconfigured: 'غير مهيأ', 'not-applicable': 'غير مطلوب',
+}
 
 export default async function AdminSystemPage() {
-  const [events, flags, contentReadiness, bookingExperience] = await Promise.all([
-    adminList<EventRow>('system_events', 'id, level, source, message, created_at', { orderBy: 'created_at', limit: 50 }),
-    getFeatureFlags(),
+  const [eventResult, flagSnapshot, contentReadiness, bookingExperience] = await Promise.all([
+    adminListResult<EventRow>('system_events', 'id, level, source, message, created_at', { orderBy: 'created_at', limit: 50 }),
+    getFeatureFlagSnapshot(),
     getContentReadiness(),
     getBookingExperience(),
   ])
+  const events = eventResult.rows
+  const integrations = getIntegrationReadiness()
   const bookingRuntime = {
     id: 'booking-runtime', title: 'عقد تشغيل الحجز 044', href: '/admin/bookings',
     detail: bookingExperience.runtime.detail,
@@ -57,7 +66,14 @@ export default async function AdminSystemPage() {
 
   const envReady = hasSupabasePublicConfig()
   const serviceReady = Boolean(process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)
-  const readinessItems = [bookingRuntime, ...contentReadiness]
+  const integrationItems: ContentReadinessItem[] = integrations.filter((item) => item.requiredForLaunch).map((item) => ({
+    id: `integration-${item.id}`,
+    title: item.title,
+    detail: item.status === 'configured' ? `${item.detail} يلزم اختبار قبول حي قبل تغيير الحالة إلى جاهز.` : item.detail,
+    status: item.status === 'not-applicable' ? 'ready' : item.status === 'configured' ? 'unknown' : 'blocked',
+    href: '/admin/system',
+  }))
+  const readinessItems = [bookingRuntime, ...contentReadiness, ...integrationItems]
   const blockers = readinessItems.filter((item) => launchLevelForStatus(item.status) === 'blocker')
   const warnings = readinessItems.filter((item) => launchLevelForStatus(item.status) === 'warning')
 
@@ -73,18 +89,26 @@ export default async function AdminSystemPage() {
         <ul className="space-y-2 text-sm">
           <li className="flex items-center justify-between rounded-xl bg-ivory/60 px-4 py-2.5">
             <span>اتصال Supabase (قراءة)</span>
-            <Badge tone={envReady ? 'success' : 'pending'}>{envReady ? 'مفعّل' : 'وضع العرض'}</Badge>
+            <Badge tone={envReady ? 'cobalt' : 'pending'}>{envReady ? 'مهيأ فقط' : 'غير مهيأ'}</Badge>
           </li>
           <li className="flex items-center justify-between rounded-xl bg-ivory/60 px-4 py-2.5">
             <span>مفتاح الخادم (عمليات الإدارة والروابط الموقعة)</span>
-            <Badge tone={serviceReady ? 'success' : 'pending'}>{serviceReady ? 'مفعّل' : 'غير مهيأ'}</Badge>
+            <Badge tone={serviceReady ? 'cobalt' : 'pending'}>{serviceReady ? 'مهيأ فقط' : 'غير مهيأ'}</Badge>
           </li>
-          {Object.entries(flags).map(([key, enabled]) => (
+          {flagSnapshot.state !== 'ready' && <li className="rounded-xl bg-antique-gold/10 px-4 py-2.5 text-sm text-text-soft" role="status">{flagSnapshot.state === 'unconfigured' ? 'لم تُهيأ قاعدة مصدر مفاتيح الميزات؛ كل الميزات الاختيارية معطلة fail-closed.' : 'تعذّرت قراءة مفاتيح الميزات؛ كل الميزات الاختيارية معطلة fail-closed.'}</li>}
+          {flagSnapshot.state === 'ready' && Object.entries(flagSnapshot.flags).map(([key, enabled]) => (
             <li key={key} className="flex items-center justify-between rounded-xl bg-ivory/60 px-4 py-2.5">
               <span dir="ltr">{key}</span>
               <Badge tone={enabled ? 'success' : 'sand'}>{enabled ? 'مفعّل' : 'معطّل'}</Badge>
             </li>
           ))}
+        </ul>
+      </Card>
+
+      <Card className="space-y-4 p-8">
+        <div><CardTitle>التكاملات</CardTitle><p className="mt-2 text-sm leading-relaxed text-text-soft">يعتمد الفحص هنا على وجود أسماء الإعدادات واكتمال أزواجها فقط. لا يقرأ القيم ولا يجري اتصالًا خارجيًا ولا يمنح نقطة قبول حي.</p></div>
+        <ul className="space-y-3">
+          {integrations.map((item) => <li key={item.id} className="rounded-2xl border border-line bg-ivory/50 p-4"><div className="flex flex-wrap items-center justify-between gap-2"><h2 className="font-bold text-deep-teal">{item.title}</h2><div className="flex gap-2">{item.requiredForLaunch && <Badge tone="danger">إطلاق</Badge>}<Badge tone={integrationTone[item.status]}>{integrationLabel[item.status]}</Badge></div></div><p className="mt-2 text-sm leading-relaxed text-text-soft">{item.detail}</p></li>)}
         </ul>
       </Card>
 
@@ -115,11 +139,13 @@ export default async function AdminSystemPage() {
 
       <Card className="p-8">
         <CardTitle className="mb-4">أحداث النظام</CardTitle>
-        {events.length === 0 ? (
+        {eventResult.state !== 'ready' ? (
+          <p className="rounded-xl bg-antique-gold/10 px-4 py-3 text-sm leading-relaxed text-text-soft" role="status">{eventResult.state === 'unconfigured' ? 'لم تُهيأ قاعدة مصدر أحداث النظام؛ لا يمكن اعتبار السجل فارغًا.' : 'تعذّرت قراءة أحداث النظام؛ لم تُفسّر النتيجة على أنها غياب للأخطاء.'}</p>
+        ) : events.length === 0 ? (
           <EmptyState
             className="border-0 bg-transparent"
             title="لا أحداث مسجلة"
-            description="أخطاء وتنبيهات النظام تُسجَّل هنا حين تقع — الهدوء خبر جيد."
+            description="نجحت قراءة المصدر ولا توجد أحداث في النطاق الحالي."
           />
         ) : (
           <ul className="divide-y divide-line/70">

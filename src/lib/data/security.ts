@@ -1,3 +1,4 @@
+import 'server-only'
 import { requirePermission } from '@/lib/auth/permissions'
 import { hasSupabasePublicConfig } from '@/lib/supabase/public-key'
 import { getServiceClient, hasSupabaseServerSecret } from '@/lib/supabase/server'

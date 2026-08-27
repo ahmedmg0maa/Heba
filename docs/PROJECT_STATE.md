@@ -1,6 +1,12 @@
 # PROJECT STATE
 Last session: 2026-08-27 | Current program: Code X development-first execution | LOCAL DEVELOPMENT IN PROGRESS — STAGING EXTERNAL GATE remains for recovery, provider migration and live acceptance only
 
+## P1 Admin read-integrity and integration-readiness checkpoint — 2026-08-27
+- The shared Admin list reader no longer converts a configured Supabase query error into an empty collection. Every consuming Admin page now crosses a sanitized application error boundary on read failure, while `/admin/system` uses an explicit `ready/unconfigured/unavailable` result so a failed event query cannot be described as healthy silence.
+- Optional feature flags now fail closed to disabled when their source is absent or unavailable. The System page distinguishes a successfully read empty set from missing/failed configuration and no longer labels Supabase environment-variable presence as a live connection.
+- `/admin/system` now reports Supabase, canonical URL, Resend, Sentry, protected-upload scanning and Staging-access configuration from variable names/completeness only. `configured` is explicitly not a provider test and remains a launch blocker until accepted live; no variable value is returned, printed or serialized.
+- `.env.example` contains empty Resend/Sentry names and removes the obsolete cPanel instruction. Browser error logging now emits only an opaque Next digest instead of a raw message/stack. `pnpm check:deploy` and the isolated Workers build passed with public **70/70** and Worker **70/70**; all local audits passed.
+
 ## P1 truthful Admin security-center checkpoint — 2026-08-27
 - `/admin/security` no longer labels seven hard-coded claims as enabled. It now separates live database evidence, local source evidence, configuration presence, unverified state and failed probes; unavailable event/session reads are not rendered as empty success states, and no token, fingerprint, account ID or secret value is selected or displayed.
 - Forward-only local migration 056 adds a service-only, `system.view`-checked aggregate readiness RPC for public-table RLS, strict Admin AAL2 policy, private Storage policies/buckets, protected-delivery 043 contract and privacy-minimized operational counts. It also replaces split session-update/audit writes with one `admin.access`-checked transaction that validates the current session and couples revocation, audit and security event.

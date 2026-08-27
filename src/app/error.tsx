@@ -11,7 +11,7 @@ export default function ErrorBoundary({
   reset: () => void
 }) {
   useEffect(() => {
-    console.error(error)
+    console.error('Application boundary error', { digest: error.digest ?? 'unavailable' })
   }, [error])
 
   return (
