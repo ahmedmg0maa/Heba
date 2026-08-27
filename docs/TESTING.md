@@ -24,6 +24,7 @@ pnpm verify:admin-operations-ux-local
 pnpm verify:contact-governance-local
 pnpm verify:testimonial-governance-local
 pnpm verify:press-governance-local
+pnpm verify:resource-hub-local
 pnpm verify:recovery-runner-local
 ```
 
@@ -44,6 +45,8 @@ The booking/CMS local checks never load `.env` or contact Supabase. They cover h
 `verify:testimonial-governance-local` executes the real review normalization contract and asserts paid-order entitlement verification, separate text-publication/first-name consent, public RLS/query filters, an atomic permission-checked moderation RPC, privacy-minimized audit and both public/Home/Admin consumers. It does not relabel source inspection as live RLS or persistence evidence.
 
 `verify:press-governance-local` executes the real Press input validator and asserts HTTPS/date/classification limits, the `press.manage` role mapping, service-only atomic CRUD, schedule job, 046 media-rights gate, metadata-only audit and public/Admin/Home consumers with preview. It cannot prove provider cron, RLS or Storage delivery until migration 050 is accepted on controlled Staging.
+
+`verify:resource-hub-local` executes the real Resource input validator and covers incomplete-private versus complete-public state, article/media readiness, transcript/captions, 046 media rights, published related offers, `resources.manage`, service-only atomic CRUD/scheduling, content-free audit and public/detail/Admin/Home/search consumers. Live media playback, RLS and cron remain external Staging evidence.
 
 `verify:recovery-runner-local` proves that recovery accepts only the Supabase Session pooler on port 5432 with the tenant-qualified Production user, routes the isolated target through the same pooler host, URL-encodes the hidden password, and clears process/unmanaged secret memory. It never opens a database connection. The actual drill is started manually with `powershell -ExecutionPolicy Bypass -File scripts/run-launch-recovery-drill-interactive.ps1` only after a disclosed password has been rotated.
 

@@ -8,7 +8,7 @@ const publicPage = read('src/app/(public)/page.tsx')
 const preview = read('src/app/preview/[type]/[id]/page.tsx')
 const manager = read('src/components/admin/HomeSectionManager.tsx')
 
-for (const kind of ['hero','trust','pathways','guided_start','editorial_feature','offer','articles','testimonials','press','cta']) {
+for (const kind of ['hero','trust','pathways','guided_start','editorial_feature','offer','articles','resources','testimonials','press','cta']) {
   assert.match(registry, new RegExp(`'${kind}'`), `home registry missing ${kind}`)
 }
 assert.match(publicPage, /getPublishedHomeSections\(\)/, 'public home must consume the governed section order')

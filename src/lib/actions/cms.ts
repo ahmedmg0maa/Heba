@@ -16,7 +16,7 @@ const NOT_ADMIN = 'هذه العملية تتطلب صلاحية إدارية.'
 const GENERIC = 'حدث خطأ — حاولي مرة أخرى.'
 
 const hasEnv = () => hasSupabasePublicConfig() && hasSupabaseServerSecret()
-const SECTION_KINDS = ['hero','intro','trust','pathways','guided_start','editorial_feature','featured_services','books','courses','workshops','availability_preview','offer','testimonials','press','articles','newsletter','cta','rich_text'] as const
+const SECTION_KINDS = ['hero','intro','trust','pathways','guided_start','editorial_feature','featured_services','books','courses','workshops','availability_preview','offer','testimonials','press','articles','resources','newsletter','cta','rich_text'] as const
 const safeLink = (value: string) => value.startsWith('/') || /^https:\/\/[^\s]+$/i.test(value)
 function validateSectionContent(value: unknown): string | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return 'محتوى القسم يجب أن يكون كائن JSON منظمًا.'
@@ -402,9 +402,9 @@ function homeSectionContentFromForm(kind: HomeSectionKind, formData: FormData): 
     const ctaLabel = required('cta_label', 2, 70)
     return ctaLabel ? { ok: true, content: { ctaLabel } } : { ok: false, error: 'أدخلي نص زر العرض.' }
   }
-  if (kind === 'articles') {
+  if (kind === 'articles' || kind === 'resources') {
     const content = { eyebrow: required('eyebrow', 2, 80), heading: required('heading', 3, 120), lead: required('lead', 8, 240), ctaLabel: required('cta_label', 2, 70) }
-    return Object.values(content).some((value) => !value) ? { ok: false, error: 'أكملي نصوص قسم المقالات.' } : { ok: true, content }
+    return Object.values(content).some((value) => !value) ? { ok: false, error: kind === 'resources' ? 'أكملي نصوص قسم الموارد.' : 'أكملي نصوص قسم المقالات.' } : { ok: true, content }
   }
   if (kind === 'testimonials') {
     const content = { eyebrow: required('eyebrow', 2, 80), heading: required('heading', 3, 120) }

@@ -22,17 +22,19 @@ export type HomeTestimonial = {
 }
 
 export type HomePressMention = { id: string; outlet: string; title: string; originalUrl: string; publishedOn: string }
+export type HomeResource = { id: string; slug: string; title: string; excerpt: string; kind: string; topic: string }
 
 export type HomeData = {
   offer: HomeOffer | null
   articles: HomeArticle[]
   testimonials: HomeTestimonial[]
   press: HomePressMention[]
+  resources: HomeResource[]
 }
 
 // Public social proof and promotions are data-only. Missing configuration or
 // query failures render honest empty sections instead of invented fallbacks.
-const EMPTY_HOME_DATA: HomeData = { offer: null, articles: [], testimonials: [], press: [] }
+const EMPTY_HOME_DATA: HomeData = { offer: null, articles: [], testimonials: [], press: [], resources: [] }
 
 const hasEnv = hasSupabasePublicConfig
 
@@ -40,7 +42,7 @@ export async function getHomeData(): Promise<HomeData> {
   if (!hasEnv()) return EMPTY_HOME_DATA
   try {
     const supabase = await getServerClient()
-    const [offerRes, articlesRes, reviewsRes, pressRes] = await Promise.all([
+    const [offerRes, articlesRes, resourcesRes, reviewsRes, pressRes] = await Promise.all([
       supabase
         .from('offers')
         .select('title, description, badge_text, ends_at')
@@ -53,6 +55,14 @@ export async function getHomeData(): Promise<HomeData> {
         .select('slug, title, excerpt, published_at')
         .eq('is_published', true)
         .order('published_at', { ascending: false })
+        .limit(3),
+      supabase
+        .from('resources')
+        .select('id, slug, title, excerpt, kind, topic')
+        .eq('status', 'published')
+        .eq('is_featured', true)
+        .or(`publish_at.is.null,publish_at.lte.${new Date().toISOString()}`)
+        .order('publish_at', { ascending: false })
         .limit(3),
       supabase
         .from('reviews')
@@ -95,6 +105,7 @@ export async function getHomeData(): Promise<HomeData> {
         comment: r.comment,
       })),
       press: (pressRes.data ?? []).map((row) => ({ id: row.id, outlet: row.outlet, title: row.title, originalUrl: row.original_url, publishedOn: row.published_on })),
+      resources: (resourcesRes.data ?? []).map((row) => ({ id: row.id, slug: row.slug, title: row.title, excerpt: row.excerpt, kind: row.kind, topic: row.topic })),
     }
   } catch {
     return EMPTY_HOME_DATA

@@ -6,6 +6,7 @@ export const HOME_SECTION_KINDS = [
   'editorial_feature',
   'offer',
   'articles',
+  'resources',
   'testimonials',
   'press',
   'cta',
@@ -80,6 +81,7 @@ export const HOME_SECTION_OPTIONS: { kind: HomeSectionKind; label: string; name:
   { kind: 'editorial_feature', label: 'المشهد التحريري', name: 'مساحة البداية المصورة' },
   { kind: 'offer', label: 'العرض المنشور', name: 'العرض الحالي' },
   { kind: 'articles', label: 'المقالات المختارة', name: 'أحدث المقالات' },
+  { kind: 'resources', label: 'الموارد الحديثة', name: 'أحدث الموارد' },
   { kind: 'testimonials', label: 'الآراء الموثقة', name: 'تجارب معتمدة' },
   { kind: 'press', label: 'الظهور الإعلامي', name: 'مصادر موثقة' },
   { kind: 'cta', label: 'الدعوة الختامية', name: 'الخطوة التالية' },
@@ -128,6 +130,7 @@ export const DEFAULT_HOME_CONTENT: Record<HomeSectionKind, HomeSectionContent> =
   },
   offer: { ctaLabel: 'استفيدي من العرض الآن' },
   articles: { eyebrow: 'قراءات منتقاة', heading: 'مقالات تعيد ترتيب الفكرة', lead: 'مساحات قصيرة للتأمل والفهم والتطبيق.', ctaLabel: 'جميع المقالات' },
+  resources: { eyebrow: 'موارد متعددة الصيغ', heading: 'شاهدي أو استمعي أو اقرئي', lead: 'مواد منشورة مع موضوع ومدة ونصوص مفرغة للإتاحة.', ctaLabel: 'كل الموارد' },
   testimonials: { eyebrow: 'قالوا عن التجربة', heading: 'شهادات متعلّماتنا' },
   press: { eyebrow: 'ظهور موثّق', heading: 'من المصادر الأصلية', lead: 'حوارات ومواد وروابط منشورة مع توضيح نوع المصدر.', ctaLabel: 'كل المصادر' },
   cta: {
@@ -199,7 +202,7 @@ export function normalizeHomeContent(kind: HomeSectionKind, value: unknown): Hom
     }
   }
   if (kind === 'offer') return { ctaLabel: text(source.ctaLabel, (fallback as { ctaLabel: string }).ctaLabel, 70) }
-  if (kind === 'articles') {
+  if (kind === 'articles' || kind === 'resources') {
     const base = fallback as ArticlesContent
     return { eyebrow: text(source.eyebrow, base.eyebrow, 80), heading: text(source.heading, base.heading, 120), lead: text(source.lead, base.lead, 240), ctaLabel: text(source.ctaLabel, base.ctaLabel, 70) }
   }

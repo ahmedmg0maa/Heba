@@ -20,6 +20,7 @@ const labels: Record<PublicSearchKind, string> = {
   workshop: 'ورشة',
   service: 'جلسة',
   article: 'مقال',
+  resource: 'مورد',
 }
 
 type Props = { searchParams: Promise<{ q?: string | string[] }> }
@@ -30,7 +31,7 @@ export default async function SearchPage({ searchParams }: Props) {
   const { query, results } = await searchPublishedContent(rawQuery)
 
   return <main>
-    <PageHero eyebrow="بحث واضح" title="ابحثي في المحتوى المنشور" lead="تظهر هنا فقط الدورات والكتب والورش والجلسات والمقالات المنشورة فعليًا." />
+    <PageHero eyebrow="بحث واضح" title="ابحثي في المحتوى المنشور" lead="تظهر هنا فقط الدورات والكتب والورش والجلسات والمقالات والموارد المنشورة فعليًا." />
     <Section>
       <form role="search" method="get" action="/search" className="mx-auto flex max-w-3xl flex-col gap-3 rounded-2xl border border-line bg-surface-raised p-4 shadow-card sm:flex-row">
         <label htmlFor="public-search" className="sr-only">كلمة البحث</label>
@@ -57,4 +58,3 @@ export default async function SearchPage({ searchParams }: Props) {
     </Section>
   </main>
 }
-

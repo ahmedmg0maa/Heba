@@ -21,6 +21,7 @@ const columns = [
       { href: '/articles', label: 'المقالات' },
       { href: '/testimonials', label: 'تجارب موثقة' },
       { href: '/press', label: 'الظهور الإعلامي' },
+      { href: '/resources', label: 'مكتبة الموارد' },
       { href: '/faq', label: 'الأسئلة الشائعة' },
     ],
   },

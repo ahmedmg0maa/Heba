@@ -10,6 +10,7 @@ import { OfferBlock } from '@/components/home/OfferBlock'
 import { FeaturedArticles } from '@/components/home/FeaturedArticles'
 import { Testimonials } from '@/components/home/Testimonials'
 import { PressHighlights } from '@/components/home/PressHighlights'
+import { FeaturedResources } from '@/components/home/FeaturedResources'
 import { FinalCta } from '@/components/home/FinalCta'
 import { Reveal } from '@/components/ui/Reveal'
 
@@ -22,6 +23,7 @@ export function HomeSectionRenderer({ section, copy, data }: { section: HomeSect
   else if (section.kind === 'editorial_feature') content = <EditorialFeature content={section.content as EditorialFeatureContent} />
   else if (section.kind === 'offer') content = <OfferBlock offer={data.offer} ctaLabel={(section.content as { ctaLabel: string }).ctaLabel} />
   else if (section.kind === 'articles') content = <FeaturedArticles articles={data.articles} content={section.content as ArticlesContent} />
+  else if (section.kind === 'resources') content = <FeaturedResources resources={data.resources} content={section.content as ArticlesContent} />
   else if (section.kind === 'testimonials') content = <Testimonials testimonials={data.testimonials} content={section.content as TestimonialsContent} />
   else if (section.kind === 'press') content = <PressHighlights mentions={data.press} content={section.content as PressContent} />
   else if (section.kind === 'cta') content = <FinalCta content={section.content as CtaContent} />

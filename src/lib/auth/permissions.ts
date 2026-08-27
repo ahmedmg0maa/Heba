@@ -12,7 +12,7 @@ export const PERMISSIONS = [
   'content.view', 'content.manage', 'content.publish', 'content.delete', 'learning.manage',
   'media.view', 'media.manage', 'media.delete',
   'settings.view', 'settings.manage', 'feature_flags.manage',
-  'inbox.view', 'inbox.manage', 'newsletter.manage', 'reviews.manage', 'press.manage',
+  'inbox.view', 'inbox.manage', 'newsletter.manage', 'reviews.manage', 'press.manage', 'resources.manage',
   'reports.view', 'reports.export', 'reports.snapshot',
   'marketing.manage', 'audit.view', 'system.view', 'notifications.send', 'admin.search',
 ] as const
@@ -24,8 +24,8 @@ const ROLE_PERMISSIONS: Record<Exclude<AdminRole, 'owner'>, readonly Permission[
   admin: PERMISSIONS.filter((permission) => permission !== 'roles.manage'),
   operations: ['admin.access', 'users.view', 'orders.view', 'bookings.view', 'bookings.manage', 'availability.manage', 'packages.manage', 'inbox.view', 'inbox.manage', 'notifications.send', 'reports.view', 'admin.search'],
   finance: ['admin.access', 'users.view', 'payments.view', 'payments.approve', 'payments.reject', 'orders.view', 'orders.update', 'orders.refund', 'bookings.view', 'packages.manage', 'reports.view', 'reports.export', 'reports.snapshot', 'marketing.manage', 'audit.view', 'admin.search'],
-  content: ['admin.access', 'catalog.view', 'catalog.manage', 'catalog.publish', 'catalog.delete', 'content.view', 'content.manage', 'content.publish', 'content.delete', 'learning.manage', 'media.view', 'media.manage', 'media.delete', 'reviews.manage', 'press.manage', 'reports.view', 'admin.search'],
-  marketing: ['admin.access', 'users.view', 'catalog.view', 'content.view', 'content.manage', 'content.publish', 'media.view', 'media.manage', 'inbox.view', 'newsletter.manage', 'reviews.manage', 'press.manage', 'reports.view', 'reports.export', 'marketing.manage', 'admin.search'],
+  content: ['admin.access', 'catalog.view', 'catalog.manage', 'catalog.publish', 'catalog.delete', 'content.view', 'content.manage', 'content.publish', 'content.delete', 'learning.manage', 'media.view', 'media.manage', 'media.delete', 'reviews.manage', 'press.manage', 'resources.manage', 'reports.view', 'admin.search'],
+  marketing: ['admin.access', 'users.view', 'catalog.view', 'content.view', 'content.manage', 'content.publish', 'media.view', 'media.manage', 'inbox.view', 'newsletter.manage', 'reviews.manage', 'press.manage', 'resources.manage', 'reports.view', 'reports.export', 'marketing.manage', 'admin.search'],
   support: ['admin.access', 'users.view', 'payments.view', 'orders.view', 'bookings.view', 'inbox.view', 'inbox.manage', 'reviews.manage', 'notifications.send', 'reports.view', 'admin.search'],
   editor: ['admin.access', 'catalog.view', 'content.view', 'content.manage', 'learning.manage', 'media.view', 'media.manage', 'admin.search'],
 }

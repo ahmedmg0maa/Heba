@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 
-const publicRoutes = ['/', '/start-here', '/search', '/courses', '/books', '/workshops', '/services', '/booking', '/about', '/testimonials', '/press', '/contact', '/faq']
+const publicRoutes = ['/', '/start-here', '/search', '/courses', '/books', '/workshops', '/services', '/booking', '/about', '/testimonials', '/press', '/resources', '/contact', '/faq']
 const visit = (page: Page, route: string) => page.goto(route, { waitUntil: 'domcontentloaded', timeout: 60_000 })
 
 test.describe('public experience', () => {
@@ -94,6 +94,13 @@ test.describe('public experience', () => {
     await expect(page.getByRole('heading', { name: 'ظهور موثّق، لا ادعاءات' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'لا توجد مصادر موثقة منشورة في هذا القسم' })).toBeVisible()
     await expect(page.getByRole('link', { name: /المصدر الأصلي/ })).toHaveCount(0)
+  })
+
+  test('resources hide empty or unconfigured media journeys', async ({ page }) => {
+    await visit(page, '/resources')
+    await expect(page.getByRole('heading', { name: 'موارد تساعدك على الفهم والتطبيق' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'لا توجد موارد منشورة بهذه المواصفات' })).toBeVisible()
+    await expect(page.getByRole('link', { name: 'افتحي المورد' })).toHaveCount(0)
   })
 
   test('start-here recommendations link to published catalogs rather than invented product slugs', async ({ page }) => {

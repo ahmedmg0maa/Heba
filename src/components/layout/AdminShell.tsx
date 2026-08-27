@@ -34,6 +34,7 @@ function sections(badges: Badges): SidebarSection[] {
         { href: '/admin/media', label: 'الوسائط' },
         { href: '/admin/reviews', label: 'التقييمات', badge: badges.reviews },
         { href: '/admin/press', label: 'الظهور الإعلامي' },
+        { href: '/admin/resources', label: 'مكتبة الموارد' },
       ],
     },
     {
@@ -63,7 +64,7 @@ const routePermission: Record<string, Permission> = {
   '/admin/products': 'catalog.view', '/admin/courses': 'catalog.view', '/admin/books': 'catalog.view',
   '/admin/workshops': 'catalog.view', '/admin/articles': 'content.view', '/admin/pages': 'content.view',
   '/admin/revisions': 'content.manage',
-  '/admin/media': 'media.view', '/admin/reviews': 'reviews.manage', '/admin/press': 'press.manage', '/admin/offers': 'marketing.manage',
+  '/admin/media': 'media.view', '/admin/reviews': 'reviews.manage', '/admin/press': 'press.manage', '/admin/resources': 'resources.manage', '/admin/offers': 'marketing.manage',
   '/admin/coupons': 'marketing.manage', '/admin/reports': 'reports.view', '/admin/roles': 'roles.manage',
   '/admin/audit-logs': 'audit.view', '/admin/security': 'system.view', '/admin/settings': 'settings.view',
   '/admin/system': 'system.view',

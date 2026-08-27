@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { listCourses, listBooks, listWorkshops, listArticles } from '@/lib/data/catalog'
+import { listPublishedResources } from '@/lib/data/resources'
 
 const site = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
 
@@ -16,6 +17,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/articles',
     '/testimonials',
     '/press',
+    '/resources',
     '/contact',
     '/faq',
   ].map((path) => ({
@@ -24,11 +26,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: path === '' ? 1 : 0.7,
   }))
 
-  const [courses, books, workshops, articles] = await Promise.all([
+  const [courses, books, workshops, articles, resources] = await Promise.all([
     listCourses(),
     listBooks(),
     listWorkshops(),
     listArticles(),
+    listPublishedResources({ limit: 100 }),
   ])
 
   return [
@@ -37,5 +40,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...books.map((b) => ({ url: `${site}/books/${b.slug}`, changeFrequency: 'weekly' as const, priority: 0.8 })),
     ...workshops.map((w) => ({ url: `${site}/workshops/${w.slug}`, changeFrequency: 'daily' as const, priority: 0.8 })),
     ...articles.map((a) => ({ url: `${site}/articles/${a.slug}`, changeFrequency: 'monthly' as const, priority: 0.6 })),
+    ...resources.map((resource) => ({ url: `${site}/resources/${resource.slug}`, changeFrequency: 'monthly' as const, priority: 0.6 })),
   ]
 }
