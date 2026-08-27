@@ -94,3 +94,7 @@ Inspect `release/manifest.json`; the archive must not contain `.env`, `supabase/
 - Commerce and booking tests must cover retries, duplicate submissions, stale state, overlapping slots, partial failures, and concurrent requests.
 - `verify:commerce` exercises simultaneous checkout, proof submission, approval, rejection, and refund calls against disposable live data and proves single audit/access effects plus RPC isolation.
 - Run authenticated Playwright projects only against controlled test data; never package reports or saved auth state.
+
+## Privacy-safe Sentry monitoring contract
+
+Run `pnpm verify:sentry-monitoring-local` whenever monitoring, Worker entry, instrumentation, dependency or isolated-build configuration changes. The executable verifier enforces matching pinned official Cloudflare/browser SDKs, the `withSentry` Worker wrapper, awaited Next server capture, optional browser initialization, disabled PII/tracing/log/breadcrumb defaults, an allowlisted event shape, and explicit shadowing of provider secrets during isolated commands. It also passes a deliberately sensitive synthetic event through the real scrubber and fails if customer email, request/token data, breadcrumbs, local variables, raw messages or non-allowlisted tags survive. This is local source/runtime evidence only; a controlled redacted Staging event and alert receipt are still required for provider acceptance.

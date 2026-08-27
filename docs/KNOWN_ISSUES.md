@@ -2,6 +2,7 @@
 
 | # | Severity | Issue | Status |
 |---|----------|-------|--------|
+| 58 | P1 | Sentry previously had variable-name readiness only, and isolated builds did not explicitly neutralize monitoring/provider credentials inherited from the shell. | **Locally closed:** official matching Worker/browser SDKs, a custom Worker wrapper, awaited Next error capture, strict PII scrub and secret-shadowed isolated commands are executable and pass both 70/70 suites. A controlled Staging event plus alert receipt remains `STAGING EXTERNAL GATE`; configuration presence is not live proof. |
 | 1 | low | Official logo, original botanical SVG system, and an optimized original no-person catalog/editorial still life are integrated. Personal photography is intentionally not required by the approved direction. | closed |
 | 2 | low | Four reference screenshots were supplied and translated into V2.4/V2.5 system rules; desktop/mobile/light/dark comparison pass completed. | closed |
 | 3 | medium | Order auto-expiry: scheduled hourly via pg_cron on the live project (migration 014). | closed |
