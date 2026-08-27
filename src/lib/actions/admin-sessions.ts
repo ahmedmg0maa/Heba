@@ -2,7 +2,8 @@
 
 import { revalidatePath } from 'next/cache'
 import { requirePermission } from '@/lib/auth/permissions'
-import { getServiceClient } from '@/lib/supabase/server'
+import { hasSupabasePublicConfig } from '@/lib/supabase/public-key'
+import { getServiceClient, hasSupabaseServerSecret } from '@/lib/supabase/server'
 
 type SessionResult = { ok: true; idleExpiresAt?: string; absoluteExpiresAt?: string } | { ok: false; error: string }
 
@@ -14,45 +15,41 @@ export async function touchAdminSession(): Promise<SessionResult> {
 
 export async function revokeAdminSession(sessionId: string): Promise<SessionResult> {
   const admin = await requirePermission('admin.access')
-  if (!admin?.userId || !/^[0-9a-f-]{36}$/i.test(sessionId)) return { ok: false, error: 'تعذّر إلغاء الجلسة.' }
-  const service = getServiceClient()
-  const { error } = await service.from('admin_sessions').update({ revoked_at: new Date().toISOString() })
-    .eq('id', sessionId).eq('user_id', admin.userId).is('revoked_at', null)
-  if (error) return { ok: false, error: 'تعذّر إلغاء الجلسة.' }
-  await service.from('audit_logs').insert({ actor_id: admin.userId, action: 'admin_session.revoked', entity_type: 'admin_session', entity_id: sessionId, meta: {} })
-  revalidatePath('/admin/security')
-  return { ok: true }
+  if (!admin?.userId || !admin.session || !/^[0-9a-f-]{36}$/i.test(sessionId)) return { ok: false, error: 'تعذّر إلغاء الجلسة.' }
+  return manageSessions(admin.userId, admin.session.id, 'one', sessionId)
 }
 
 export async function revokeOtherAdminSessions(): Promise<SessionResult> {
   const admin = await requirePermission('admin.access')
   if (!admin?.userId || !admin.session) return { ok: false, error: 'تعذّر إلغاء الجلسات.' }
-  const service = getServiceClient()
-  const { error } = await service.from('admin_sessions').update({ revoked_at: new Date().toISOString() })
-    .eq('user_id', admin.userId).neq('id', admin.session.id).is('revoked_at', null)
-  if (error) return { ok: false, error: 'تعذّر إلغاء الجلسات.' }
-  await service.from('audit_logs').insert({ actor_id: admin.userId, action: 'admin_session.others_revoked', entity_type: 'admin_session', entity_id: admin.session.id, meta: {} })
-  revalidatePath('/admin/security')
-  return { ok: true }
+  return manageSessions(admin.userId, admin.session.id, 'others')
 }
 
 export async function revokeAllAdminSessions(): Promise<SessionResult> {
   const admin = await requirePermission('admin.access')
-  if (!admin?.userId) return { ok: false, error: 'تعذّر إلغاء الجلسات.' }
-  const service = getServiceClient()
-  const { error } = await service.from('admin_sessions').update({ revoked_at: new Date().toISOString() })
-    .eq('user_id', admin.userId).is('revoked_at', null)
-  if (error) return { ok: false, error: 'تعذّر إلغاء الجلسات.' }
-  await service.from('audit_logs').insert({ actor_id: admin.userId, action: 'admin_session.all_revoked', entity_type: 'admin_session', entity_id: admin.userId, meta: {} })
+  if (!admin?.userId || !admin.session) return { ok: false, error: 'تعذّر إلغاء الجلسات.' }
+  return manageSessions(admin.userId, admin.session.id, 'all')
+}
+
+async function manageSessions(actorId: string, currentSessionId: string, scope: 'one' | 'others' | 'all', sessionId?: string): Promise<SessionResult> {
+  const { error } = await getServiceClient().rpc('manage_admin_sessions', {
+    p_actor_id: actorId,
+    p_current_session_id: currentSessionId,
+    p_scope: scope,
+    p_session_id: sessionId ?? null,
+  })
+  if (error) return { ok: false, error: error.code === 'PGRST202' ? 'يلزم تطبيق تحديث مركز الأمان على بيئة Staging أولًا.' : 'تعذّر إلغاء الجلسات.' }
   revalidatePath('/admin/security')
   return { ok: true }
 }
 
 export async function getAdminSessionInventory() {
+  if (!hasSupabasePublicConfig() || !hasSupabaseServerSecret()) return { state: 'unconfigured' as const, sessions: [] }
   const admin = await requirePermission('admin.access')
-  if (!admin?.userId) return []
-  const { data } = await getServiceClient().from('admin_sessions')
+  if (!admin?.userId) return { state: 'unavailable' as const, sessions: [] }
+  const { data, error } = await getServiceClient().from('admin_sessions')
     .select('id,device_label,created_at,last_seen_at,idle_expires_at,absolute_expires_at,revoked_at')
     .eq('user_id', admin.userId).is('revoked_at', null).order('last_seen_at', { ascending: false }).limit(20)
-  return (data ?? []).map((session) => ({ ...session, current: session.id === admin.session?.id }))
+  if (error) return { state: 'unavailable' as const, sessions: [] }
+  return { state: 'ready' as const, sessions: (data ?? []).map((session) => ({ ...session, current: session.id === admin.session?.id })) }
 }

@@ -1,6 +1,12 @@
 # PROJECT STATE
 Last session: 2026-08-27 | Current program: Code X development-first execution | LOCAL DEVELOPMENT IN PROGRESS — STAGING EXTERNAL GATE remains for recovery, provider migration and live acceptance only
 
+## P1 truthful Admin security-center checkpoint — 2026-08-27
+- `/admin/security` no longer labels seven hard-coded claims as enabled. It now separates live database evidence, local source evidence, configuration presence, unverified state and failed probes; unavailable event/session reads are not rendered as empty success states, and no token, fingerprint, account ID or secret value is selected or displayed.
+- Forward-only local migration 056 adds a service-only, `system.view`-checked aggregate readiness RPC for public-table RLS, strict Admin AAL2 policy, private Storage policies/buckets, protected-delivery 043 contract and privacy-minimized operational counts. It also replaces split session-update/audit writes with one `admin.access`-checked transaction that validates the current session and couples revocation, audit and security event.
+- The Center exposes only the current administrator's active-session inventory plus aggregate lockout/failure/event counts. Provider claims remain `unverified` until the RPC runs on authorized Staging; the presence of a server-secret variable is labeled `configured`, never `verified`.
+- `pnpm check:deploy` passed the 68-page production build, public Playwright **70/70** and every local contract/audit. The isolated vinext/Workers build and Cloudflare runtime suite also passed **70/70** with retries disabled. Migration 056 is source-only and has not been applied externally.
+
 ## P1 governed Newsletter consent checkpoint — 2026-08-27
 - The optional Home newsletter section is now a real governed intake rather than a decorative form. It renders only when an approved/effective/versioned Privacy page exists and secure Supabase public/server configuration is available; preview keeps the form disabled and a missing configuration produces no public promise.
 - Forward-only local migration 055 records explicit consent time/version/source, revokes browser-direct writes, rate-limits normalized device and email fingerprints, and exposes only service-role subscription/unsubscribe/Admin-lifecycle RPCs. Each mutation, permission check and privacy-minimized audit record is one database transaction; raw unsubscribe tokens, email addresses and device material never enter audit metadata.

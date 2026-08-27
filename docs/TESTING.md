@@ -23,6 +23,7 @@ pnpm verify:catalog-publication-local
 pnpm verify:program-catalog-local
 pnpm verify:media-lifecycle-local
 pnpm verify:newsletter-governance-local
+pnpm verify:admin-security-center-local
 pnpm verify:revision-recovery-local
 pnpm verify:admin-operations-ux-local
 pnpm verify:contact-governance-local
@@ -55,6 +56,8 @@ The booking/CMS local checks never load `.env` or contact Supabase. They cover h
 `verify:media-lifecycle-local` asserts migration 054's soft archive/restore and compatible replacement contract, in-database permission recheck, atomic transfer of media usages and Press/Resource references, service-only grants, minimized audit and storage-object preservation. It also prevents regression to the nonexistent `deleted_at` publication query and proves pickers plus public Press/Resource consumers deny archived media. Provider RLS, Storage and concurrent replacement still require controlled Staging evidence.
 
 `verify:newsletter-governance-local` executes the newsletter normalization contract and asserts explicit consent, approved-Privacy/configuration publication gating, browser-direct write revocation, service-only throttled intake, hashed unsubscribe tokens, read-only GET behavior, atomic permission/audit Admin lifecycle and the deliberate absence of Admin resubscribe. It does not claim provider persistence, distributed throttling or outbound-email evidence before controlled Staging.
+
+`verify:admin-security-center-local` asserts that the Security Center cannot render hard-coded live success, cannot convert an unavailable session/event read into an empty result, and never selects request fingerprints or tokens. It verifies migration 056's `system.view` aggregate probes and `admin.access` own-session RPC, including current-session validation, service-only grants and atomic revocation/audit/security-event writes. Actual RLS, Storage, Auth and telemetry status remains unverified until the probe runs on authorized Staging.
 
 `verify:recovery-runner-local` proves that recovery accepts only the Supabase Session pooler on port 5432 with the tenant-qualified Production user, routes the isolated target through the same pooler host, URL-encodes the hidden password, and clears process/unmanaged secret memory. It never opens a database connection. The actual drill is started manually with `powershell -ExecutionPolicy Bypass -File scripts/run-launch-recovery-drill-interactive.ps1` only after a disclosed password has been rotated.
 
