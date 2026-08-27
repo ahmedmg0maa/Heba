@@ -1,6 +1,6 @@
 import type { HomeData } from '@/lib/data/home'
 import type { HomeCopy } from '@/lib/data/cms'
-import type { ArticlesContent, CtaContent, EditorialFeatureContent, GuidedStartContent, HomeSection, PathwaysContent, PressContent, TestimonialsContent, TrustContent } from '@/lib/home/sections'
+import type { ArticlesContent, CtaContent, EditorialFeatureContent, GuidedStartContent, HomeSection, NewsletterContent, PathwaysContent, PressContent, TestimonialsContent, TrustContent } from '@/lib/home/sections'
 import { Hero } from '@/components/home/Hero'
 import { TrustStrip } from '@/components/home/TrustStrip'
 import { ServiceCards } from '@/components/home/ServiceCards'
@@ -12,9 +12,10 @@ import { Testimonials } from '@/components/home/Testimonials'
 import { PressHighlights } from '@/components/home/PressHighlights'
 import { FeaturedResources } from '@/components/home/FeaturedResources'
 import { FinalCta } from '@/components/home/FinalCta'
+import { NewsletterSignup } from '@/components/home/NewsletterSignup'
 import { Reveal } from '@/components/ui/Reveal'
 
-export function HomeSectionRenderer({ section, copy, data }: { section: HomeSection; copy: HomeCopy; data: HomeData }) {
+export function HomeSectionRenderer({ section, copy, data, preview = false, newsletterEnabled = false }: { section: HomeSection; copy: HomeCopy; data: HomeData; preview?: boolean; newsletterEnabled?: boolean }) {
   if (section.kind === 'hero') return <Hero copy={copy} />
   let content: React.ReactNode = null
   if (section.kind === 'trust') content = <TrustStrip content={section.content as TrustContent} />
@@ -26,6 +27,7 @@ export function HomeSectionRenderer({ section, copy, data }: { section: HomeSect
   else if (section.kind === 'resources') content = <FeaturedResources resources={data.resources} content={section.content as ArticlesContent} />
   else if (section.kind === 'testimonials') content = <Testimonials testimonials={data.testimonials} content={section.content as TestimonialsContent} />
   else if (section.kind === 'press') content = <PressHighlights mentions={data.press} content={section.content as PressContent} />
+  else if (section.kind === 'newsletter') content = preview || newsletterEnabled ? <NewsletterSignup content={section.content as NewsletterContent} preview={preview} /> : null
   else if (section.kind === 'cta') content = <FinalCta content={section.content as CtaContent} />
   return content ? <Reveal>{content}</Reveal> : null
 }

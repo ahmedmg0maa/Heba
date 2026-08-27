@@ -23,7 +23,7 @@ type Message = {
   created_at: string
   contact_message_notes: { id: string; note: string; created_at: string }[]
 }
-type Subscriber = { id: string; email: string; status: string; created_at: string }
+type Subscriber = { id: string; email: string; status: string; consent_at: string | null; consent_version: string | null; source: string | null; created_at: string }
 
 function purposeLabel(message: Message) {
   return CONTACT_PURPOSE_LABELS[message.purpose as ContactPurpose] ?? message.subject ?? 'استفسار عام'
@@ -36,7 +36,7 @@ export default async function AdminInboxPage() {
       'id,name,email,phone,subject,purpose,message,status,priority,assigned_to,is_spam,privacy_consent_at,created_at,contact_message_notes(id,note,created_at)',
       { orderBy: 'created_at', limit: 300 },
     ),
-    adminList<Subscriber>('newsletter_subscribers', 'id,email,status,created_at', { orderBy: 'created_at', limit: 500 }),
+    adminList<Subscriber>('newsletter_subscribers', 'id,email,status,consent_at,consent_version,source,created_at', { orderBy: 'created_at', limit: 500 }),
     adminList<{ user_id: string; role: string }>('admin_roles', 'user_id,role', { limit: 100 }),
     adminList<{ id: string; to_email: string; subject: string; status: string; created_at: string; last_error: string | null }>(
       'email_outbox',
@@ -98,10 +98,11 @@ export default async function AdminInboxPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardTitle>المشتركات</CardTitle>
+          <p className="mt-2 text-xs leading-loose text-text-soft">لا يمكن للإدارة إعادة تفعيل بريد بلا موافقة؛ الاشتراك يعود فقط من النموذج العام. السجلات القديمة بلا دليل موافقة ليست مؤهلة للإرسال.</p>
           <div className="mt-4 space-y-3">
             {subscribers.map((subscriber) => (
               <div key={subscriber.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-ivory/50 p-3">
-                <div><p dir="ltr">{subscriber.email}</p><p className="text-xs text-taupe">{subscriber.status}</p></div>
+                <div><p dir="ltr">{subscriber.email}</p><p className="text-xs text-taupe">{subscriber.status} · {subscriber.consent_at ? `موافقة ${subscriber.consent_version ?? 'مسجلة'} · ${subscriber.source ?? 'مصدر غير مسجل'}` : 'سجل قديم بلا موافقة مثبتة'}</p></div>
                 <SubscriberControls id={subscriber.id} status={subscriber.status} />
               </div>
             ))}

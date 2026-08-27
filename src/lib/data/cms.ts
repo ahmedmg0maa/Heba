@@ -171,7 +171,7 @@ export async function getContentReadiness(): Promise<ContentReadinessItem[]> {
       { id: 'payments', title: 'وسيلة دفع مفعّلة', detail: 'تُفحص بعد ربط مشروع الإنتاج الصحيح؛ الشراء والحجز محجوبان بلا وسيلة دفع.', status: 'unconfigured', href: '/admin/settings' },
       { id: 'articles', title: 'مقال منشور', detail: 'تُفحص بعد ربط مشروع الإنتاج الصحيح.', status: 'unconfigured', href: '/admin/articles' },
       { id: 'legal', title: 'سياسات قانونية معتمدة', detail: 'تتطلب اعتماد المالكة ومراجعة قانونية؛ النصوص الحالية مسودات غير منشورة.', status: 'blocked', href: '/admin/pages' },
-      { id: 'database-change', title: 'ترحيلات الحجز والوسائط', detail: '044 و045 و046 محلية فقط ولم تُطبّق على staging أو الإنتاج.', status: 'blocked', href: '/admin/system' },
+      { id: 'database-change', title: 'ترحيلات التشغيل والحوكمة', detail: '044–055 مصدرية محلية فقط ولم تُقبل على Staging؛ 043 وحدها هي آخر حالة Production موثقة.', status: 'blocked', href: '/admin/system' },
       { id: 'recovery', title: 'نسخة احتياطية وخطة رجوع مجرّبة', detail: 'لا توجد نقطة استعادة موثقة ولا تجربة رجوع على staging.', status: 'blocked', href: '/admin/system' },
       { id: 'auth-redirects', title: 'روابط Auth والنطاق القانوني', detail: 'يلزم اعتماد النطاق الأساسي ثم التحقق من Site URL وقائمة redirect URLs في Supabase وبيئة الاستضافة.', status: 'blocked', href: '/admin/settings' },
     ]
@@ -179,12 +179,13 @@ export async function getContentReadiness(): Promise<ContentReadinessItem[]> {
 
   try {
     const supabase = await getServerClient()
-    const [products, activeServices, availability, articles, paymentRows] = await Promise.all([
+    const [products, activeServices, availability, articles, paymentRows, approvedLegal] = await Promise.all([
       supabase.from('products').select('id', { count: 'exact', head: true }).eq('is_published', true),
       supabase.from('services').select('id', { count: 'exact', head: true }).eq('is_active', true),
       supabase.from('availability_rules').select('id', { count: 'exact', head: true }),
       supabase.from('articles').select('id', { count: 'exact', head: true }).eq('is_published', true),
       supabase.from('site_settings').select('key, value').in('key', ['payment_instapay', 'payment_wallet', 'payment_bank']),
+      supabase.from('pages').select('slug', { count: 'exact', head: true }).in('slug', ['privacy','terms','refund','disclaimer','session-policy']).eq('status', 'published').eq('is_published', true).eq('legal_review_status', 'approved').not('legal_version', 'is', null).not('effective_at', 'is', null),
     ])
 
     const serviceCount = activeServices.count ?? 0
@@ -209,8 +210,12 @@ export async function getContentReadiness(): Promise<ContentReadinessItem[]> {
           ? { id: 'payments', title: 'وسيلة دفع مفعّلة', detail: 'توجد وسيلة دفع مفعّلة واحدة على الأقل؛ لا تعرض هذه القائمة أي بيانات حساب.', status: 'ready', href: '/admin/settings' }
           : { id: 'payments', title: 'وسيلة دفع مفعّلة', detail: 'الشراء والحجز محجوبان حتى تفعيل وسيلة دفع من الإعدادات.', status: 'needs-content', href: '/admin/settings' },
       readinessForCount('articles', 'مقال منشور', articles, '/admin/articles', (count) => `${count.toLocaleString('ar-EG')} مقالًا منشورًا ظاهرًا في الكتالوج العام.`, 'انشري مقالًا أو اتركي قسم المقالات فارغًا بوضوح.'),
-      { id: 'legal', title: 'سياسات قانونية معتمدة', detail: 'تتطلب اعتماد المالكة ومراجعة قانونية؛ النصوص الحالية مسودات غير منشورة.', status: 'blocked', href: '/admin/pages' },
-      { id: 'database-change', title: 'ترحيلات الحجز والوسائط', detail: '044 و045 و046 محلية فقط؛ يلزم staging مع 044 ثم 045 ثم 046 قبل أي إطلاق.', status: 'blocked', href: '/admin/system' },
+      approvedLegal.error
+        ? { id: 'legal', title: 'سياسات قانونية معتمدة', detail: 'تعذّر التحقق من حالة السياسات؛ لا تُعامل كمعتمدة.', status: 'unknown', href: '/admin/pages' }
+        : approvedLegal.count === 5
+          ? { id: 'legal', title: 'سياسات قانونية معتمدة', detail: 'الخصوصية والشروط والاسترداد وإخلاء المسؤولية وسياسة الجلسة منشورة بإصدار وتاريخ سريان معتمدين.', status: 'ready', href: '/admin/pages' }
+          : { id: 'legal', title: 'سياسات قانونية معتمدة', detail: `${(approvedLegal.count ?? 0).toLocaleString('ar-EG')} من ٥ سياسات فقط مستوفية للاعتماد والإصدار وتاريخ السريان.`, status: 'blocked', href: '/admin/pages' },
+      { id: 'database-change', title: 'ترحيلات التشغيل والحوكمة', detail: '044–055 محلية فقط؛ يلزم Recovery ثم تطبيقها بالترتيب على Staging قبل أي إطلاق.', status: 'blocked', href: '/admin/system' },
       { id: 'recovery', title: 'نسخة احتياطية وخطة رجوع مجرّبة', detail: 'يلزم إثبات نقطة استعادة حديثة وتجربة rollback على staging قبل الترحيلات.', status: 'blocked', href: '/admin/system' },
       { id: 'auth-redirects', title: 'روابط Auth والنطاق القانوني', detail: 'لم يتم التحقق من Site URL وredirect allow-list؛ اعتماد النطاق والتحقق الخارجي مانع إطلاق.', status: 'blocked', href: '/admin/settings' },
     ]

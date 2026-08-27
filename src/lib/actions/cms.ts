@@ -415,6 +415,10 @@ function homeSectionContentFromForm(kind: HomeSectionKind, formData: FormData): 
     const content = { eyebrow: required('eyebrow', 2, 80), heading: required('heading', 3, 120), lead: required('lead', 8, 240), ctaLabel: required('cta_label', 2, 70) }
     return Object.values(content).some((value) => !value) ? { ok: false, error: 'أكملي نصوص قسم الظهور الإعلامي.' } : { ok: true, content }
   }
+  if (kind === 'newsletter') {
+    const content = { eyebrow: required('eyebrow', 2, 80), heading: required('heading', 3, 120), body: required('body', 8, 320) }
+    return Object.values(content).some((value) => !value) ? { ok: false, error: 'أكملي نصوص قسم النشرة.' } : { ok: true, content }
+  }
   const content = { eyebrow: required('eyebrow', 2, 80), heading: required('heading', 3, 120), body: required('body', 8, 320), primaryLabel: required('primary_label', 2, 60), primaryHref: homeHref(formData, 'primary_href'), secondaryLabel: required('secondary_label', 2, 60), secondaryHref: homeHref(formData, 'secondary_href') }
   if (Object.values(content).some((value) => !value)) return { ok: false, error: 'أكملي محتوى القسم وروابطه الداخلية.' }
   return { ok: true, content }

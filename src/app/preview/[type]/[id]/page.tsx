@@ -37,7 +37,7 @@ export default async function ContentPreviewPage({ params, searchParams }: Props
   if (page.slug === 'home') {
     const [copy, data] = await Promise.all([getHomeCopy(), getHomeData()])
     const sections = normalizeHomeSections(page.page_sections, false)
-    return <main><p className="sticky top-0 z-60 bg-burgundy px-4 py-2 text-center text-sm font-bold text-on-dark">معاينة خاصة — ليست منشورة ولا قابلة للفهرسة · {previewLabel}</p>{sections.map((section) => <HomeSectionRenderer key={section.id} section={section} copy={copy} data={data} />)}</main>
+    return <main><p className="sticky top-0 z-60 bg-burgundy px-4 py-2 text-center text-sm font-bold text-on-dark">معاينة خاصة — ليست منشورة ولا قابلة للفهرسة · {previewLabel}</p>{sections.map((section) => <HomeSectionRenderer key={section.id} section={section} copy={copy} data={data} preview />)}</main>
   }
 
   return <main className="mx-auto max-w-4xl px-6 py-12"><p className="mb-4 rounded-full bg-antique-gold/15 px-4 py-2 text-center text-sm font-bold text-deep-teal">معاينة خاصة — ليست منشورة · {previewLabel}</p><h1 className="text-4xl font-bold text-deep-teal">{page.title}</h1><div className="mt-8 space-y-5">{page.page_sections.sort((a, b) => a.sort - b.sort).map((section) => <Card key={section.id}><p className="text-xs font-bold text-antique-gold">{section.kind} · {section.name}</p><pre className="mt-3 whitespace-pre-wrap text-sm text-ink" dir="auto">{JSON.stringify(section.content, null, 2)}</pre></Card>)}</div></main>

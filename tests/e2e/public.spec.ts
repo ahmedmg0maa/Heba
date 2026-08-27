@@ -110,6 +110,11 @@ test.describe('public experience', () => {
     await expect(page.getByRole('link', { name: 'شاهدي التفاصيل' })).toHaveCount(0)
   })
 
+  test('newsletter intake is hidden rather than dead when secure persistence is unavailable', async ({ page }) => {
+    await visit(page, '/')
+    await expect(page.getByRole('button', { name: 'اشتركي بموافقتك' })).toHaveCount(0)
+  })
+
   test('start-here recommendations link to published catalogs rather than invented product slugs', async ({ page }) => {
     await visit(page, '/start-here')
     await expect(page.getByRole('link', { name: 'استكشفي الدورات' }).first()).toHaveAttribute('href', '/courses')

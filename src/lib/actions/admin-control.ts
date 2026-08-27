@@ -595,28 +595,6 @@ export async function saveHomeCopy(form: FormData): Promise<AdminActionResult> {
   revalidatePath('/admin/settings'); revalidatePath('/'); return { ok: true }
 }
 
-export async function updateMessageStatus(id: string, status: string): Promise<AdminActionResult> {
-  const admin = await requireAdminUser('inbox.manage')
-  if (!admin) return { ok: false, error: 'هذه العملية تتطلب صلاحية إدارية.' }
-  if (!['new','read','replied','archived'].includes(status)) return { ok: false, error: 'حالة غير صحيحة.' }
-  const { error } = await getServiceClient().from('contact_messages').update({ status }).eq('id', id)
-  if (error) return { ok: false, error: message(error) }
-  await audit(admin.id, `contact_message.${status}`, 'contact_message', id)
-  revalidatePath('/admin/inbox'); return { ok: true }
-}
-
-export async function updateSubscriber(id: string, status: 'subscribed' | 'unsubscribed' | 'delete'): Promise<AdminActionResult> {
-  const admin = await requireAdminUser('newsletter.manage')
-  if (!admin) return { ok: false, error: 'هذه العملية تتطلب صلاحية إدارية.' }
-  const service = getServiceClient()
-  const { error } = status === 'delete'
-    ? await service.from('newsletter_subscribers').delete().eq('id', id)
-    : await service.from('newsletter_subscribers').update({ status, unsubscribed_at: status === 'unsubscribed' ? new Date().toISOString() : null }).eq('id', id)
-  if (error) return { ok: false, error: message(error) }
-  await audit(admin.id, `newsletter.${status}`, 'newsletter_subscriber', id)
-  revalidatePath('/admin/inbox'); return { ok: true }
-}
-
 type MediaUploadInput = {
   bucket: string
   name: string

@@ -9,6 +9,7 @@ export const HOME_SECTION_KINDS = [
   'resources',
   'testimonials',
   'press',
+  'newsletter',
   'cta',
 ] as const
 
@@ -42,6 +43,7 @@ export type EditorialFeatureContent = {
 export type ArticlesContent = { eyebrow: string; heading: string; lead: string; ctaLabel: string }
 export type TestimonialsContent = { eyebrow: string; heading: string }
 export type PressContent = { eyebrow: string; heading: string; lead: string; ctaLabel: string }
+export type NewsletterContent = { eyebrow: string; heading: string; body: string }
 export type CtaContent = {
   eyebrow: string
   heading: string
@@ -62,6 +64,7 @@ export type HomeSectionContent =
   | ArticlesContent
   | TestimonialsContent
   | PressContent
+  | NewsletterContent
   | CtaContent
 
 export type HomeSection = {
@@ -84,6 +87,7 @@ export const HOME_SECTION_OPTIONS: { kind: HomeSectionKind; label: string; name:
   { kind: 'resources', label: 'الموارد الحديثة', name: 'أحدث الموارد' },
   { kind: 'testimonials', label: 'الآراء الموثقة', name: 'تجارب معتمدة' },
   { kind: 'press', label: 'الظهور الإعلامي', name: 'مصادر موثقة' },
+  { kind: 'newsletter', label: 'النشرة البريدية', name: 'اشتراك بموافقة صريحة' },
   { kind: 'cta', label: 'الدعوة الختامية', name: 'الخطوة التالية' },
 ]
 
@@ -133,6 +137,7 @@ export const DEFAULT_HOME_CONTENT: Record<HomeSectionKind, HomeSectionContent> =
   resources: { eyebrow: 'موارد متعددة الصيغ', heading: 'شاهدي أو استمعي أو اقرئي', lead: 'مواد منشورة مع موضوع ومدة ونصوص مفرغة للإتاحة.', ctaLabel: 'كل الموارد' },
   testimonials: { eyebrow: 'قالوا عن التجربة', heading: 'شهادات متعلّماتنا' },
   press: { eyebrow: 'ظهور موثّق', heading: 'من المصادر الأصلية', lead: 'حوارات ومواد وروابط منشورة مع توضيح نوع المصدر.', ctaLabel: 'كل المصادر' },
+  newsletter: { eyebrow: 'رسالة هادئة عند وجود جديد', heading: 'اختاري بنفسك ما يصل إلى بريدك', body: 'ملخصات ومواد جديدة فقط عند إعداد الإرسال، بموافقة مستقلة عن أي شراء أو حجز.' },
   cta: {
     eyebrow: 'خطوة واحدة تكفي للبداية',
     heading: 'اختاري الباب الأقرب لما تحتاجينه الآن',
@@ -213,6 +218,10 @@ export function normalizeHomeContent(kind: HomeSectionKind, value: unknown): Hom
   if (kind === 'press') {
     const base = fallback as PressContent
     return { eyebrow: text(source.eyebrow, base.eyebrow, 80), heading: text(source.heading, base.heading, 120), lead: text(source.lead, base.lead, 240), ctaLabel: text(source.ctaLabel, base.ctaLabel, 70) }
+  }
+  if (kind === 'newsletter') {
+    const base = fallback as NewsletterContent
+    return { eyebrow: text(source.eyebrow, base.eyebrow, 80), heading: text(source.heading, base.heading, 120), body: text(source.body, base.body, 320) }
   }
   const base = fallback as CtaContent
   return {

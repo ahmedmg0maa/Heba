@@ -12,6 +12,7 @@ import {
   type EditorialFeatureContent,
   type GuidedStartContent,
   type HomeSectionKind,
+  type NewsletterContent,
   type PathwaysContent,
   type PressContent,
   type TestimonialsContent,
@@ -60,6 +61,10 @@ function SectionFields({ kind, content }: { kind: HomeSectionKind; content: unkn
   if (kind === 'press') {
     const data = value as PressContent
     return <div className="grid gap-2 md:grid-cols-2"><Field label="السطر التعريفي" name="eyebrow" value={data.eyebrow} /><Field label="العنوان" name="heading" value={data.heading} /><Field label="الوصف" name="lead" value={data.lead} /><Field label="زر كل المصادر" name="cta_label" value={data.ctaLabel} /></div>
+  }
+  if (kind === 'newsletter') {
+    const data = value as NewsletterContent
+    return <div className="grid gap-2 md:grid-cols-2"><Field label="السطر التعريفي" name="eyebrow" value={data.eyebrow} /><Field label="العنوان" name="heading" value={data.heading} /><div className="md:col-span-2"><Field label="الوصف" name="body" value={data.body} area /></div><p className="text-xs leading-loose text-text-soft md:col-span-2">صيغة الموافقة ورابط الخصوصية ثابتان لحماية سلامة الموافقة، ولا يمكن حذفهما من محرر المحتوى.</p></div>
   }
   const data = value as CtaContent
   return <div className="grid gap-2 md:grid-cols-2"><Field label="السطر التعريفي" name="eyebrow" value={data.eyebrow} /><Field label="العنوان" name="heading" value={data.heading} /><div className="md:col-span-2"><Field label="الوصف" name="body" value={data.body} area /></div><Field label="الزر الأساسي" name="primary_label" value={data.primaryLabel} /><LinkField label="رابطه" name="primary_href" value={data.primaryHref} /><Field label="الزر الثانوي" name="secondary_label" value={data.secondaryLabel} /><LinkField label="رابطه" name="secondary_href" value={data.secondaryHref} /></div>

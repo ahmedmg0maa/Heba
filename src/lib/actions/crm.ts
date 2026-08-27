@@ -66,10 +66,16 @@ export async function createUnsubscribeLink(subscriberId: string): Promise<{ ok:
   if (!admin?.userId) return { ok: false, error: 'لا تملكين صلاحية إدارة القائمة.' }
   const token = `${randomUUID()}${randomUUID()}`.replaceAll('-', '')
   const hash = createHash('sha256').update(token).digest('hex')
-  const { error } = await getServiceClient().from('newsletter_subscribers').update({
-    unsubscribe_token_hash: hash,
-    token_created_at: new Date().toISOString(),
-  }).eq('id', subscriberId)
+  const { error } = await getServiceClient().rpc('rotate_newsletter_unsubscribe_token', { p_subscriber_id: subscriberId, p_token_hash: hash, p_actor_id: admin.userId })
   if (error) return { ok: false, error: 'تعذّر إنشاء الرابط.' }
   return { ok: true, url: `/unsubscribe/${token}` }
+}
+
+export async function manageNewsletterSubscriber(subscriberId: string, action: 'unsubscribe' | 'erase'): Promise<Result> {
+  const admin = await requirePermission('newsletter.manage')
+  if (!admin?.userId) return { ok: false, error: 'لا تملكين صلاحية إدارة القائمة.' }
+  const { error } = await getServiceClient().rpc('manage_newsletter_subscriber', { p_subscriber_id: subscriberId, p_action: action, p_actor_id: admin.userId })
+  if (error) return { ok: false, error: 'تعذّر تحديث سجل الاشتراك.' }
+  revalidatePath('/admin/inbox')
+  return { ok: true }
 }
