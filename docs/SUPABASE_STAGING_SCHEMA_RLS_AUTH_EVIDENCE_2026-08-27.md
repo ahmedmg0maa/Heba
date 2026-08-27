@@ -22,7 +22,7 @@ This record covers the current Code X worktree only. It does not convert histori
 
 | Contract | Result | Command/evidence |
 |---|---|---|
-| Sequential source migrations 000–059 | `PASS-local` | `pnpm audit:db` |
+| Sequential source migrations 000–060 | `PASS-local` | `pnpm audit:db` |
 | Recovery runner read-only/isolation contract | `PASS-local` | `pnpm verify:recovery-runner-local`; Production identity, Session pooler/5432, `default_transaction_read_only=on`, pre-target preflight and generated-target routing are source-asserted |
 | Mandatory booking order 044 → 045 → 046 → 047 | `PASS-local` | `pnpm verify:booking-staging-contract` |
 | Sanitized pre/post contract fixtures | `PASS-local` | `pnpm verify:booking-staging-contract-fixtures` |
@@ -40,6 +40,7 @@ This record covers the current Code X worktree only. It does not convert histori
 | 057 Atomic operational settings/governed outbox claim-finalize/Worker-safe idempotent Resend adapter | `PASS-local` | `pnpm verify:resend-outbox-local`, `pnpm audit:db`, `pnpm audit:security`, Worker E2E |
 | 058 Bounded/audited Customer 360 reads and atomic recoverable note/tag lifecycle | `PASS-local` | `pnpm verify:customer-360-local`, `pnpm audit:db`, `pnpm audit:admin`, Worker E2E |
 | 059 Atomic permission-scoped/idempotent Admin notification delivery and content-free audit | `PASS-local` | `pnpm verify:admin-notifications-local`, `pnpm audit:db`, `pnpm audit:admin`, Worker E2E |
+| 060 Owner-only bounded role reads and atomic race-safe role/permission governance | `PASS-local` | `pnpm verify:admin-role-governance-local`, `pnpm verify:fresh-admin-assurance`, `pnpm audit:db`, `pnpm audit:admin`, Worker E2E |
 
 Fixture success is not a live schema fingerprint. It proves the validator rejects the wrong grants/policies/order; it does not prove that the provider schema matches those fixtures.
 
@@ -56,7 +57,7 @@ Fixture success is not a live schema fingerprint. It proves the validator reject
 
 ## Safety conclusion
 
-Production remains untouched and 043 must not be reapplied. Migrations 044–047 remain unapplied in this execution. Migrations 048–059 are additive development-first Contact, Testimonials, Press, Resource Hub, guided-assessment, governed-programme, media-lifecycle, newsletter-consent, Admin-security, operational-email, Customer-360 and governed-notification contracts authored locally after 047 and are also unapplied; any provider application must preserve the full 044→059 order and requires the ordered Staging gate. Later local migrations do not authorize provider writes.
+Production remains untouched and 043 must not be reapplied. Migrations 044–047 remain unapplied in this execution. Migrations 048–060 are additive development-first Contact, Testimonials, Press, Resource Hub, guided-assessment, governed-programme, media-lifecycle, newsletter-consent, Admin-security, operational-email, Customer-360, governed-notification and atomic role-governance contracts authored locally after 047 and are also unapplied; any provider application must preserve the full 044→060 order and requires the ordered Staging gate. Later local migrations do not authorize provider writes.
 
 ## Exact unblock
 

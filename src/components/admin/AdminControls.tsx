@@ -239,13 +239,15 @@ export function RoleForm() {
   )
 }
 
-export function RevokeRoleButton({ roleId }: { roleId: string }) {
+export function RevokeRoleButton({ roleId, disabled = false }: { roleId: string; disabled?: boolean }) {
   const { busy, error, run } = useBusy()
   return (
     <div>
       <a className="mb-2 inline-block text-xs font-bold text-deep-teal underline underline-offset-4" href="/auth/admin/mfa?reauth=1&redirect=/admin/roles">تأكيد أمني حديث</a>
-      <Button size="sm" variant="burgundy" disabled={busy} onClick={() => run(() => revokeRole(roleId))}>
-        سحب الدور
+      <Button size="sm" variant="burgundy" disabled={busy || disabled} onClick={() => {
+        if (window.confirm('هل تريدين سحب هذا الدور؟ سيُطبق التغيير فورًا ويُسجل في سجل التدقيق.')) run(() => revokeRole(roleId))
+      }}>
+        {disabled ? 'دورك الحالي' : 'سحب الدور'}
       </Button>
       {error && <p className="mt-1 text-xs text-burgundy">{error}</p>}
     </div>

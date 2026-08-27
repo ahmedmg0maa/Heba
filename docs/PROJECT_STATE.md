@@ -1,6 +1,13 @@
 # PROJECT STATE
 Last session: 2026-08-28 | Current program: Code X development-first execution | LOCAL DEVELOPMENT IN PROGRESS — STAGING EXTERNAL GATE remains for recovery, provider migration and live acceptance only
 
+## P0 atomic role-governance checkpoint — 2026-08-28
+- `/admin/roles` is now an owner-only, `roles.manage`-checked surface backed by one bounded service-only read RPC. It returns at most 500 assignments and 1,000 permission mappings, joins the required identity once, records a minimized PII-access audit, and fails closed instead of showing partial IDs when an identity query fails.
+- Forward-only local migration 060 removes browser-direct role/permission mutations and narrows reads to a user's own assignment or the owner governance permission. Grant/revoke runs in one owner-rechecked transaction, denies changes to the current actor's own roles, serializes governance operations and checks last-owner preservation under that lock before mutation and metadata-only audit.
+- Permission-matrix replacement is now one transaction rather than delete/insert/audit steps. PostgreSQL validates the complete permission registry, requires `admin.access`, reserves `roles.manage` for owners, serializes per-role updates and audits only the count and invariant result. Fresh MFA remains a Server Action requirement for every role or matrix mutation.
+- The UI no longer renders governance controls to ordinary administrators. Self-role revocation is visibly disabled, revocation requires explicit confirmation, and each sensitive editor links to fresh MFA. The session-bound route is explicitly dynamic, so credential-empty builds do not prerender an authorization decision.
+- `pnpm check:deploy` passed every contract/audit, the 67 static pages plus the dynamic role route, and public Playwright **70/70**. The isolated vinext/Workers build and Cloudflare runtime suite passed **70/70** with retries disabled. Migration 060 is source-only and unapplied externally.
+
 ## P1 governed Admin notification checkpoint — 2026-08-28
 - Manual customer notifications no longer use a direct table insert followed by a separate audit insert. Forward-only local migration 059 exposes a service-role-only transaction that rechecks `notifications.send`, verifies the target profile, validates bounded title/body, allowlists notification kinds and Dashboard destinations, then couples delivery and a content-free audit record.
 - Each Admin send carries an opaque UUID idempotency identity protected by a transaction advisory lock and a unique partial index. Repeating an identical request returns the existing notification without a second delivery or audit; reusing an identity for different content, actor or customer fails closed.

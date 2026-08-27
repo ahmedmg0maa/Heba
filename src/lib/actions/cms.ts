@@ -239,12 +239,16 @@ export async function grantRole(formData: FormData): Promise<ActionResult> {
   const service = getServiceClient()
   const { data: profile } = await service.from('profiles').select('id').eq('email', email).maybeSingle()
   if (!profile) return { ok: false, error: 'لا يوجد حساب بهذا البريد.' }
+  if (profile.id === admin.user.id) return { ok: false, error: 'لا يمكن تعديل أدوارك من جلستك الحالية. استخدمي مالكة أخرى مخولة.' }
 
-  const { error } = await service
-    .from('admin_roles')
-    .upsert({ user_id: profile.id, role, granted_by: admin.user.id }, { onConflict: 'user_id,role' })
+  const { error } = await service.rpc('manage_admin_role', {
+    p_actor_id: admin.user.id,
+    p_action: 'grant',
+    p_target_user_id: profile.id,
+    p_role: role,
+    p_role_id: null,
+  })
   if (error) return { ok: false, error: GENERIC }
-  await audit(admin.user.id, 'role.granted', 'admin_role', profile.id, { email, role })
   revalidatePath('/admin/roles')
   return { ok: true }
 }
@@ -255,16 +259,14 @@ export async function revokeRole(roleId: string): Promise<ActionResult> {
   const admin = context?.userId ? { user: { id: context.userId }, role: context.role } : null
   if (!admin) return { ok: false, error: FRESH_ADMIN_ASSURANCE_ERROR }
   if (admin.role !== 'owner') return { ok: false, error: 'إدارة الأدوار متاحة للمالكة فقط.' }
-  const service = getServiceClient()
-  const { data: target } = await service.from('admin_roles').select('role').eq('id', roleId).maybeSingle()
-  if (!target) return { ok: false, error: 'الدور غير موجود.' }
-  if (target.role === 'owner') {
-    const { count } = await service.from('admin_roles').select('id', { count: 'exact', head: true }).eq('role', 'owner')
-    if ((count ?? 0) <= 1) return { ok: false, error: 'لا يمكن سحب آخر دور مالكة؛ يجب أن يبقى مسار استرداد واحد على الأقل.' }
-  }
-  const { error } = await service.from('admin_roles').delete().eq('id', roleId)
+  const { error } = await getServiceClient().rpc('manage_admin_role', {
+    p_actor_id: admin.user.id,
+    p_action: 'revoke',
+    p_target_user_id: null,
+    p_role: null,
+    p_role_id: roleId,
+  })
   if (error) return { ok: false, error: GENERIC }
-  await audit(admin.user.id, 'role.revoked', 'admin_role', roleId)
   revalidatePath('/admin/roles')
   return { ok: true }
 }
@@ -278,12 +280,13 @@ export async function setRolePermissions(role: string, permissions: string[]): P
   if (!['admin','operations','finance','content','marketing','support','editor'].includes(role)) return { ok: false, error: 'لا يمكن تعديل هذا الدور.' }
   const allowed = [...new Set(permissions)].filter((permission): permission is Permission => PERMISSIONS.includes(permission as Permission))
   if (!allowed.includes('admin.access')) return { ok: false, error: 'يجب أن يحتفظ كل دور إداري بصلاحية admin.access.' }
-  const service = getServiceClient()
-  const { error: deleteError } = await service.from('admin_permissions').delete().eq('role', role)
-  if (deleteError) return { ok: false, error: GENERIC }
-  const { error } = await service.from('admin_permissions').insert(allowed.map((permission) => ({ role, permission })))
+  if (allowed.includes('roles.manage')) return { ok: false, error: 'صلاحية إدارة الأدوار حصرية للمالكة ولا تُمنح لدور آخر.' }
+  const { error } = await getServiceClient().rpc('set_admin_role_permissions', {
+    p_actor_id: admin.user.id,
+    p_role: role,
+    p_permissions: allowed,
+  })
   if (error) return { ok: false, error: GENERIC }
-  await audit(admin.user.id, 'permissions.updated', 'admin_role', role, { permissions: allowed })
   revalidatePath('/admin/roles')
   return { ok: true }
 }

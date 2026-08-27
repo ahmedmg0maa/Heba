@@ -102,3 +102,7 @@ Run `pnpm verify:sentry-monitoring-local` whenever monitoring, Worker entry, ins
 ## Governed Admin notification contract
 
 `pnpm verify:admin-notifications-local` proves migration 059 rechecks `notifications.send` inside its service-only RPC, revokes direct browser delivery, validates the customer, bounds message content, allowlists kind/destination, serializes the request identity, and writes the notification plus content-free audit in one transaction. It also verifies that the Server Action cannot fall back to split table/audit writes and that both customer Admin surfaces render the bounded accessible control only after the real permission query. Database persistence, concurrent duplicate submission and customer RLS visibility still require controlled Staging.
+
+## Atomic Admin role-governance contract
+
+`pnpm verify:admin-role-governance-local` proves migration 060 makes the role matrix owner-only and auditable, narrows role/permission reads, revokes browser-direct mutations, and routes grant/revoke plus full permission replacement through owner-rechecked service-only transactions. It asserts self-role changes are denied, last-owner counting occurs after the shared transaction lock, delegated roles retain `admin.access` and cannot receive `roles.manage`, audit excludes email and full permission arrays, and the Admin page cannot render a partial/fake governance state. Fresh-MFA enforcement remains covered by `verify:fresh-admin-assurance`; concurrency, RLS and durable mutation evidence require controlled Staging.

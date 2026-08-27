@@ -1,18 +1,31 @@
 import type { Metadata } from 'next'
-import { adminList } from '@/lib/data/cms'
-import { getServerClient } from '@/lib/supabase/server'
+import { getServiceClient } from '@/lib/supabase/server'
 import { Card, CardTitle } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { RoleForm, RevokeRoleButton } from '@/components/admin/AdminControls'
 import { RolePermissionEditor } from '@/components/admin/RolePermissionEditor'
-import { PERMISSIONS } from '@/lib/auth/permissions'
+import { PERMISSIONS, requirePermission } from '@/lib/auth/permissions'
 
 export const metadata: Metadata = { title: 'الأدوار — الإدارة' }
+export const dynamic = 'force-dynamic'
 
 type Row = { id: string; user_id: string; role: string; created_at: string }
 type PermissionRow = { role: string; permission: string }
+type GovernancePayload = {
+  assignments: Array<Row & { email: string | null }>
+  permissions: PermissionRow[]
+  counts: { assignments: number; permissions: number; owners: number }
+}
+
+function isGovernancePayload(value: unknown): value is GovernancePayload {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+  const payload = value as Partial<GovernancePayload>
+  return Array.isArray(payload.assignments) && Array.isArray(payload.permissions)
+    && typeof payload.counts?.assignments === 'number' && typeof payload.counts?.permissions === 'number'
+    && typeof payload.counts?.owners === 'number'
+}
 
 const roleLabels: Record<string, { label: string; tone: 'burgundy' | 'teal' | 'cobalt' | 'gold' }> = {
   owner: { label: 'مالكة', tone: 'burgundy' },
@@ -28,31 +41,19 @@ const roleLabels: Record<string, { label: string; tone: 'burgundy' | 'teal' | 'c
 const dateFmt = new Intl.DateTimeFormat('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' })
 
 export default async function AdminRolesPage() {
-  const roles = await adminList<Row>('admin_roles', 'id, user_id, role, created_at', {
-    orderBy: 'created_at',
-    ascending: true,
-  })
-  const permissions = await adminList<PermissionRow>('admin_permissions', 'role, permission', { orderBy: 'permission', ascending: true, limit: 300 })
-
-  let emails = new Map<string, string>()
-  if (roles.length > 0) {
-    try {
-      const supabase = await getServerClient()
-      const { data } = await supabase
-        .from('profiles')
-        .select('id, email')
-        .in('id', [...new Set(roles.map((r) => r.user_id))])
-      emails = new Map((data ?? []).map((p) => [p.id, p.email]))
-    } catch {
-      // emails stay empty; ids shown instead
-    }
-  }
+  const admin = await requirePermission('roles.manage', { redirectOnFailure: true })
+  if (!admin?.userId || admin.role !== 'owner') throw new Error('ADMIN_ROLE_GOVERNANCE_ACCESS_UNAVAILABLE')
+  const { data, error } = await getServiceClient().rpc('get_admin_role_governance', { p_actor_id: admin.userId })
+  if (error || !isGovernancePayload(data)) throw new Error('ADMIN_ROLE_GOVERNANCE_READ_UNAVAILABLE')
+  const roles = data.assignments
+  const permissions = data.permissions
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
       <header>
         <h1 className="text-3xl font-bold text-deep-teal">الأدوار والصلاحيات</h1>
         <p className="mt-1 text-text-soft">منح الأدوار وسحبها متاح للمالكة فقط — كل تغيير يُسجل في سجل التدقيق.</p>
+        <p className="mt-1 text-xs text-text-soft">{Number(data.counts.assignments).toLocaleString('ar-EG')} تعيين · {Number(data.counts.owners).toLocaleString('ar-EG')} مالكة · القراءة محدودة إلى ٥٠٠ تعيين و١٠٠٠ صلاحية.</p>
       </header>
 
       <Card className="p-8">
@@ -76,7 +77,7 @@ export default async function AdminRolesPage() {
       {roles.length === 0 ? (
         <EmptyState
           title="لا أدوار ممنوحة بعد"
-          description="امنحي دور «مالكة» لحسابك الأول عبر SQL (خطوات docs/SUPABASE_SETUP.md §5) ثم أديري الباقي من هنا."
+          description="لم تُرجع القراءة المحكومة أي تعيينات ضمن النطاق الحالي."
         />
       ) : (
         <Table>
@@ -94,14 +95,14 @@ export default async function AdminRolesPage() {
               return (
                 <TR key={r.id}>
                   <TD>
-                    <span dir="ltr">{emails.get(r.user_id) ?? r.user_id}</span>
+                    <span dir="ltr">{r.email || 'حساب بلا بريد مسجل'}</span>
                   </TD>
                   <TD>
                     <Badge tone={meta.tone}>{meta.label}</Badge>
                   </TD>
                   <TD>{dateFmt.format(new Date(r.created_at))}</TD>
                   <TD>
-                    <RevokeRoleButton roleId={r.id} />
+                    <RevokeRoleButton roleId={r.id} disabled={r.user_id === admin.userId} />
                   </TD>
                 </TR>
               )
