@@ -7,8 +7,8 @@ import { Section } from '@/components/ui/Section'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { getServerClient } from '@/lib/supabase/server'
-import { hasSupabasePublicConfig } from '@/lib/supabase/public-key'
+import { listPublishedPrograms } from '@/lib/data/programs'
+import { ProgramCard } from '@/components/catalog/ProgramCard'
 
 export const metadata: Metadata = {
   title: 'الخدمات',
@@ -19,7 +19,7 @@ export const revalidate = 300
 
 export default async function ServicesPage() {
   const services = await listServices()
-  const plans = await listPublishedPlans()
+  const plans = (await listPublishedPrograms()).filter((program) => program.type === 'vip')
 
   return (
     <main>
@@ -61,33 +61,11 @@ export default async function ServicesPage() {
         </div>
       </Section>
 
-      {plans && plans.length > 0 && <Section eyebrow="مرافقة مستمرة" title="باقات تناسب إيقاعك" lead="اختاري مدة واضحة ومزايا محددة؛ لا التزامات مخفية ولا تفاصيل مبهمة.">
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">{plans.map((plan) => {
-          const features = Array.isArray(plan.features) ? plan.features.map(String) : []
-          const interval = plan.billing_interval === 'month' ? 'شهريًا' : plan.billing_interval === 'quarter' ? 'كل 3 أشهر' : plan.billing_interval === 'year' ? 'سنويًا' : 'مرة واحدة'
-          return <Card key={plan.id} className="relative flex flex-col overflow-hidden border-antique-gold/30 p-7"><span className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-transparent via-antique-gold to-transparent"/><p className="text-xs font-bold text-antique-gold">{interval}</p><h3 className="mt-2 text-2xl font-bold text-deep-teal">{plan.title}</h3><p className="mt-3 flex items-end gap-2"><strong className="tnum text-3xl text-burgundy">{Number(plan.price).toLocaleString('ar-EG')}</strong><span className="text-sm text-text-soft">{plan.currency}</span></p><p className="mt-4 leading-loose text-text-soft">{plan.description}</p><ul className="mt-5 flex-1 space-y-2 text-sm text-ink">{features.map((feature) => <li key={feature} className="flex gap-2"><span className="text-antique-gold">✓</span>{feature}</li>)}{plan.sessions_included > 0 && <li className="flex gap-2"><span className="text-antique-gold">✓</span>{plan.sessions_included.toLocaleString('ar-EG')} جلسات مشمولة</li>}</ul><Button href="/contact" className="mt-6">اطلبي الاشتراك</Button></Card>
-        })}</div>
+      {plans.length > 0 && <Section eyebrow="مرافقة مستمرة" title="باقات تناسب إيقاعك" lead="تظهر فقط باقات مرتبطة بمنتج واستحقاق وسعر متطابقين وجاهزة للطلب.">
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">{plans.map((plan) => <ProgramCard key={plan.id} program={plan}/>)}</div>
       </Section>}
 
       <CTARibbon />
     </main>
   )
-}
-
-async function listPublishedPlans() {
-  if (!hasSupabasePublicConfig()) return []
-
-  try {
-    const supabase = await getServerClient()
-    const { data, error } = await supabase
-      .from('subscription_plans')
-      .select('id, title, description, price, currency, billing_interval, duration_days, sessions_included, max_subscribers, features')
-      .eq('is_published', true)
-      .eq('is_active', true)
-      .order('sort', { ascending: true })
-
-    return error ? [] : data ?? []
-  } catch {
-    return []
-  }
 }

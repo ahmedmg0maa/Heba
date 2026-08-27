@@ -4,8 +4,8 @@ import { formatPrice } from '@/lib/format'
 import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table'
 import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { PublishToggle } from '@/components/admin/AdminControls'
-import { ProductComposition, ProductCreatePanel, ProductEditPanel } from '@/components/admin/ProductManager'
+import { Button } from '@/components/ui/Button'
+import { ProductComposition, ProductCreatePanel, ProductEditPanel, ProgramPublishControl } from '@/components/admin/ProductManager'
 
 export const metadata: Metadata = { title: 'المنتجات — الإدارة' }
 
@@ -22,6 +22,8 @@ const typeLabels: Record<string, string> = {
   vip: 'VIP',
   free_resource: 'مورد مجاني',
 }
+const programTypes = new Set(['bundle', 'vip', 'free_resource'])
+const specialistRoutes: Record<string, string> = { course: '/admin/courses', book: '/admin/books', workshop: '/admin/workshops', session: '/admin/bookings' }
 
 export default async function AdminProductsPage() {
   const media = await getPublicMediaOptions()
@@ -35,7 +37,7 @@ export default async function AdminProductsPage() {
     <div className="mx-auto max-w-5xl space-y-8">
       <header>
         <h1 className="text-3xl font-bold text-deep-teal">المنتجات</h1>
-        <p className="mt-1 text-text-soft">كل ما يُباع على المنصة — المنشور منه يظهر فورًا في صفحات الاكتشاف.</p>
+        <p className="mt-1 text-text-soft">الحزم وVIP والموارد المجانية تُدار هنا وتظهر في «البرامج» فقط بعد فحص التكوين والتسليم. العناصر المتخصصة تُنشر من شاشتها الأصلية.</p>
       </header>
 
       <ProductCreatePanel media={media} />
@@ -69,7 +71,7 @@ export default async function AdminProductsPage() {
                   <Badge tone={p.is_published ? 'success' : 'sand'}>{p.is_published ? 'منشور' : 'مسودة'}</Badge>
                 </TD>
                 <TD>
-                  <div className="flex flex-wrap items-start gap-2"><PublishToggle table="products" id={p.id} published={p.is_published} /><ProductEditPanel media={media} item={{ id:p.id,type:p.type,title:p.title,slug:p.slug,subtitle:p.subtitle,description:p.description,price:Number(p.price),compareAtPrice:p.compare_at_price,currency:p.currency,coverUrl:p.cover_url,isPublished:p.is_published,sort:p.sort }}/><ProductComposition productId={p.id} productType={p.type} variants={variants.filter((variant) => variant.product_id === p.id).map((variant) => ({ id: variant.id, name: variant.name, price: Number(variant.price), isActive: variant.is_active }))} options={products.filter((item) => item.id !== p.id && item.type !== 'bundle').map((item) => ({ id: item.id, title: item.title, type: item.type }))} selectedChildren={bundleRows.filter((row) => row.bundle_product_id === p.id).map((row) => row.child_product_id)} /></div>
+                  {programTypes.has(p.type) ? <div className="flex flex-wrap items-start gap-2"><ProgramPublishControl productId={p.id} published={p.is_published} /><ProductEditPanel media={media} item={{ id:p.id,type:p.type,title:p.title,slug:p.slug,subtitle:p.subtitle,description:p.description,price:Number(p.price),compareAtPrice:p.compare_at_price,currency:p.currency,coverUrl:p.cover_url,isPublished:p.is_published,sort:p.sort }}/><ProductComposition productId={p.id} productType={p.type} variants={variants.filter((variant) => variant.product_id === p.id).map((variant) => ({ id: variant.id, name: variant.name, price: Number(variant.price), isActive: variant.is_active }))} options={products.filter((item) => item.id !== p.id && ['course','book','workshop','session'].includes(item.type)).map((item) => ({ id: item.id, title: item.title, type: item.type }))} selectedChildren={bundleRows.filter((row) => row.bundle_product_id === p.id).map((row) => row.child_product_id)} /></div> : <Button href={specialistRoutes[p.type] ?? '/admin/overview'} size="sm" variant="secondary">إدارة ونشر من المصدر</Button>}
                 </TD>
               </TR>
             ))}

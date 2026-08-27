@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 
-const publicRoutes = ['/', '/start-here', '/search', '/courses', '/books', '/workshops', '/services', '/booking', '/about', '/testimonials', '/press', '/resources', '/contact', '/faq']
+const publicRoutes = ['/', '/start-here', '/search', '/courses', '/books', '/workshops', '/services', '/programs', '/booking', '/about', '/testimonials', '/press', '/resources', '/contact', '/faq']
 const visit = (page: Page, route: string) => page.goto(route, { waitUntil: 'domcontentloaded', timeout: 60_000 })
 
 test.describe('public experience', () => {
@@ -101,6 +101,13 @@ test.describe('public experience', () => {
     await expect(page.getByRole('heading', { name: 'موارد تساعدك على الفهم والتطبيق' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'لا توجد موارد منشورة بهذه المواصفات' })).toBeVisible()
     await expect(page.getByRole('link', { name: 'افتحي المورد' })).toHaveCount(0)
+  })
+
+  test('program discovery hides incomplete or unconfigured commercial journeys', async ({ page }) => {
+    await visit(page, '/programs')
+    await expect(page.getByRole('heading', { name: 'اختاري تجربة مكتملة وواضحة' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'لا توجد برامج منشورة بهذه المواصفات' })).toBeVisible()
+    await expect(page.getByRole('link', { name: 'شاهدي التفاصيل' })).toHaveCount(0)
   })
 
   test('start-here recommendations link to published catalogs rather than invented product slugs', async ({ page }) => {

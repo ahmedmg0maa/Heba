@@ -231,7 +231,7 @@ export async function saveProductRecord(productId: string | null, form: FormData
   const type = text(form, 'type')
   const title = text(form, 'title')
   const slug = text(form, 'slug').toLowerCase()
-  if (!['bundle','vip','free_resource'].includes(type) && !productId) return { ok: false, error: 'أنشئي الدورات والكتب والورش والجلسات من أقسامها المتخصصة.' }
+  if (!['bundle','vip','free_resource'].includes(type)) return { ok: false, error: 'عدّلي الدورات والكتب والورش والجلسات من أقسامها المتخصصة.' }
   if (title.length < 2 || !/^[a-z0-9-]{3,80}$/.test(slug)) return { ok: false, error: 'راجعي العنوان والرابط.' }
   const payload = {
     type, title, slug,
@@ -239,14 +239,15 @@ export async function saveProductRecord(productId: string | null, form: FormData
     description: text(form, 'description'),
     price: Math.max(0, number(form, 'price')),
     compare_at_price: optionalNumber(form, 'compare_at_price'),
-    currency: text(form, 'currency') || 'EGP',
+    currency: (text(form, 'currency') || 'EGP').toUpperCase(),
     cover_url: text(form, 'cover_url') || null,
-    is_published: form.get('is_published') === 'on',
+    is_published: false,
     sort: number(form, 'sort'),
   }
   if (productId) {
     const { data: previous } = await service.from('products').select('*').eq('id', productId).maybeSingle()
     if (!previous) return { ok: false, error: 'المنتج غير موجود.' }
+    if (!['bundle','vip','free_resource'].includes(previous.type) || previous.type !== type) return { ok: false, error: 'نوع المنتج ثابت؛ استخدمي شاشة المجال المتخصصة أو أنشئي برنامجًا جديدًا.' }
     await revision(admin.id, 'product', productId, previous)
     const { error } = await service.from('products').update(payload).eq('id', productId)
     if (error) return { ok: false, error: message(error) }
@@ -258,14 +259,23 @@ export async function saveProductRecord(productId: string | null, form: FormData
       await service.from(domainMap[type]).update(domainUpdate).eq('product_id', productId)
     }
     await syncMediaUsage(admin.id, text(form, 'cover_asset_id'), 'product', productId, 'cover_url')
-    await audit(admin.id, 'product.updated', 'product', productId, { title, slug, type })
-    revalidatePath('/admin/products'); revalidatePath('/'); return { ok: true, id: productId }
+    await audit(admin.id, 'product.updated', 'product', productId, { title, slug, type, publicationReset: true })
+    revalidatePath('/admin/products'); revalidatePath('/programs'); revalidatePath('/search'); revalidatePath('/'); return { ok: true, id: productId }
   }
   const { data, error } = await service.from('products').insert(payload).select('id').single()
   if (error || !data) return { ok: false, error: message(error) }
   await syncMediaUsage(admin.id, text(form, 'cover_asset_id'), 'product', data.id, 'cover_url')
   await audit(admin.id, 'product.created', 'product', data.id, { title, slug, type })
-  revalidatePath('/admin/products'); return { ok: true, id: data.id }
+  revalidatePath('/admin/products'); revalidatePath('/programs'); return { ok: true, id: data.id }
+}
+
+export async function setProgramProductPublication(productId: string, publish: boolean): Promise<AdminActionResult> {
+  const admin = await requireAdminUser('catalog.publish')
+  if (!admin) return { ok: false, error: 'لا تملكين صلاحية نشر البرامج والباقات.' }
+  const { error } = await getServiceClient().rpc('set_program_product_publication', { p_product_id: productId, p_publish: publish, p_actor_id: admin.id })
+  if (error) return { ok: false, error: error.message.includes('program_product_not_ready') ? 'لا يمكن النشر: أكملي الوصف والسعر/العملة وحقوق الغلاف، ثم تكوين الحزمة المنشور أو باقة VIP المرتبطة والمتطابقة أو المورد المجاني المنشور.' : message(error) }
+  revalidatePath('/admin/products'); revalidatePath('/programs'); revalidatePath('/search'); revalidatePath('/sitemap.xml'); revalidatePath('/')
+  return { ok: true, id: productId }
 }
 
 export async function deleteProductRecord(productId: string): Promise<AdminActionResult> {
@@ -313,18 +323,10 @@ export async function saveBundleChildren(bundleProductId: string, form: FormData
   const admin = await requireAdminUser('catalog.manage')
   if (!admin) return { ok: false, error: 'لا تملكين صلاحية إدارة الكتالوج.' }
   const children = [...new Set(form.getAll('children').map(String).filter((id) => id && id !== bundleProductId))].slice(0, 50)
-  const service = getServiceClient()
-  const { data: bundle } = await service.from('products').select('id, type').eq('id', bundleProductId).maybeSingle()
-  if (!bundle || bundle.type !== 'bundle') return { ok: false, error: 'المنتج المحدد ليس حزمة.' }
   if (children.length === 0) return { ok: false, error: 'اختاري منتجًا واحدًا على الأقل داخل الحزمة.' }
-  const { data: validChildren } = await service.from('products').select('id').in('id', children).neq('type', 'bundle')
-  if ((validChildren ?? []).length !== children.length) return { ok: false, error: 'تحتوي القائمة على منتج غير صالح أو حزمة متداخلة.' }
-  const { error: deleteError } = await service.from('product_bundles').delete().eq('bundle_product_id', bundleProductId)
-  if (deleteError) return { ok: false, error: message(deleteError) }
-  const { error } = await service.from('product_bundles').insert(children.map((child_product_id) => ({ bundle_product_id: bundleProductId, child_product_id })))
-  if (error) return { ok: false, error: message(error) }
-  await audit(admin.id, 'bundle.composition_updated', 'product', bundleProductId, { children })
-  revalidatePath('/admin/products'); return { ok: true, id: bundleProductId }
+  const { error } = await getServiceClient().rpc('set_program_bundle_children', { p_bundle_product_id: bundleProductId, p_child_ids: children, p_actor_id: admin.id })
+  if (error) return { ok: false, error: error.message.includes('published_bundle_not_ready') ? 'تعذّر التعديل: الحزمة المنشورة لا تقبل عنصرًا غير منشور أو غير جاهز.' : error.message.includes('invalid_bundle_child') ? 'الحزمة تقبل دورة أو كتابًا أو ورشة أو جلسة فقط، ولا تقبل حزمة متداخلة أو برنامج VIP.' : message(error) }
+  revalidatePath('/admin/products'); revalidatePath('/programs'); revalidatePath('/search'); return { ok: true, id: bundleProductId }
 }
 
 export async function saveOperationalSettings(form: FormData): Promise<AdminActionResult> {

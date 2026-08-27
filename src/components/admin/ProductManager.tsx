@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { deleteProductRecord, deleteProductVariant, saveBundleChildren, saveProductRecord, saveProductVariant } from '@/lib/actions/admin-control'
+import { deleteProductRecord, deleteProductVariant, saveBundleChildren, saveProductRecord, saveProductVariant, setProgramProductPublication } from '@/lib/actions/admin-control'
 import { Button } from '@/components/ui/Button'
 import { MediaPickerField } from '@/components/admin/MediaPickerField'
 import type { MediaOption } from '@/lib/data/cms'
@@ -24,7 +24,7 @@ function ProductForm({ item, media = [] }: { item?: ProductAdminItem; media?: Me
     <label className="text-xs font-bold text-deep-teal">الترتيب<input name="sort" type="number" defaultValue={item?.sort??0} className={input}/></label>
     <MediaPickerField assets={media} defaultValue={item?.coverUrl} label="غلاف المنتج" />
     <label className="text-xs font-bold text-deep-teal md:col-span-2">الوصف<textarea name="description" defaultValue={item?.description} rows={3} className={input}/></label>
-    <label className="flex items-center gap-2 text-sm font-bold text-deep-teal"><input name="is_published" type="checkbox" defaultChecked={item?.isPublished} className="accent-deep-teal"/> منشور</label>
+    <p className="rounded-xl bg-ivory/70 p-3 text-xs leading-relaxed text-text-soft md:col-span-2">الحفظ يعيد البرنامج إلى مسودة لحماية السعر والتكوين. استخدمي زر النشر المستقل بعد اكتمال الحزمة أو ربط VIP أو المورد المجاني.</p>
     {message&&<p className="text-xs font-semibold text-deep-teal md:col-span-2" role="status">{message}</p>}
     <div className="flex flex-wrap gap-2 md:col-span-2"><Button type="submit" size="sm" disabled={busy}>{busy?'جاري الحفظ…':item?'حفظ المنتج':'إنشاء المنتج'}</Button>{item&&(!confirm?<Button type="button" size="sm" variant="burgundy" onClick={()=>setConfirm(true)}>حذف</Button>:<><Button type="button" size="sm" variant="burgundy" onClick={async()=>{setBusy(true);const result=await deleteProductRecord(item.id);setMessage(result.ok?'حُذف المنتج.':result.error);setBusy(false)}}>تأكيد الحذف</Button><Button type="button" size="sm" variant="ghost" onClick={()=>setConfirm(false)}>تراجع</Button></>)}</div>
   </form>
@@ -32,6 +32,8 @@ function ProductForm({ item, media = [] }: { item?: ProductAdminItem; media?: Me
 
 export function ProductCreatePanel({media=[]}:{media?:MediaOption[]}){return <details className="rounded-2xl border border-antique-gold/30 bg-surface-raised shadow-card"><summary className="cursor-pointer list-none px-6 py-5 font-heading text-xl font-bold text-deep-teal">إضافة حزمة أو منتج VIP أو مورد مجاني</summary><div className="border-t border-line p-6"><ProductForm media={media}/></div></details>}
 export function ProductEditPanel({item,media=[]}:{item:ProductAdminItem;media?:MediaOption[]}){return <details className="min-w-64 rounded-xl border border-line bg-ivory/40"><summary className="cursor-pointer list-none px-4 py-2 text-sm font-bold text-deep-teal">تعديل كامل</summary><div className="border-t border-line p-4"><ProductForm item={item} media={media}/></div></details>}
+
+export function ProgramPublishControl({ productId, published }: { productId: string; published: boolean }) { const [busy,setBusy]=useState(false),[message,setMessage]=useState<string|null>(null);return <div className="min-w-36"><Button type="button" size="sm" variant={published?'secondary':'primary'} disabled={busy} onClick={async()=>{setBusy(true);const result=await setProgramProductPublication(productId,!published);setMessage(result.ok?(published?'أُخفي البرنامج.':'نُشر البرنامج بعد فحص الجاهزية.'):result.error);setBusy(false)}}>{published?'إخفاء':'فحص ونشر'}</Button>{message&&<p role="status" className="mt-1 max-w-64 text-xs font-semibold text-deep-teal">{message}</p>}</div> }
 
 export function ProductComposition({ productId, productType, variants, options, selectedChildren }: { productId: string; productType: string; variants: ProductVariantItem[]; options: BundleChildOption[]; selectedChildren: string[] }) {
   const [busy, setBusy] = useState(false)

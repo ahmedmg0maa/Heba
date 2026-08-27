@@ -73,6 +73,7 @@ export async function adminSetField(table: string, id: string, field: string, va
   } else if (table === 'products' && field === 'is_published') {
     const { data: product } = await service.from('products').select('id,type,is_published').eq('id', id).maybeSingle()
     if (!product) return { ok: false, error: 'المنتج غير موجود.' }
+    if (['bundle','vip','free_resource'].includes(product.type)) return { ok: false, error: 'استخدمي فحص ونشر البرامج المخصص؛ النشر العام لا يتجاوز عقد التكوين والاستحقاق.' }
     const productKind: Partial<Record<string, CatalogPublicationKind>> = { course: 'course', book: 'book', workshop: 'workshop', session: 'service' }
     const kind = productKind[product.type]
     if (kind) {

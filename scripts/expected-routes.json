@@ -19,6 +19,8 @@
     "/press",
     "/resources",
     "/resources/[slug]",
+    "/programs",
+    "/programs/[slug]",
     "/contact",
     "/faq",
     "/privacy",

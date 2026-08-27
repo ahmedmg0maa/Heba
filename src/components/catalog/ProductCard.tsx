@@ -15,7 +15,7 @@ type ProductCardProps = {
   badge?: { label: string; tone?: 'gold' | 'burgundy' | 'teal' | 'cobalt' }
   rating?: { value: number; count: number }
   meta?: string[]
-  coverKind?: 'course' | 'book' | 'workshop' | 'session'
+  coverKind?: 'course' | 'book' | 'workshop' | 'session' | 'program'
   ctaLabel?: string
   coverUrl?: string | null
 }
@@ -38,6 +38,10 @@ const coverArt: Record<NonNullable<ProductCardProps['coverKind']>, { position: s
   session: {
     position: '39% center',
     glyph: <path d="M20 20a6 6 0 1 0-6-6 6 6 0 0 0 6 6Zm-11 14c0-6 4.9-11 11-11s11 5 11 11" strokeLinecap="round" strokeLinejoin="round" />,
+  },
+  program: {
+    position: '52% center',
+    glyph: <path d="M9 12h22v20H9zM9 18h22M15 8v8M25 8v8M14 24h12M14 28h8" strokeLinecap="round" strokeLinejoin="round" />,
   },
 }
 

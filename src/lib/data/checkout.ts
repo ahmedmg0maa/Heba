@@ -1,6 +1,7 @@
 import { getServerClient } from '@/lib/supabase/server'
 import { hasSupabasePublicConfig } from '@/lib/supabase/public-key'
 import { listBooks, listCourses, listServices, listWorkshops } from './catalog'
+import { getPublishedProgram } from './programs'
 
 export const PRODUCT_TYPES = ['book', 'course', 'workshop', 'session', 'bundle', 'vip', 'free_resource'] as const
 export type ProductType = (typeof PRODUCT_TYPES)[number]
@@ -134,6 +135,8 @@ async function getCatalogProduct(type: ProductType, slug: string): Promise<Check
 export async function getCheckoutProduct(type: string, slug: string): Promise<CheckoutProduct | null> {
   if (!PRODUCT_TYPES.includes(type as ProductType)) return null
   const t = type as ProductType
+  if (t === 'free_resource') return null
+  if ((t === 'bundle' || t === 'vip') && !(await getPublishedProgram(t, slug))) return null
   if (!hasEnv()) return getCatalogProduct(t, slug)
   try {
     const supabase = await getServerClient()

@@ -15,6 +15,7 @@ const allNav = [
   { href: '/books', label: 'الكتب' },
   { href: '/workshops', label: 'ورش العمل', flag: 'workshops' },
   { href: '/services', label: 'الخدمات' },
+  { href: '/programs', label: 'البرامج' },
   { href: '/articles', label: 'المقالات' },
 ]
 

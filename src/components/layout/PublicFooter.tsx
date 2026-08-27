@@ -11,6 +11,7 @@ const columns = [
       { href: '/books', label: 'الكتب الرقمية' },
       { href: '/workshops', label: 'ورش العمل' },
       { href: '/booking', label: 'الجلسات الفردية' },
+      { href: '/programs', label: 'البرامج والباقات' },
     ],
   },
   {
