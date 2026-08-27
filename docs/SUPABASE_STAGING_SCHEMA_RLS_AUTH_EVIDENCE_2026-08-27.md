@@ -22,12 +22,13 @@ This record covers the current Code X worktree only. It does not convert histori
 
 | Contract | Result | Command/evidence |
 |---|---|---|
-| Sequential source migrations 000–047 | `PASS-local` | `pnpm audit:db` |
+| Sequential source migrations 000–048 | `PASS-local` | `pnpm audit:db` |
 | Recovery runner read-only/isolation contract | `PASS-local` | `pnpm verify:recovery-runner-local`; Production identity, Session pooler/5432, `default_transaction_read_only=on`, pre-target preflight and generated-target routing are source-asserted |
 | Mandatory booking order 044 → 045 → 046 → 047 | `PASS-local` | `pnpm verify:booking-staging-contract` |
 | Sanitized pre/post contract fixtures | `PASS-local` | `pnpm verify:booking-staging-contract-fixtures` |
 | 043 protected-delivery source contracts | `PASS-local` | `pnpm verify:delivery-local`, database/media/security audits |
 | 044/045 hold, expiry, duplicate denial, cancellation/reschedule and Cairo-time contract | `PASS-local` | `pnpm verify:booking-local`, `pnpm verify:booking-permissions-local` |
+| 048 Contact validation/consent/throttling/direct-write revocation/Admin atomicity | `PASS-local` | `pnpm verify:contact-governance-local`, `pnpm audit:db`, `pnpm audit:security` |
 
 Fixture success is not a live schema fingerprint. It proves the validator rejects the wrong grants/policies/order; it does not prove that the provider schema matches those fixtures.
 
@@ -44,7 +45,7 @@ Fixture success is not a live schema fingerprint. It proves the validator reject
 
 ## Safety conclusion
 
-Production remains untouched and 043 must not be reapplied. Migrations 044–047 remain unapplied in this execution. Migrations 048–050 are intentionally not authored or applied before the ordered Staging gate succeeds.
+Production remains untouched and 043 must not be reapplied. Migrations 044–047 remain unapplied in this execution. Migration 048 is an additive development-first Contact contract authored locally after 047 and is also unapplied; any provider application must preserve the full 044→048 order and requires the ordered Staging gate. Later local migrations do not authorize provider writes.
 
 ## Exact unblock
 
