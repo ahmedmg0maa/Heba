@@ -1,10 +1,9 @@
 ﻿import type { Metadata } from 'next'
-import { getServerClient } from '@/lib/supabase/server'
-import { adminList } from '@/lib/data/cms'
+import { getServiceClient } from '@/lib/supabase/server'
 import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { NotifyUser } from '@/components/admin/NotifyUser'
-import { hasSupabasePublicConfig } from '@/lib/supabase/public-key'
+import { requirePermission } from '@/lib/auth/permissions'
 import Link from 'next/link'
 
 export const metadata: Metadata = { title: 'العملاء — الإدارة' }
@@ -13,35 +12,17 @@ type Row = { id: string; full_name: string; email: string; phone: string | null;
 
 const dateFmt = new Intl.DateTimeFormat('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' })
 
-const hasEnv = hasSupabasePublicConfig
-
-async function searchUsers(q: string): Promise<Row[]> {
-  if (!hasEnv()) return []
-  try {
-    const supabase = await getServerClient()
-    const like = `%${q.replace(/[%_]/g, '')}%`
-    const { data } = await supabase
-      .from('profiles')
-      .select('id, full_name, email, phone, created_at')
-      .or(`full_name.ilike.${like},email.ilike.${like}`)
-      .order('created_at', { ascending: false })
-      .limit(50)
-    return (data ?? []) as Row[]
-  } catch {
-    return []
-  }
-}
-
 type Props = { searchParams: Promise<{ q?: string }> }
 
 export default async function AdminUsersPage({ searchParams }: Props) {
   const { q } = await searchParams
-  const users = q?.trim()
-    ? await searchUsers(q.trim())
-    : await adminList<Row>('profiles', 'id, full_name, email, phone, created_at', {
-        orderBy: 'created_at',
-        limit: 200,
-      })
+  const admin = await requirePermission('users.view', { redirectOnFailure: true })
+  if (!admin?.userId) throw new Error('ADMIN_CUSTOMER_DIRECTORY_ACCESS_UNAVAILABLE')
+  const query = q?.trim() ?? ''
+  if (query.length > 100 || /[\u0000-\u001f\u007f]/.test(query)) throw new Error('ADMIN_CUSTOMER_SEARCH_INVALID')
+  const { data, error } = await getServiceClient().rpc('search_admin_users', { p_actor_id: admin.userId, p_query: query })
+  if (error) throw new Error('ADMIN_CUSTOMER_DIRECTORY_READ_UNAVAILABLE')
+  const users = (Array.isArray(data) ? data : []) as Row[]
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">

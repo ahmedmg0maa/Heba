@@ -7,30 +7,49 @@ import { getServiceClient } from '@/lib/supabase/server'
 import { deliverResendOutbox } from '@/lib/email/resend'
 
 type Result = { ok: true; notice?: string } | { ok: false; error: string }
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
-export async function addCustomerNote(userId: string, note: string): Promise<Result> {
+async function customerRecordAction(
+  kind: 'note' | 'tag',
+  customerId: string,
+  action: 'add' | 'archive' | 'restore' | 'remove',
+  input: { id?: string; value?: string },
+): Promise<Result> {
   const admin = await requirePermission('users.manage')
-  if (!admin?.userId) return { ok: false, error: 'لا تملكين صلاحية إدارة العملاء.' }
-  if (note.trim().length < 2) return { ok: false, error: 'اكتبي ملاحظة واضحة.' }
-  const service = getServiceClient()
-  const { error } = await service.from('user_notes').insert({ user_id: userId, author_id: admin.userId, note: note.trim() })
-  if (error) return { ok: false, error: 'تعذّر حفظ الملاحظة.' }
-  await service.from('audit_logs').insert({ actor_id: admin.userId, action: 'customer.note_added', entity_type: 'user', entity_id: userId, meta: { length: note.trim().length } })
-  revalidatePath(`/admin/users/${userId}`)
+  if (!admin?.userId || !UUID.test(customerId) || (input.id && !UUID.test(input.id))) {
+    return { ok: false, error: 'تعذّر التحقق من سجل العميلة.' }
+  }
+  const value = input.value?.trim() ?? ''
+  if (kind === 'note' && action === 'add' && (value.length < 2 || value.length > 2000)) {
+    return { ok: false, error: 'اكتبي ملاحظة بين حرفين و٢٠٠٠ حرف.' }
+  }
+  if (kind === 'tag' && action === 'add' && (value.length < 2 || value.length > 40 || /[\u0000-\u001f\u007f]/.test(value))) {
+    return { ok: false, error: 'اكتبي وسمًا واضحًا لا يتجاوز ٤٠ حرفًا.' }
+  }
+  const rpc = kind === 'note' ? 'manage_customer_note' : 'manage_customer_tag'
+  const args = kind === 'note'
+    ? { p_actor_id: admin.userId, p_customer_id: customerId, p_action: action, p_note_id: input.id ?? null, p_note: action === 'add' ? value : null }
+    : { p_actor_id: admin.userId, p_customer_id: customerId, p_action: action, p_tag_id: input.id ?? null, p_tag: action === 'add' ? value : null }
+  const { error } = await getServiceClient().rpc(rpc, args)
+  if (error) return { ok: false, error: error.code === 'PGRST202' ? 'يلزم تطبيق تحديث Customer 360 على Staging أولًا.' : 'تعذّر تحديث سجل العميلة.' }
+  revalidatePath(`/admin/users/${customerId}`)
   return { ok: true }
 }
 
+export async function addCustomerNote(userId: string, note: string): Promise<Result> {
+  return customerRecordAction('note', userId, 'add', { value: note })
+}
+
+export async function setCustomerNoteArchived(userId: string, noteId: string, archived: boolean): Promise<Result> {
+  return customerRecordAction('note', userId, archived ? 'archive' : 'restore', { id: noteId })
+}
+
 export async function addCustomerTag(userId: string, tag: string): Promise<Result> {
-  const admin = await requirePermission('users.manage')
-  if (!admin?.userId) return { ok: false, error: 'لا تملكين صلاحية إدارة العملاء.' }
-  const clean = tag.trim().slice(0, 40)
-  if (clean.length < 2) return { ok: false, error: 'اكتبي وسمًا واضحًا.' }
-  const service = getServiceClient()
-  const { error } = await service.from('user_tags').upsert({ user_id: userId, tag: clean }, { onConflict: 'user_id,tag' })
-  if (error) return { ok: false, error: 'تعذّر حفظ الوسم.' }
-  await service.from('audit_logs').insert({ actor_id: admin.userId, action: 'customer.tag_added', entity_type: 'user', entity_id: userId, meta: { tag: clean } })
-  revalidatePath(`/admin/users/${userId}`)
-  return { ok: true }
+  return customerRecordAction('tag', userId, 'add', { value: tag })
+}
+
+export async function removeCustomerTag(userId: string, tagId: string): Promise<Result> {
+  return customerRecordAction('tag', userId, 'remove', { id: tagId })
 }
 
 export async function manageInboxMessage(
