@@ -12,37 +12,14 @@ function refresh() {
   revalidatePath('/services')
 }
 
-export async function saveAvailability(formData: FormData): Promise<Result> {
-  const admin = await requirePermission('availability.manage')
-  if (!admin) return { ok: false, error: 'لا تملكين صلاحية إدارة الإتاحة.' }
-  const serviceId = String(formData.get('service_id') ?? '')
-  const weekdays = formData.getAll('weekdays').map(Number).filter((day) => day >= 0 && day <= 6)
-  if (!serviceId) return { ok: false, error: 'الخدمة غير محددة.' }
-  if (weekdays.length === 0) return { ok: false, error: 'اختاري يوم عمل واحدًا على الأقل.' }
-
-  const rows: { service_id: string; weekday: number; start_time: string; end_time: string; timezone: string }[] = []
-  for (const weekday of weekdays) {
-    const startTime = String(formData.get(`start_${weekday}`) ?? '')
-    const endTime = String(formData.get(`end_${weekday}`) ?? '')
-    if (!/^\d{2}:\d{2}$/.test(startTime) || !/^\d{2}:\d{2}$/.test(endTime) || startTime >= endTime)
-      return { ok: false, error: `راجعي وقت البداية والنهاية لليوم رقم ${weekday + 1}.` }
-    rows.push({ service_id: serviceId, weekday, start_time: startTime, end_time: endTime, timezone: 'Africa/Cairo' })
-  }
-
-  const service = getServiceClient()
-  const { error: deleteError } = await service.from('availability_rules').delete().eq('service_id', serviceId)
-  if (deleteError) return { ok: false, error: 'تعذّر تحديث الجدول.' }
-  const { error } = await service.from('availability_rules').insert(rows)
-  if (error) return { ok: false, error: 'تعذّر حفظ مواعيد الإتاحة.' }
-  await service.from('audit_logs').insert({
-    actor_id: admin.userId,
-    action: 'availability.updated',
-    entity_type: 'service',
-    entity_id: serviceId,
-    meta: { rules: rows },
-  })
-  refresh()
-  return { ok: true }
+function governanceError(message: string, fallback: string): string {
+  const normalized = message.toLowerCase()
+  if (normalized.includes('permission_required')) return 'انتهت صلاحية الجلسة الإدارية أو لا تملكين الصلاحية المطلوبة.'
+  if (normalized.includes('not_found')) return 'لم يعد السجل المطلوب موجودًا. حدّثي الصفحة وحاولي مجددًا.'
+  if (normalized.includes('overlap') || normalized.includes('unavailable') || normalized.includes('23p01')) return 'الوقت المختار غير متاح أو يتداخل مع موعد قائم.'
+  if (normalized.includes('transition_invalid')) return 'هذا الانتقال بين حالات الحجز غير مسموح.'
+  if (normalized.includes('invalid')) return 'راجعي القيم المدخلة ثم حاولي مجددًا.'
+  return fallback
 }
 
 export async function saveAvailabilityException(formData: FormData): Promise<Result> {
@@ -58,24 +35,16 @@ export async function saveAvailabilityException(formData: FormData): Promise<Res
   if (!['closed', 'custom', 'holiday', 'blackout'].includes(mode)) return { ok: false, error: 'نوع الاستثناء غير صحيح.' }
   if (mode === 'custom' && (!startTime || !endTime || startTime >= endTime))
     return { ok: false, error: 'حددي وقتًا استثنائيًا صحيحًا.' }
-  const payload = {
-    service_id: serviceId,
-    date,
-    is_closed: mode !== 'custom',
-    start_time: mode === 'custom' ? startTime : null,
-    end_time: mode === 'custom' ? endTime : null,
-    kind: mode,
-    reason,
-  }
-  const { error } = await getServiceClient().from('availability_exceptions').upsert(payload, { onConflict: 'service_id,date' })
-  if (error) return { ok: false, error: 'تعذّر حفظ الاستثناء.' }
-  await getServiceClient().from('audit_logs').insert({
-    actor_id: admin.userId,
-    action: `availability.${mode}`,
-    entity_type: 'service',
-    entity_id: serviceId,
-    meta: payload,
+  const { error } = await getServiceClient().rpc('admin_upsert_availability_exception', {
+    p_actor_id: admin.userId,
+    p_service_id: serviceId,
+    p_date: date,
+    p_kind: mode,
+    p_start_time: mode === 'custom' ? startTime : null,
+    p_end_time: mode === 'custom' ? endTime : null,
+    p_reason: reason,
   })
+  if (error) return { ok: false, error: governanceError(error.message, 'تعذّر حفظ الاستثناء.') }
   refresh()
   return { ok: true }
 }
@@ -90,33 +59,39 @@ export async function saveBookingSlotOverride(formData: FormData): Promise<Resul
   const reason = String(formData.get('reason') ?? '').trim().slice(0, 500)
   if (!serviceId || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}$/.test(startTime) || !['open', 'closed'].includes(mode))
     return { ok: false, error: 'راجعي تاريخ ووقت وحالة الـ slot.' }
-  const service = getServiceClient()
-  const payload = { service_id: serviceId, date, start_time: startTime, mode, reason, created_by: admin.userId }
-  const { data, error } = await service.from('booking_slot_overrides').upsert(payload, { onConflict: 'service_id,date,start_time' }).select('id').single()
-  if (error || !data) return { ok: false, error: 'تعذّر حفظ تعديل الـ slot.' }
-  await service.from('audit_logs').insert({ actor_id: admin.userId, action: `availability.slot_${mode}`, entity_type: 'booking_slot_override', entity_id: data.id, meta: { serviceId, date, startTime, reason } })
+  const { error } = await getServiceClient().rpc('admin_upsert_booking_slot_override', {
+    p_actor_id: admin.userId,
+    p_service_id: serviceId,
+    p_date: date,
+    p_start_time: startTime,
+    p_mode: mode,
+    p_reason: reason,
+  })
+  if (error) return { ok: false, error: governanceError(error.message, 'تعذّر حفظ تعديل الموعد اليدوي.') }
   refresh(); return { ok: true }
 }
 
 export async function deleteBookingSlotOverride(overrideId: string): Promise<Result> {
   const admin = await requirePermission('availability.manage')
   if (!admin?.userId) return { ok: false, error: 'لا تملكين صلاحية إدارة الإتاحة.' }
-  const service = getServiceClient()
-  const { data: previous } = await service.from('booking_slot_overrides').select('*').eq('id', overrideId).maybeSingle()
-  if (!previous) return { ok: false, error: 'تعديل الـ slot غير موجود.' }
-  const { error } = await service.from('booking_slot_overrides').delete().eq('id', overrideId)
-  if (error) return { ok: false, error: 'تعذّر حذف تعديل الـ slot.' }
-  await service.from('audit_logs').insert({ actor_id: admin.userId, action: 'availability.slot_override_deleted', entity_type: 'booking_slot_override', entity_id: overrideId, meta: { serviceId: previous.service_id, date: previous.date, startTime: previous.start_time } })
+  const { error } = await getServiceClient().rpc('admin_delete_booking_slot_override', {
+    p_actor_id: admin.userId,
+    p_override_id: overrideId,
+  })
+  if (error) return { ok: false, error: governanceError(error.message, 'تعذّر حذف تعديل الموعد اليدوي.') }
   refresh(); return { ok: true }
 }
 
 export async function resolveBookingReschedule(requestId: string, approve: boolean, note = ''): Promise<Result> {
   const admin = await requirePermission('bookings.manage')
   if (!admin) return { ok: false, error: 'لا تملكين صلاحية إدارة الحجوزات.' }
-  const { error } = await getServiceClient().rpc('resolve_booking_reschedule', {
-    p_request_id: requestId, p_approve: approve, p_admin_note: note.trim().slice(0, 1000),
+  const { error } = await getServiceClient().rpc('resolve_booking_reschedule_governed', {
+    p_actor_id: admin.userId,
+    p_request_id: requestId,
+    p_approve: approve,
+    p_admin_note: note.trim().slice(0, 1000),
   })
-  if (error) return { ok: false, error: error.message.includes('PROPOSED_SLOT_UNAVAILABLE') ? 'الموعد المقترح لم يعد متاحًا.' : 'تعذّر حسم طلب تغيير الموعد.' }
+  if (error) return { ok: false, error: governanceError(error.message, 'تعذّر حسم طلب تغيير الموعد.') }
   refresh(); revalidatePath('/dashboard/bookings')
   return { ok: true }
 }
@@ -124,18 +99,11 @@ export async function resolveBookingReschedule(requestId: string, approve: boole
 export async function deleteAvailabilityException(exceptionId: string): Promise<Result> {
   const admin = await requirePermission('availability.manage')
   if (!admin) return { ok: false, error: 'لا تملكين صلاحية إدارة الإتاحة.' }
-  const service = getServiceClient()
-  const { data: exception } = await service.from('availability_exceptions').select('*').eq('id', exceptionId).maybeSingle()
-  if (!exception) return { ok: false, error: 'الاستثناء غير موجود.' }
-  const { error } = await service.from('availability_exceptions').delete().eq('id', exceptionId)
-  if (error) return { ok: false, error: 'تعذّر حذف الاستثناء.' }
-  await service.from('audit_logs').insert({
-    actor_id: admin.userId,
-    action: 'availability.exception_deleted',
-    entity_type: 'service',
-    entity_id: exception.service_id,
-    meta: exception,
+  const { error } = await getServiceClient().rpc('admin_delete_availability_exception', {
+    p_actor_id: admin.userId,
+    p_exception_id: exceptionId,
   })
+  if (error) return { ok: false, error: governanceError(error.message, 'تعذّر حذف الاستثناء.') }
   refresh()
   return { ok: true }
 }
@@ -148,24 +116,24 @@ export async function saveAvailabilityWindow(formData: FormData): Promise<Result
   const startTime = String(formData.get('start_time') ?? '')
   const endTime = String(formData.get('end_time') ?? '')
   if (!serviceId || weekday < 0 || weekday > 6 || !/^\d{2}:\d{2}$/.test(startTime) || !/^\d{2}:\d{2}$/.test(endTime) || startTime >= endTime) return { ok: false, error: 'راجعي اليوم وبداية النافذة ونهايتها.' }
-  const service = getServiceClient()
-  const { data, error } = await service.from('availability_rules').insert({ service_id: serviceId, weekday, start_time: startTime, end_time: endTime, timezone: 'Africa/Cairo' }).select('id').single()
-  if (error) return { ok: false, error: error.code === '23P01' ? 'هذه النافذة تتداخل مع نافذة موجودة.' : 'تعذّر حفظ نافذة الإتاحة.' }
-  await service.from('audit_logs').insert({ actor_id: admin.userId, action: 'availability.window_created', entity_type: 'availability_rule', entity_id: data.id, meta: { serviceId, weekday, startTime, endTime } })
+  const { error } = await getServiceClient().rpc('admin_create_availability_window', {
+    p_actor_id: admin.userId,
+    p_service_id: serviceId,
+    p_weekday: weekday,
+    p_start_time: startTime,
+    p_end_time: endTime,
+  })
+  if (error) return { ok: false, error: governanceError(error.message, 'تعذّر حفظ نافذة الإتاحة.') }
   refresh(); return { ok: true }
 }
 
 export async function deleteAvailabilityWindow(windowId: string): Promise<Result> {
   const admin = await requirePermission('availability.manage')
   if (!admin?.userId) return { ok: false, error: 'لا تملكين صلاحية إدارة الإتاحة.' }
-  const service = getServiceClient()
-  const { data } = await service.from('availability_rules').select('*').eq('id', windowId).maybeSingle()
-  if (!data) return { ok: false, error: 'نافذة الإتاحة غير موجودة.' }
-  const { error } = await service.from('availability_rules').delete().eq('id', windowId)
-  if (error) return { ok: false, error: 'تعذّر حذف النافذة.' }
-  await service.from('audit_logs').insert({ actor_id: admin.userId, action: 'availability.window_deleted', entity_type: 'availability_rule', entity_id: windowId, meta: data })
+  const { error } = await getServiceClient().rpc('admin_delete_availability_window', {
+    p_actor_id: admin.userId,
+    p_window_id: windowId,
+  })
+  if (error) return { ok: false, error: governanceError(error.message, 'تعذّر حذف نافذة الإتاحة.') }
   refresh(); return { ok: true }
 }
-
-// Backward-compatible alias used by older clients.
-export const closeAvailabilityDate = saveAvailabilityException

@@ -105,44 +105,6 @@ export async function adminSetField(table: string, id: string, field: string, va
   return { ok: true }
 }
 
-export async function setBookingStatus(
-  bookingId: string,
-  status: 'confirmed' | 'completed' | 'cancelled' | 'no_show',
-): Promise<ActionResult> {
-  if (!hasEnv()) return { ok: false, error: NO_ENV }
-  const admin = await requireAdminUser('bookings.manage')
-  if (!admin) return { ok: false, error: NOT_ADMIN }
-
-  const service = getServiceClient()
-  const { data: booking } = await service.from('bookings').select('id, user_id, status').eq('id', bookingId).maybeSingle()
-  if (!booking) return { ok: false, error: 'الحجز غير موجود.' }
-
-  const { error } = await service.from('bookings').update({ status }).eq('id', bookingId)
-  if (error) return { ok: false, error: GENERIC }
-
-  await service.from('booking_events').insert({
-    booking_id: bookingId,
-    actor_id: admin.user.id,
-    event: `status:${booking.status}→${status}`,
-  })
-  const labels: Record<typeof status, string> = {
-    confirmed: 'تأكد موعد جلستك ✨',
-    completed: 'اكتملت جلستك — شكرًا لحضورك',
-    cancelled: 'أُلغي موعد جلستك',
-    no_show: 'سُجّل تغيّب عن الجلسة',
-  }
-  await service.from('notifications').insert({
-    user_id: booking.user_id,
-    title: labels[status],
-    body: '',
-    kind: status === 'cancelled' || status === 'no_show' ? 'warning' : 'success',
-    link: '/dashboard/bookings',
-  })
-  await audit(admin.user.id, `booking.${status}`, 'booking', bookingId, { previous: booking.status })
-  revalidatePath('/admin/bookings')
-  return { ok: true }
-}
-
 export async function deleteReview(reviewId: string): Promise<ActionResult> {
   if (!hasEnv()) return { ok: false, error: NO_ENV }
   const admin = await requireAdminUser('reviews.manage')

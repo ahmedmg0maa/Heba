@@ -5,7 +5,6 @@ import {
   adminSetField,
   publishArticle,
   createArticle,
-  setBookingStatus,
   updateSetting,
   toggleFlag,
   grantRole,
@@ -78,37 +77,6 @@ export function ReviewControls({ id, featured, status = 'pending' }: { id: strin
       <textarea value={reason} onChange={(event) => setReason(event.target.value)} rows={2} placeholder="سبب الرفض الداخلي (مطلوب عند الرفض)" className="w-full rounded-lg border border-line bg-surface-raised p-2 text-xs text-ink" />
       <textarea value={response} onChange={(event) => setResponse(event.target.value)} rows={2} placeholder="رد المالكة الاختياري" className="w-full rounded-lg border border-line bg-surface-raised p-2 text-xs text-ink" />
       <label className="flex items-center gap-2 text-xs text-text-soft"><input type="checkbox" checked={publishResponse} onChange={(event) => setPublishResponse(event.target.checked)} />نشر الرد مع التقييم المعتمد</label>
-      {error && <p className="text-xs text-burgundy">{error}</p>}
-    </div>
-  )
-}
-
-export function BookingControls({ id, status }: { id: string; status: string }) {
-  const { busy, error, run } = useBusy()
-  return (
-    <div className="space-y-1">
-      <div className="flex flex-wrap gap-2">
-        {status === 'pending' && (
-          <Button size="sm" disabled={busy} onClick={() => run(() => setBookingStatus(id, 'confirmed'))}>
-            تأكيد
-          </Button>
-        )}
-        {(status === 'pending' || status === 'confirmed') && (
-          <>
-            <Button size="sm" variant="secondary" disabled={busy} onClick={() => run(() => setBookingStatus(id, 'completed'))}>
-              اكتملت
-            </Button>
-            <Button size="sm" variant="burgundy" disabled={busy} onClick={() => run(() => setBookingStatus(id, 'cancelled'))}>
-              إلغاء
-            </Button>
-          </>
-        )}
-        {status === 'confirmed' && (
-          <Button size="sm" variant="ghost" disabled={busy} onClick={() => run(() => setBookingStatus(id, 'no_show'))}>
-            تغيّب
-          </Button>
-        )}
-      </div>
       {error && <p className="text-xs text-burgundy">{error}</p>}
     </div>
   )

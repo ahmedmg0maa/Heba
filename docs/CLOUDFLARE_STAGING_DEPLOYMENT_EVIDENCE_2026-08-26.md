@@ -6,6 +6,8 @@
 
 تم إنشاء ونشر Worker تجريبي مستقل وآمن على `workers.dev`، وأنشئ لاحقًا مشروع Supabase Staging مستقل بحجم Nano المجاني وبلا بيانات. لكن قبول Staging الوظيفي غير ممكن بعد لأن schema/RBAC وبيانات اتصال التطبيق وAuth redirects لم تُجهز بعد. لم يُستخدم Supabase Production، ولم تتغير DNS أو Nameservers أو النطاق الأساسي أو أي مورد Production.
 
+> تحديث مصدر محلي في 2026-08-28: أضيفت migrations 048–061 بعد العقد الخارجي 044–047. آخرها 061 يغلق هوية وتنفيذ Admin booking/availability محليًا، واجتاز Next وWorkers **70/70**. لا يغيّر هذا حكم Staging: لم تُطبق 061 أو أي migration أخرى على مزود، وتبقى جميع أدلة SQL/RLS/persistence الحية `unverified` حتى بوابة الاستعادة والترحيل المفوضة.
+
 ## هوية النشر
 
 - مستودع المصدر: `https://github.com/ahmedmg0maa/Heba`

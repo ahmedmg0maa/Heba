@@ -3,7 +3,6 @@ import { adminList, getPublicMediaOptions } from '@/lib/data/cms'
 import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table'
 import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { BookingControls } from '@/components/admin/AdminControls'
 import { AvailabilityManager } from '@/components/admin/AvailabilityManager'
 import { Card, CardTitle } from '@/components/ui/Card'
 import { CatalogCreatePanel, CatalogEditPanel } from '@/components/admin/CatalogManager'
@@ -121,7 +120,7 @@ export default async function AdminBookingsPage() {
                     <Badge tone={st.tone}>{st.label}</Badge>
                   </TD>
                   <TD>
-                    <div className="flex flex-wrap items-start gap-2"><BookingControls id={b.id} status={b.status} /><BookingEditor booking={{ id: b.id, startsAt: b.starts_at, endsAt: b.ends_at, status: b.status, meetingUrl: b.meeting_url, customerNotes: b.customer_notes, adminNotes: b.admin_notes }} /></div>
+                    <BookingEditor booking={{ id: b.id, startsAt: b.starts_at, status: b.status, meetingUrl: b.meeting_url, customerNotes: b.customer_notes, adminNotes: b.admin_notes }} />
                   </TD>
                 </TR>
               )

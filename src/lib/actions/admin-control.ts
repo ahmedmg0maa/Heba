@@ -549,16 +549,25 @@ export async function saveBookingAdmin(bookingId: string, form: FormData): Promi
   const admin = await requireAdminUser('bookings.manage')
   if (!admin) return { ok: false, error: 'هذه العملية تتطلب صلاحية إدارية.' }
   const startsAt = optionalDate(form, 'starts_at')
-  const endsAt = optionalDate(form, 'ends_at')
   const status = text(form, 'status')
-  if (!startsAt || !endsAt || endsAt <= startsAt || !['pending','confirmed','completed','cancelled','no_show'].includes(status))
+  if (!startsAt || !['pending','confirmed','completed','cancelled','no_show'].includes(status))
     return { ok: false, error: 'راجعي الموعد والحالة.' }
   const service = getServiceClient()
-  const { error } = await service.rpc('admin_update_booking', {
-    p_booking_id: bookingId, p_starts_at: startsAt, p_ends_at: endsAt, p_status: status,
-    p_meeting_url: text(form, 'meeting_url'), p_customer_notes: text(form, 'customer_notes'), p_admin_notes: text(form, 'admin_notes'),
+  const { error } = await service.rpc('admin_update_booking_governed', {
+    p_actor_id: admin.id,
+    p_booking_id: bookingId,
+    p_starts_at: startsAt,
+    p_status: status,
+    p_meeting_url: text(form, 'meeting_url'),
+    p_admin_notes: text(form, 'admin_notes'),
   })
-  if (error) return { ok: false, error: error.code === '23P01' ? 'الموعد الجديد غير متاح أو يتعارض مع buffer.' : message(error) }
+  if (error) {
+    if (error.code === '23P01' || error.message.toLowerCase().includes('unavailable'))
+      return { ok: false, error: 'الموعد الجديد غير متاح أو يتعارض مع فترة الفصل بين الجلسات.' }
+    if (error.message.toLowerCase().includes('transition_invalid'))
+      return { ok: false, error: 'هذا الانتقال بين حالات الحجز غير مسموح.' }
+    return { ok: false, error: message(error) }
+  }
   revalidatePath('/admin/bookings')
   revalidatePath('/dashboard/bookings')
   return { ok: true, id: bookingId }
