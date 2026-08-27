@@ -585,3 +585,11 @@
 - **Related histories are explicitly bounded.** Curriculum counts, workshop materials, booking events/reschedules, order items and payment product titles use separate scoped queries rather than unbounded embedded relationships. Customer links are reduced to HTTPS meetings and Dashboard-relative notifications.
 - **Pending payment is an authoritative next action.** The Dashboard derives it from an own order row and routes to payments or orders according to persisted state. Missing order metadata fails closed rather than defaulting to a fabricated state.
 - **066 changes SELECT continuity only.** It grants no INSERT/UPDATE/DELETE path and remains unapplied until the recovery-controlled `STAGING EXTERNAL GATE` proves RLS isolation and persistence.
+
+## 2026-08-28 — Customer account writes cross one explicit-actor boundary
+
+- **A customer session proves identity; it does not retain broad table UPDATE.** The Server Action verifies the current Auth user and passes only that opaque ID to service-only PostgreSQL functions. Authenticated roles keep their own reads but cannot update arbitrary profile or notification columns.
+- **Profile self-service is an allowlist.** The transaction may change only normalized `full_name` and optional `phone`; email, avatar, timestamps and ownership cannot be supplied by the browser. The business row and audit evidence commit together under a per-customer lock.
+- **Read state is operational state with a truthful result.** Mark-all-read changes only the actor's unread notifications, returns the durable affected count and writes one count-only audit record. A retry with nothing left is a successful idempotent no-op rather than a duplicate audit.
+- **Customer content is excluded from audit.** Profile names, phone numbers, notification titles and bodies never enter audit metadata; evidence records only changed-field booleans or an affected-row count.
+- **067 remains source-only.** SQL parsing, RLS denial, concurrent execution and reload persistence stay under the recovery-controlled `STAGING EXTERNAL GATE`.

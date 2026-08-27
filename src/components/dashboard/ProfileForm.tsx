@@ -36,9 +36,19 @@ export function ProfileForm({ profile }: { profile: MyProfile | null }) {
 
   return (
     <form onSubmit={onSubmit} className="space-y-5">
-      <FormField label="الاسم الكامل" name="full_name" defaultValue={profile?.fullName ?? ''} required />
+      <FormField label="الاسم الكامل" name="full_name" defaultValue={profile?.fullName ?? ''} minLength={2} maxLength={120} required />
       <FormField label="البريد الإلكتروني" name="email" defaultValue={profile?.email ?? ''} disabled dir="ltr" hint="البريد مرتبط بحسابك ولا يمكن تغييره من هنا" />
-      <FormField label="رقم الهاتف" name="phone" type="tel" defaultValue={profile?.phone ?? ''} dir="ltr" />
+      <FormField
+        label="رقم الهاتف"
+        name="phone"
+        type="tel"
+        defaultValue={profile?.phone ?? ''}
+        minLength={7}
+        maxLength={30}
+        pattern="\+?[0-9][0-9 ()-]{5,28}[0-9]"
+        hint="من ٧ إلى ٣٠ رمزًا؛ يمكن استخدام + والمسافات والأقواس والشرطة"
+        dir="ltr"
+      />
       <Feedback state={state} />
       <Button type="submit" disabled={busy}>
         {busy ? 'جارٍ الحفظ…' : 'حفظ التغييرات'}
