@@ -577,3 +577,11 @@
 - **Minting is an auditable bounded operation.** Per actor/kind/entity advisory locks enforce 30 daily resource admissions or 60 recording admissions. Evidence contains a hashed request fingerprint and structural reason/remaining count; Storage paths, titles and external destinations are excluded.
 - **External learning resources require HTTPS.** Both the database boundary and route URL parser reject plain HTTP and non-web schemes. The redirect response remains private/no-store with a no-referrer policy.
 - **065 is source-only.** Local contracts and both 70/70 suites prove source/runtime compatibility, not live SQL, RLS, Storage or concurrency; those remain inside `STAGING EXTERNAL GATE`.
+
+## 2026-08-28 — Customer-owned history survives public withdrawal
+
+- **Unpublishing controls discovery, not an existing customer's receipt.** Products, courses/curriculum, books, workshops and services remain readable only to customers holding the corresponding order, enrollment, access grant, non-cancelled registration or booking. Anonymous/public visibility still requires the original publication or active flag.
+- **Dashboard failures are not empty accounts.** No-environment and anonymous states may return neutral fallbacks, but a configured authentication or query error raises one sanitized application error and renders an accessible retry/support boundary.
+- **Related histories are explicitly bounded.** Curriculum counts, workshop materials, booking events/reschedules, order items and payment product titles use separate scoped queries rather than unbounded embedded relationships. Customer links are reduced to HTTPS meetings and Dashboard-relative notifications.
+- **Pending payment is an authoritative next action.** The Dashboard derives it from an own order row and routes to payments or orders according to persisted state. Missing order metadata fails closed rather than defaulting to a fabricated state.
+- **066 changes SELECT continuity only.** It grants no INSERT/UPDATE/DELETE path and remains unapplied until the recovery-controlled `STAGING EXTERNAL GATE` proves RLS isolation and persistence.

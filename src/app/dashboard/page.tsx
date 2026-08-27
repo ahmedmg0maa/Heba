@@ -5,11 +5,12 @@ import {
   getMyCourses,
   getMyBooks,
   getMyBookings,
+  getMyOrders,
   getMyNotifications,
   getMyStreak,
   getMyAchievements,
 } from '@/lib/data/dashboard'
-import { isFuture } from '@/lib/format'
+import { formatPrice, isFuture } from '@/lib/format'
 import { StatCard } from '@/components/ui/StatCard'
 import { Card, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -21,11 +22,12 @@ export const metadata: Metadata = { title: 'لوحتي' }
 const dateFmt = new Intl.DateTimeFormat('ar-EG', { weekday: 'long', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' })
 
 export default async function DashboardHome() {
-  const [profile, courses, books, bookings, notifications, streak, achievements] = await Promise.all([
+  const [profile, courses, books, bookings, orders, notifications, streak, achievements] = await Promise.all([
     getMyProfile(),
     getMyCourses(),
     getMyBooks(),
     getMyBookings(),
+    getMyOrders(),
     getMyNotifications(),
     getMyStreak(),
     getMyAchievements(),
@@ -35,6 +37,7 @@ export default async function DashboardHome() {
   const inProgress = courses.filter((c) => c.percent > 0 && c.percent < 100)
   const continueCourse = inProgress[0] ?? courses[0] ?? null
   const upcoming = bookings.find((b) => b.status !== 'cancelled' && isFuture(b.startsAt))
+  const pendingOrder = orders.find((order) => order.status === 'pending_payment' || order.status === 'awaiting_review')
   const unread = notifications.filter((n) => !n.readAt).length
 
   return (
@@ -49,6 +52,27 @@ export default async function DashboardHome() {
         <StatCard label="كتبي" value={books.length.toLocaleString('ar-EG')} accent="burgundy" />
         <StatCard label="إشعارات جديدة" value={unread.toLocaleString('ar-EG')} accent="gold" />
       </div>
+
+      {pendingOrder && (
+        <Card className="flex flex-col gap-4 border-antique-gold/50 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="mb-2 flex flex-wrap items-center gap-2" role="status">
+              <h2 className="font-bold text-deep-teal">
+                {pendingOrder.status === 'awaiting_review' ? 'دفعتك قيد المراجعة' : 'طلب ينتظر إثبات الدفع'}
+              </h2>
+              <Badge tone={pendingOrder.status === 'awaiting_review' ? 'cobalt' : 'pending'}>
+                {formatPrice(pendingOrder.total)}
+              </Badge>
+            </div>
+            <p className="text-sm text-text-soft">
+              {pendingOrder.productTitles.length > 0 ? pendingOrder.productTitles.join(' + ') : 'طلب شراء'}
+            </p>
+          </div>
+          <Button href={pendingOrder.status === 'awaiting_review' ? '/dashboard/payments' : '/dashboard/orders'} variant="secondary" size="sm">
+            {pendingOrder.status === 'awaiting_review' ? 'متابعة المراجعة' : 'إكمال الخطوة التالية'}
+          </Button>
+        </Card>
+      )}
 
       {/* Learning streak (S4) */}
       <Card className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
