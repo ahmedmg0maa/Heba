@@ -6,7 +6,7 @@ import { getServiceClient, hasSupabaseServerSecret } from '@/lib/supabase/server
 import { FRESH_ADMIN_ASSURANCE_ERROR, PERMISSIONS, requireFreshAdminAssurance, requirePermission, type Permission } from '@/lib/auth/permissions'
 import { hasSupabasePublicConfig } from '@/lib/supabase/public-key'
 import { defaultHomeContent, HOME_SECTION_KINDS, isHomeSectionKind, normalizeHomeContent, type HomeSectionKind } from '@/lib/home/sections'
-import { normalizeStartHereContent, START_HERE_PATHS } from '@/lib/start-here/content'
+import { normalizeStartHereContent } from '@/lib/start-here/content'
 import { catalogPublicationReadiness, type CatalogPublicationKind } from '@/lib/catalog/publication-readiness'
 
 type ActionResult = { ok: true } | { ok: false; error: string }
@@ -507,11 +507,6 @@ export async function saveStartHereExperience(formData: FormData): Promise<Actio
 
   const raw = {
     hero: { eyebrow: required('hero_eyebrow', 2, 80), title: required('hero_title', 3, 120), lead: required('hero_lead', 12, 300) },
-    quiz: {
-      eyebrow: required('quiz_eyebrow', 2, 80), heading: required('quiz_heading', 3, 120), lead: required('quiz_lead', 12, 260),
-      questions: [0, 1, 2].map((index) => ({ title: required(`question_${index}_title`, 4, 120), options: Object.fromEntries(START_HERE_PATHS.map((path) => [path, required(`question_${index}_${path}`, 3, 100)])) })),
-      results: Object.fromEntries(START_HERE_PATHS.map((path) => [path, { title: required(`result_${path}_title`, 4, 140), text: required(`result_${path}_text`, 12, 300), href: internalHref(`result_${path}_href`), cta: required(`result_${path}_cta`, 2, 70) }])),
-    },
     paths: [0, 1, 2, 3].map((index) => ({ title: required(`path_${index}_title`, 4, 140), text: required(`path_${index}_text`, 12, 300), href: internalHref(`path_${index}_href`), cta: required(`path_${index}_cta`, 2, 70) })),
     closing: { title: required('closing_title', 3, 120), lead: required('closing_lead', 12, 260), ctaLabel: required('closing_cta_label', 2, 70), ctaHref: internalHref('closing_cta_href') },
   }
@@ -527,7 +522,7 @@ export async function saveStartHereExperience(formData: FormData): Promise<Actio
   }
   const { error } = await service.from('site_settings').upsert({ key: 'start_here_experience', value, is_public: true, updated_by: admin.user.id }, { onConflict: 'key' })
   if (error) return { ok: false, error: GENERIC }
-  const { error: auditError } = await service.from('audit_logs').insert({ actor_id: admin.user.id, action: 'start_here_experience.updated', entity_type: 'site_settings', entity_id: 'start_here_experience', meta: { questions: 3, paths: 4 } })
+  const { error: auditError } = await service.from('audit_logs').insert({ actor_id: admin.user.id, action: 'start_here_experience.updated', entity_type: 'site_settings', entity_id: 'start_here_experience', meta: { paths: 4, assessmentManagedSeparately: true } })
   if (auditError) {
     if (previous) await service.from('site_settings').upsert(previous, { onConflict: 'key' })
     else await service.from('site_settings').delete().eq('key', 'start_here_experience')

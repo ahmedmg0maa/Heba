@@ -6,6 +6,8 @@ import { Card } from '@/components/ui/Card'
 import { CTARibbon } from '@/components/catalog/CTARibbon'
 import { StartHereQuiz } from '@/components/catalog/StartHereQuiz'
 import { getStartHereContent } from '@/lib/data/start-here'
+import { getPublishedGuidedAssessment } from '@/lib/data/assessments'
+import { defaultGuidedAssessmentContent } from '@/lib/assessments/governance'
 
 export const metadata: Metadata = {
   title: 'ابدئي من هنا',
@@ -13,7 +15,7 @@ export const metadata: Metadata = {
 }
 
 export default async function StartHerePage() {
-  const content = await getStartHereContent()
+  const [content, assessment] = await Promise.all([getStartHereContent(), getPublishedGuidedAssessment()])
   return (
     <main>
       <PageHero
@@ -23,7 +25,7 @@ export default async function StartHerePage() {
       />
 
       <section className="bg-ivory px-6 pt-14">
-        <StartHereQuiz content={content.quiz} />
+        <StartHereQuiz content={assessment?.content ?? defaultGuidedAssessmentContent} version={assessment?.version} />
       </section>
 
       <Section>

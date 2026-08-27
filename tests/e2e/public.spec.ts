@@ -112,6 +112,16 @@ test.describe('public experience', () => {
   test('start-here flow completes by keyboard with an announced deterministic result', async ({ page }) => {
     await visit(page, '/start-here')
     await expect(page.locator('[data-start-here-quiz]')).toHaveAttribute('data-hydrated', 'true')
+    const progress = page.getByRole('progressbar', { name: 'تقدم الاختبار' })
+    const firstOption = page.getByRole('button', { name: 'تشتت واحتياج لوضوح' })
+    await firstOption.focus()
+    await firstOption.press('Enter')
+    await expect(progress).toHaveAttribute('aria-valuenow', '1')
+    const undo = page.getByRole('button', { name: 'الرجوع عن آخر إجابة' })
+    await undo.focus()
+    await undo.press('Enter')
+    await expect(progress).toHaveAttribute('aria-valuenow', '0')
+    await expect(firstOption).toHaveAttribute('aria-pressed', 'false')
     for (const label of ['تشتت واحتياج لوضوح', 'جلسة مركزة وشخصية', 'تفكيك سؤال شخصي']) {
       const option = page.getByRole('button', { name: label })
       await option.focus()
@@ -120,6 +130,11 @@ test.describe('public experience', () => {
     }
     await expect(page.getByRole('status').filter({ hasText: 'قد يناسبك استكشاف الجلسات المنشورة' })).toBeVisible()
     await expect(page.getByRole('link', { name: 'استكشفي الجلسات' })).toHaveAttribute('href', '/booking')
+    const edit = page.getByRole('button', { name: 'تعديل الإجابات' })
+    await edit.focus()
+    await edit.press('Enter')
+    await expect(progress).toHaveAttribute('aria-valuenow', '0')
+    await expect(page.getByRole('status').filter({ hasText: 'قد يناسبك استكشاف الجلسات المنشورة' })).toHaveCount(0)
   })
 
   test('search is discoverable, published-only, and honest when no source is configured', async ({ page }) => {

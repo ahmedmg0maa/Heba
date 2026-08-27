@@ -69,6 +69,7 @@
     "/admin/reviews",
     "/admin/press",
     "/admin/resources",
+    "/admin/assessments",
     "/admin/reports",
     "/admin/revisions",
     "/admin/settings",

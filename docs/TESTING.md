@@ -18,6 +18,7 @@ pnpm verify:report-export-local
 pnpm verify:home-cms-local
 pnpm verify:public-search-local
 pnpm verify:start-here-cms-local
+pnpm verify:guided-assessment-local
 pnpm verify:catalog-publication-local
 pnpm verify:revision-recovery-local
 pnpm verify:admin-operations-ux-local
@@ -36,7 +37,7 @@ The booking/CMS local checks never load `.env` or contact Supabase. They cover h
 
 `verify:report-export-local` proves the source contract for the fixed report datasets, POST/same-origin boundary, fresh-AAL2 step-up, dataset permission, date/row limits, CSV formula neutralization, private response, and fail-closed audit. `verify:home-cms-local` proves the typed homepage registry, structured Admin actions, required-section publication gate, revision/audit integration, safe internal links, public renderer, and preview parity. Both are credential-free source-contract checks; persistence and session behavior still require controlled Staging evidence.
 
-`verify:public-search-local` covers Arabic normalization, published-only sources, bounded results, an accessible public entry and search-page `noindex`. `verify:start-here-cms-local` covers structured Admin fields, deterministic fixed paths, safe internal links, revision/audit/public consumers and announced selection/result state. `verify:catalog-publication-local` covers domain/product publication parity, 046 rights fail-closed behavior, course/book/workshop/service completeness and unavailable checkout denial. These do not claim Staging persistence, RLS, file delivery or race evidence.
+`verify:public-search-local` covers Arabic normalization, published-only sources, bounded results, an accessible public entry and search-page `noindex`. `verify:start-here-cms-local` covers the governed page shell, safe internal links, revision/audit and the formal-assessment handoff. `verify:guided-assessment-local` executes the structured validator and asserts immutable published versions, public-pointer RLS, service-only atomic publish/delete, Admin question/option/result mapping, catalog-root allowlisting, progress/edit accessibility and the deliberate absence of answer persistence or network calls. `verify:catalog-publication-local` covers domain/product publication parity, 046 rights fail-closed behavior, course/book/workshop/service completeness and unavailable checkout denial. These do not claim Staging persistence, RLS, cron or authenticated browser evidence.
 
 `verify:revision-recovery-local` proves that only page/page-section/article allowlisted fields can be restored, always to draft/hidden state, behind fresh AAL2, with a current-state checkpoint and audit rollback. `verify:admin-operations-ux-local` proves the booking saved view omits customer search/PII and the catalog checklist remains subordinate to server-authoritative publication. Both are source contracts; reload persistence and audit rows still require controlled Staging.
 

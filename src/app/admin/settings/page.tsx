@@ -69,8 +69,8 @@ export default async function AdminSettingsPage() {
       <Card className="space-y-6 p-8"><CardTitle>تعريف هبة والقيم</CardTitle><p className="text-sm text-text-soft">هذه النصوص هي المصدر الفعلي لصفحة «عن هبة». لا تُضاف ادعاءات أو مؤهلات غير مؤكدة تلقائيًا.</p><OwnerProfileEditor profile={ownerProfile}/></Card>
 
       <Card className="space-y-6 p-8">
-        <CardTitle>رحلة «ابدئي من هنا»</CardTitle>
-        <p className="text-sm leading-loose text-text-soft">تحكم منظم في مقدمة الصفحة وأسئلة الاختبار ونتائجه وبطاقات الحالات والدعوة الختامية. الروابط داخلية فقط، والحفظ مسجل في المراجعات والتدقيق.</p>
+        <CardTitle>غلاف صفحة «ابدئي من هنا»</CardTitle>
+        <p className="text-sm leading-loose text-text-soft">تحكم منظم في مقدمة الصفحة وبطاقات الحالات والدعوة الختامية. تُدار أسئلة الاختبار ونتائجه وإصداراته من صفحة «الاختبار الإرشادي» المستقلة، والروابط هنا داخلية فقط.</p>
         <StartHereExperienceEditor content={startHereContent} />
       </Card>
 
