@@ -71,9 +71,15 @@ try {
   if (proofOutcomes.join(',') !== 'existing,submitted') throw new Error(`Unexpected proof outcomes: ${proofOutcomes.join(',')}`)
   approvedPaymentId = concurrentProofs[0].data.payment_id
   if (approvedPaymentId !== concurrentProofs[1].data.payment_id) throw new Error('Proof idempotency returned different payments')
+  const { data: reviewProof, error: reviewProofError } = await service.rpc('get_payment_proof_for_review', { p_actor_id: owner.user_id, p_payment_id: approvedPaymentId })
+  if (reviewProofError || !reviewProof?.storagePath || !reviewProof?.proofId) throw reviewProofError ?? new Error('Governed proof lookup failed')
+  const { error: signedReviewError } = await service.storage.from('payment-proofs').createSignedUrl(reviewProof.storagePath, 60)
+  if (signedReviewError) throw signedReviewError
+  const { error: confirmReviewError } = await service.rpc('confirm_payment_proof_review', { p_actor_id: owner.user_id, p_payment_id: approvedPaymentId, p_proof_id: reviewProof.proofId })
+  if (confirmReviewError) throw confirmReviewError
   const concurrentApprovals = await Promise.all([
-    service.rpc('approve_payment_atomic', { p_payment_id: approvedPaymentId, p_actor_id: owner.user_id }),
-    service.rpc('approve_payment_atomic', { p_payment_id: approvedPaymentId, p_actor_id: owner.user_id }),
+    service.rpc('approve_payment_governed', { p_payment_id: approvedPaymentId, p_actor_id: owner.user_id }),
+    service.rpc('approve_payment_governed', { p_payment_id: approvedPaymentId, p_actor_id: owner.user_id }),
   ])
   if (concurrentApprovals.some((result) => result.error)) throw concurrentApprovals.find((result) => result.error).error
   const outcomes = concurrentApprovals.map((result) => result.data?.outcome).sort()
@@ -87,26 +93,36 @@ try {
   ])
   if (approvedPayment.status !== 'approved' || paidOrder.status !== 'paid' || accessCount !== 2 || enrollmentCount !== 1 || approvalAuditCount !== 1) throw new Error('Atomic approval postconditions failed')
 
+  const concurrentRefundStarts = await Promise.all([
+    service.rpc('manage_order_refund', { p_order_id: approvedOrderId, p_actor_id: owner.user_id, p_action: 'initiate', p_reason: 'اختبار ذري', p_evidence_reference: null }),
+    service.rpc('manage_order_refund', { p_order_id: approvedOrderId, p_actor_id: owner.user_id, p_action: 'initiate', p_reason: 'اختبار مكرر', p_evidence_reference: null }),
+  ])
+  if (concurrentRefundStarts.some((result) => result.error)) throw concurrentRefundStarts.find((result) => result.error).error
+  const refundStartOutcomes = concurrentRefundStarts.map((result) => result.data?.outcome).sort()
+  if (refundStartOutcomes.join(',') !== 'already_processing,initiate') throw new Error(`Unexpected refund start outcomes: ${refundStartOutcomes.join(',')}`)
+  const { data: processingOrder } = await service.from('orders').select('status').eq('id', approvedOrderId).single()
+  const { count: accessDuringRefund } = await service.from('content_access').select('id', { count: 'exact', head: true }).eq('order_id', approvedOrderId)
+  if (processingOrder.status !== 'refund_pending' || accessDuringRefund !== 2) throw new Error('Refund processing must retain access')
   const concurrentRefunds = await Promise.all([
-    service.rpc('transition_order_atomic', { p_order_id: approvedOrderId, p_actor_id: owner.user_id, p_status: 'refunded', p_reason: 'اختبار ذري' }),
-    service.rpc('transition_order_atomic', { p_order_id: approvedOrderId, p_actor_id: owner.user_id, p_status: 'refunded', p_reason: 'اختبار مكرر' }),
+    service.rpc('manage_order_refund', { p_order_id: approvedOrderId, p_actor_id: owner.user_id, p_action: 'complete', p_reason: null, p_evidence_reference: 'test-refund-reference' }),
+    service.rpc('manage_order_refund', { p_order_id: approvedOrderId, p_actor_id: owner.user_id, p_action: 'complete', p_reason: null, p_evidence_reference: 'test-refund-reference' }),
   ])
   if (concurrentRefunds.some((result) => result.error)) throw concurrentRefunds.find((result) => result.error).error
   const refundOutcomes = concurrentRefunds.map((result) => result.data?.outcome).sort()
-  if (refundOutcomes.join(',') !== 'already_refunded,refunded') throw new Error(`Unexpected refund outcomes: ${refundOutcomes.join(',')}`)
+  if (refundOutcomes.join(',') !== 'already_completed,complete') throw new Error(`Unexpected refund outcomes: ${refundOutcomes.join(',')}`)
   const [{ data: refundedOrder }, { count: remainingAccess }, { count: remainingEnrollment }, { count: refundAuditCount }] = await Promise.all([
     service.from('orders').select('status').eq('id', approvedOrderId).single(),
     service.from('content_access').select('id', { count: 'exact', head: true }).eq('order_id', approvedOrderId),
     service.from('course_enrollments').select('id', { count: 'exact', head: true }).eq('user_id', userId).eq('course_id', courseId),
-    service.from('audit_logs').select('id', { count: 'exact', head: true }).eq('entity_type', 'order').eq('entity_id', approvedOrderId).eq('action', 'order.refunded'),
+    service.from('audit_logs').select('id', { count: 'exact', head: true }).eq('entity_type', 'order').eq('entity_id', approvedOrderId).eq('action', 'refund.complete'),
   ])
   if (refundedOrder.status !== 'refunded' || remainingAccess !== 0 || remainingEnrollment !== 0 || refundAuditCount !== 1) throw new Error('Atomic refund postconditions failed')
 
   const rejected = await createOrderAndPayment()
   rejectedOrderId = rejected.orderId; rejectedPaymentId = rejected.paymentId
   const concurrentRejections = await Promise.all([
-    service.rpc('reject_payment_atomic', { p_payment_id: rejectedPaymentId, p_actor_id: owner.user_id, p_reason: 'إيصال غير واضح' }),
-    service.rpc('reject_payment_atomic', { p_payment_id: rejectedPaymentId, p_actor_id: owner.user_id, p_reason: 'إيصال مكرر' }),
+    service.rpc('reject_payment_governed', { p_payment_id: rejectedPaymentId, p_actor_id: owner.user_id, p_reason: 'إيصال غير واضح' }),
+    service.rpc('reject_payment_governed', { p_payment_id: rejectedPaymentId, p_actor_id: owner.user_id, p_reason: 'إيصال مكرر' }),
   ])
   if (concurrentRejections.some((result) => result.error)) throw concurrentRejections.find((result) => result.error).error
   const rejectOutcomes = concurrentRejections.map((result) => result.data?.outcome).sort()
@@ -118,7 +134,7 @@ try {
   ])
   if (rejectedPayment.status !== 'rejected' || !rejectedPayment.reject_reason || pendingOrder.status !== 'pending_payment' || rejectionAuditCount !== 1) throw new Error('Atomic rejection postconditions failed')
 
-  const { error: anonError } = await anon.rpc('approve_payment_atomic', { p_payment_id: approvedPaymentId, p_actor_id: owner.user_id })
+  const { error: anonError } = await anon.rpc('approve_payment_governed', { p_payment_id: approvedPaymentId, p_actor_id: owner.user_id })
   if (!anonError) throw new Error('Anonymous caller could execute privileged payment RPC')
 } finally {
   if (approvedPaymentId || rejectedPaymentId || approvedOrderId || rejectedOrderId) await service.from('audit_logs').delete().in('entity_id', [approvedPaymentId, rejectedPaymentId, approvedOrderId, rejectedOrderId].filter(Boolean))

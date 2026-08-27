@@ -4,6 +4,7 @@ import { formatPrice } from '@/lib/format'
 import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { ApprovalActions } from '@/components/admin/ApprovalActions'
+import { requirePermission } from '@/lib/auth/permissions'
 
 export const metadata: Metadata = { title: 'موافقات الدفع — الإدارة' }
 
@@ -16,7 +17,11 @@ const methodLabels: Record<string, string> = {
 }
 
 export default async function AdminPaymentsPage() {
-  const queue = await getApprovalQueue()
+  const [queue, approvePermission, rejectPermission] = await Promise.all([
+    getApprovalQueue(),
+    requirePermission('payments.approve'),
+    requirePermission('payments.reject'),
+  ])
   const pendingTotal = queue.reduce((s, a) => s + a.amount, 0)
 
   return (
@@ -69,7 +74,7 @@ export default async function AdminPaymentsPage() {
                 <TD className="font-bold">{formatPrice(a.amount)}</TD>
                 <TD>{dateFmt.format(new Date(a.createdAt))}</TD>
                 <TD>
-                  <ApprovalActions paymentId={a.paymentId} hasProof={Boolean(a.proofPath)} />
+                  <ApprovalActions paymentId={a.paymentId} hasProof={a.proofPresent} canApprove={Boolean(approvePermission)} canReject={Boolean(rejectPermission)} />
                 </TD>
               </TR>
             ))}

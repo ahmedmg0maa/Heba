@@ -24,6 +24,8 @@ const dateFmt = new Intl.DateTimeFormat('ar-EG', {
 })
 
 function statusBadge(p: MyPayment) {
+  if (p.orderStatus === 'refund_pending') return <Badge tone="cobalt">الاسترداد قيد التنفيذ</Badge>
+  if (p.status === 'refunded') return <Badge tone="danger">مسترد</Badge>
   if (p.status === 'approved') return <Badge tone="success">مقبول — تم تفعيل الوصول</Badge>
   if (p.status === 'rejected') return <Badge tone="danger">مرفوض</Badge>
   if (p.orderExpiresAt && new Date(p.orderExpiresAt).getTime() < Date.now() && p.orderStatus === 'pending_payment')
@@ -37,6 +39,9 @@ function Timeline({ p }: { p: MyPayment }) {
   ]
   if (p.status === 'approved') {
     steps.push({ label: 'اعتُمد الدفع وفُعّل الوصول', time: p.reviewedAt, state: 'done' })
+    if (p.orderStatus === 'refund_pending') steps.push({ label: 'الاسترداد قيد التنفيذ — يظل الوصول فعالًا حتى تأكيد إعادة المبلغ', time: null, state: 'wait' })
+  } else if (p.status === 'refunded') {
+    steps.push({ label: 'اكتمل الاسترداد وسُحبت الاستحقاقات المرتبطة بالطلب', time: null, state: 'done' })
   } else if (p.status === 'rejected') {
     steps.push({ label: `رُفض الدفع${p.rejectReason ? ` — ${p.rejectReason}` : ''}`, time: p.reviewedAt, state: 'bad' })
     steps.push({ label: 'يمكنك رفع إيصال جديد من صفحة طلباتك', time: null, state: 'wait' })

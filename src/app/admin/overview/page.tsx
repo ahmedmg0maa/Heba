@@ -9,6 +9,7 @@ import { RevenueChart, DonutChart } from '@/components/admin/Charts'
 import { ApprovalActions } from '@/components/admin/ApprovalActions'
 import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table'
 import { adminList, getContentReadiness, launchLevelForStatus } from '@/lib/data/cms'
+import { requirePermission } from '@/lib/auth/permissions'
 
 export const metadata: Metadata = { title: 'نظرة عامة — الإدارة' }
 
@@ -16,7 +17,7 @@ const timeFmt = new Intl.DateTimeFormat('ar-EG', { hour: 'numeric', minute: '2-d
 const dateFmt = new Intl.DateTimeFormat('ar-EG', { day: 'numeric', month: 'short' })
 
 export default async function AdminOverviewPage() {
-  const [kpis, approvals, customers, schedule, rescheduleRequests, systemAlerts, readiness] = await Promise.all([
+  const [kpis, approvals, customers, schedule, rescheduleRequests, systemAlerts, readiness, approvePermission, rejectPermission] = await Promise.all([
     getAdminKpis(),
     getApprovalQueue(5),
     getRecentCustomers(),
@@ -24,6 +25,8 @@ export default async function AdminOverviewPage() {
     adminList<{ id: string; status: string; proposed_starts_at: string }>('booking_reschedule_requests', 'id, status, proposed_starts_at', { orderBy: 'created_at', limit: 20 }),
     adminList<{ id: string; level: string; message: string }>('system_events', 'id, level, message', { orderBy: 'created_at', limit: 20 }),
     getContentReadiness(),
+    requirePermission('payments.approve'),
+    requirePermission('payments.reject'),
   ])
   const pendingReschedules = rescheduleRequests.filter((item) => item.status === 'pending').length
   const activeAlerts = systemAlerts.filter((item) => item.level === 'error' || item.level === 'warn').length
@@ -95,7 +98,7 @@ export default async function AdminOverviewPage() {
                   <TD className="max-w-48 truncate">{a.productTitles.join(' + ') || '—'}</TD>
                   <TD>{formatPrice(a.amount)}</TD>
                   <TD>
-                    <ApprovalActions paymentId={a.paymentId} hasProof={Boolean(a.proofPath)} />
+                    <ApprovalActions paymentId={a.paymentId} hasProof={a.proofPresent} canApprove={Boolean(approvePermission)} canReject={Boolean(rejectPermission)} />
                   </TD>
                 </TR>
               ))}

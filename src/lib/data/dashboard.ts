@@ -6,7 +6,7 @@ export type MyPayment = {
   orderId: string
   method: string
   amount: number
-  status: 'pending' | 'approved' | 'rejected'
+  status: 'pending' | 'approved' | 'rejected' | 'cancelled' | 'refunded'
   rejectReason: string | null
   createdAt: string
   reviewedAt: string | null

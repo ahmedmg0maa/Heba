@@ -21,7 +21,7 @@ export type ApprovalItem = {
   method: string
   createdAt: string
   productTitles: string[]
-  proofPath: string | null
+  proofPresent: boolean
 }
 
 export type RecentCustomer = { id: string; name: string; email: string; joinedAt: string }
@@ -123,24 +123,26 @@ export async function getApprovalQueue(limit = 50): Promise<ApprovalItem[]> {
   if (!hasEnv()) return []
   try {
     const supabase = await getServerClient()
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('payments')
       .select(
-        'id, order_id, amount, method, created_at, user_id, payment_proofs(storage_path), orders!inner(order_items(products(title)))',
+        'id, order_id, amount, method, created_at, user_id, payment_proofs(id), orders!inner(order_items(products(title)))',
       )
       .eq('status', 'pending')
       .order('created_at', { ascending: true })
       .limit(limit)
+    if (error) throw new Error('ADMIN_PAYMENT_QUEUE_UNAVAILABLE')
     if (!data || data.length === 0) return []
 
     const userIds = [...new Set(data.map((p) => p.user_id))]
-    const { data: profiles } = await supabase.from('profiles').select('id, full_name, email').in('id', userIds)
+    const { data: profiles, error: profilesError } = await supabase.from('profiles').select('id, full_name, email').in('id', userIds)
+    if (profilesError) throw new Error('ADMIN_PAYMENT_QUEUE_IDENTITY_UNAVAILABLE')
     const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]))
 
     return data.map((p) => {
       const order = Array.isArray(p.orders) ? p.orders[0] : p.orders
       const items = (order?.order_items ?? []) as { products: { title: string } | { title: string }[] | null }[]
-      const proofs = (p.payment_proofs ?? []) as { storage_path: string }[]
+      const proofs = (p.payment_proofs ?? []) as { id: string }[]
       const profile = profileMap.get(p.user_id)
       return {
         paymentId: p.id,
@@ -153,11 +155,11 @@ export async function getApprovalQueue(limit = 50): Promise<ApprovalItem[]> {
         productTitles: items
           .map((i) => (Array.isArray(i.products) ? i.products[0]?.title : i.products?.title))
           .filter((t): t is string => Boolean(t)),
-        proofPath: proofs[proofs.length - 1]?.storage_path ?? null,
+        proofPresent: proofs.length > 0,
       }
     })
   } catch {
-    return []
+    throw new Error('ADMIN_PAYMENT_QUEUE_READ_UNAVAILABLE')
   }
 }
 
@@ -218,11 +220,13 @@ export async function getAdminOrders(status?: string, limit = 100): Promise<Admi
       .order('created_at', { ascending: false })
       .limit(limit)
     if (status) query = query.eq('status', status)
-    const { data } = await query
+    const { data, error } = await query
+    if (error) throw new Error('ADMIN_ORDER_LIST_UNAVAILABLE')
     if (!data || data.length === 0) return []
 
     const userIds = [...new Set(data.map((o) => o.user_id))]
-    const { data: profiles } = await supabase.from('profiles').select('id, full_name, email').in('id', userIds)
+    const { data: profiles, error: profilesError } = await supabase.from('profiles').select('id, full_name, email').in('id', userIds)
+    if (profilesError) throw new Error('ADMIN_ORDER_IDENTITIES_UNAVAILABLE')
     const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]))
 
     return data.map((o) => {
@@ -241,7 +245,7 @@ export async function getAdminOrders(status?: string, limit = 100): Promise<Admi
       }
     })
   } catch {
-    return []
+    throw new Error('ADMIN_ORDER_LIST_READ_UNAVAILABLE')
   }
 }
 

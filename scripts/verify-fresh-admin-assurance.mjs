@@ -18,6 +18,7 @@ assert.match(permissions, /requirePermission\(permission\)[\s\S]*hasFreshMfaAssu
 for (const [source, action] of [
   [paymentActions, 'approvePayment'],
   [paymentActions, 'rejectPayment'],
+  [paymentActions, 'manageOrderRefund'],
   [cmsActions, 'grantRole'],
   [cmsActions, 'revokeRole'],
   [cmsActions, 'setRolePermissions'],
@@ -31,9 +32,9 @@ for (const [source, action] of [
   assert.match(body, /requireFreshAdminAssurance\(/, `${action} must require a fresh AAL2 confirmation`)
 }
 
-const refundStart = paymentActions.indexOf('export async function updateOrderStatus')
+const refundStart = paymentActions.indexOf('export async function manageOrderRefund')
 const refundBody = paymentActions.slice(refundStart)
-assert.match(refundBody, /status === 'refunded'[\s\S]*requireFreshAdminAssurance\('orders\.refund'\)/, 'refunds must require fresh assurance')
+assert.match(refundBody, /requireFreshAdminAssurance\('orders\.refund'\)/, 'refund lifecycle must require fresh assurance')
 
 assert.match(mfaPage, /const requiresFreshCode = params\.get\('reauth'\) === '1'/, 'MFA route must recognize reauth mode')
 assert.match(mfaPage, /aal2' && !requiresFreshCode/, 'existing AAL2 must not skip a requested fresh challenge')

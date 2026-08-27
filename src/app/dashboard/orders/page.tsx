@@ -14,6 +14,7 @@ const statusMap: Record<string, { label: string; tone: 'success' | 'pending' | '
   pending_payment: { label: 'بانتظار الدفع', tone: 'pending' },
   awaiting_review: { label: 'قيد المراجعة', tone: 'cobalt' },
   paid: { label: 'مدفوع', tone: 'success' },
+  refund_pending: { label: 'الاسترداد قيد التنفيذ', tone: 'cobalt' },
   expired: { label: 'منتهي', tone: 'sand' },
   cancelled: { label: 'ملغي', tone: 'sand' },
   refunded: { label: 'مسترد', tone: 'danger' },

@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { OrderActions } from '@/components/admin/OrderActions'
 import { cn } from '@/lib/cn'
+import { requirePermission } from '@/lib/auth/permissions'
 
 export const metadata: Metadata = { title: 'الطلبات — الإدارة' }
 
@@ -17,6 +18,7 @@ const statuses = [
   { key: 'pending_payment', label: 'بانتظار الدفع' },
   { key: 'awaiting_review', label: 'قيد المراجعة' },
   { key: 'paid', label: 'مدفوع' },
+  { key: 'refund_pending', label: 'الاسترداد قيد التنفيذ' },
   { key: 'expired', label: 'منتهي' },
   { key: 'cancelled', label: 'ملغي' },
   { key: 'refunded', label: 'مسترد' },
@@ -26,6 +28,7 @@ const badgeTones: Record<string, 'success' | 'pending' | 'sand' | 'danger' | 'co
   pending_payment: 'pending',
   awaiting_review: 'cobalt',
   paid: 'success',
+  refund_pending: 'cobalt',
   expired: 'sand',
   cancelled: 'sand',
   refunded: 'danger',
@@ -35,7 +38,11 @@ type Props = { searchParams: Promise<{ status?: string }> }
 
 export default async function AdminOrdersPage({ searchParams }: Props) {
   const { status } = await searchParams
-  const orders = await getAdminOrders(status || undefined)
+  const [orders, updatePermission, refundPermission] = await Promise.all([
+    getAdminOrders(status || undefined),
+    requirePermission('orders.update'),
+    requirePermission('orders.refund'),
+  ])
   const active = status ?? ''
 
   return (
@@ -97,7 +104,7 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
                   </Badge>
                 </TD>
                 <TD>
-                  <OrderActions orderId={o.id} status={o.status} />
+                  <OrderActions orderId={o.id} status={o.status} canUpdate={Boolean(updatePermission)} canRefund={Boolean(refundPermission)} />
                 </TD>
               </TR>
             ))}
