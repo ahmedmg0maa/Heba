@@ -51,6 +51,7 @@ Image-generation direction: original editorial scenes in the project teal/aqua/w
 | Preview source/security contract | 13/13 passed |
 | Interactive local Preview | 5/5 passed |
 | Interactive Cloudflare Preview runtime | 5/5 passed |
+| Interactive deployed Preview | 5/5 passed on the public Worker URL |
 | Standard public browser suite | 68/70 passed before the legacy motion selector correction; corrected Desktop/Mobile contract then passed 2/2 |
 | Complete isolated Cloudflare/Vinext public suite | 70/70 passed |
 | Route, UX, color and security audits | passed |
@@ -64,6 +65,20 @@ Preview fixtures are intentionally not exposed through fake Admin controls. The 
 
 ## Release judgment
 
-`PUBLIC INTERACTIVE PREVIEW — ACCEPTED LOCALLY AND ON CLOUDFLARE RUNTIME`
+`PUBLIC INTERACTIVE PREVIEW — LIVE AND ACCEPTED`
 
 This judgment does not mean `STAGING ACCEPTED`, `PRODUCTION READY` or `PRODUCTION LIVE — ACCEPTING CUSTOMERS`. Those judgments still require the external Staging recovery/provider/migration acceptance and later explicit Production/DNS authorization.
+
+## Live deployment evidence
+
+- Source commit: `a2bed6292c00cc399739fe1f09eba1f2ec354e50`
+- Worker: `heba-elsherif-platform-public-preview`
+- URL: `https://heba-elsherif-platform-public-preview.heba-elsherif-platform.workers.dev`
+- Version: `589b48ac-d5d7-445d-89d7-71a313e7c46d`
+- Interactive suite: **5/5 passed** against the deployed URL.
+- Route smoke: **16/16** Home, public and Preview detail routes returned `200`.
+- Headers: CSP, HSTS, frame denial, MIME sniffing denial and referrer policy are present.
+- Client exposure scan: HTML plus four emitted JavaScript assets contained **0** high-risk secret/connection patterns; a source-map probe returned `404`.
+- Runtime observation: an error-only Worker tail remained empty while Home, Booking, Course and Book requests each returned `200`.
+
+During local Worker acceptance, the brand image initially used the runtime image-optimization redirect. Local HTTP plus the production CSP upgraded that redirect to HTTPS and left the image broken in the emulator. The canonical logo now bypasses that redirect and is served directly as a static Cloudflare asset; the corrected Worker and deployed Preview both pass the explicit loaded-image assertion.

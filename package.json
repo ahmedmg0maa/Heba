@@ -24,6 +24,7 @@
     "test:e2e:cloudflare": "pnpm build:cloudflare:isolated && playwright test tests/e2e/public.spec.ts --config playwright.cloudflare.config.ts",
     "test:e2e:preview": "playwright test --config playwright.preview.config.ts",
     "test:e2e:cloudflare:preview": "pnpm build:cloudflare:preview:isolated && playwright test --config playwright.cloudflare.preview.config.ts",
+    "test:e2e:live-preview": "playwright test --config playwright.live-preview.config.ts",
     "verify:booking": "node --env-file=.env scripts/verify-booking-rpc.mjs",
     "verify:booking-local": "node scripts/verify-booking-local.mjs",
     "verify:booking-permissions-local": "node scripts/verify-booking-permissions-local.mjs",
