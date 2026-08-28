@@ -37,10 +37,10 @@ after a `content_access` check.
 ## 4. Auth
 - Email/password is used. Enable "Confirm email" in Auth → Providers → Email.
 - Set Site URL (Auth → URL Configuration) to the deployed domain; add `http://localhost:3000` to redirect allow-list.
-- `handle_new_user` trigger auto-creates a `profiles` row on signup.
+- Migration 070 makes `handle_new_user` auto-create only a bounded customer `profiles` row plus minimized audit evidence. It never grants an Admin role; live trigger evidence remains a Staging acceptance test until that source-only migration is authorized and applied there.
 
 ## 5. First admin (owner)
-After signing up with the owner's email, run in SQL editor:
+This is a separately authorized environment bootstrap—not part of public signup. After verifying the first owner's confirmed Auth identity, an operator with direct database authority may run in SQL editor:
 ```sql
 insert into public.admin_roles (user_id, role)
 select id, 'owner' from auth.users where email = 'OWNER_EMAIL_HERE';

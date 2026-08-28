@@ -610,3 +610,11 @@
 - **`datetime-local` means Cairo in this product.** The server converts the wall time with the IANA `Africa/Cairo` rules and rejects non-round-tripping dates; it never inherits UTC or another Worker/browser locale. PostgreSQL remains authoritative for whether the resulting slot is actually available.
 - **ICS is a private representation of persisted state.** Pending bookings export as `TENTATIVE`, confirmed as `CONFIRMED`; invalid dates or query failure stop generation, and Arabic lines are escaped/folded before a private/no-store download.
 - **069 remains source-only.** Database compilation, RLS denial, trigger effects, concurrent retries and calendar-client compatibility require the recovery-controlled `STAGING EXTERNAL GATE`.
+
+## 2026-08-28 — Public registration can create a customer profile, never an administrator
+
+- **The legacy email-based owner auto-grant is retired by migration 070.** It remains visible in historical migration 013 and prior decision history because applied migrations and append-only decisions are not rewritten, but it is no longer the effective trigger after 070.
+- **Identity metadata is untrusted input.** The Auth trigger normalizes and bounds full name/email, substitutes an empty display name for invalid provider-side metadata, and protects new/changed profile rows with forward-safe constraints. Existing unknown rows are not destructively rewritten during deployment.
+- **Registration evidence excludes identity content.** The profile and registration audit commit in one trigger transaction; audit stores only the opaque user ID and structural booleans, not name, email or raw metadata.
+- **Role provisioning is separate from account creation.** Existing owner rows are preserved. New staff roles use migration 060's owner-authorized, fresh-AAL2 transaction; an environment with no owner requires a separately approved first-owner bootstrap after identity verification.
+- **070 remains source-only.** Auth trigger execution, existing-row constraint validation, email confirmation and durable audit evidence remain within `STAGING EXTERNAL GATE`.
