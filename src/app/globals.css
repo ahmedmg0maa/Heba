@@ -199,6 +199,13 @@ html {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
 }
+.hero-grid {
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--color-deep-teal) 5%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--color-deep-teal) 5%, transparent) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: linear-gradient(to bottom, black, transparent 94%);
+}
 .hero-enter {
   opacity: 0;
   animation: hero-enter .8s cubic-bezier(.2,.7,.2,1) forwards;

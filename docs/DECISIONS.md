@@ -705,3 +705,20 @@
 - Every simulated commercial step states that it creates no booking, order, payment, upload, entitlement, review or testimonial. Session-only progress is convenience state, not an operational record.
 - Preview fixtures remain code-scoped and read-only. Adding fake Admin mutations would violate operational truth; real Admin-to-public persistence is accepted only against isolated Staging with permissions, audit and the required migrations.
 - Original generated artwork may ship as compressed public Preview assets because it contains no customer data, third-party logo, competitor asset or factual claim. Paid/protected media remains in the governed private Storage delivery path.
+
+## 2026-08-28 — Preview Admin access cannot weaken operational Admin
+
+- `/admin` remains the only operational control plane and keeps Supabase identity, AAL2 MFA, RBAC, server validation and audit requirements. A public Preview password is never accepted as an operational administrator identity.
+- `/preview-admin` is a separate read-only visual map enabled only when `HEBA_DEPLOYMENT_ENV=preview`. It exposes no customer/provider data and has no mutation controls, so it cannot create a false persistence claim.
+- Preview access uses deployment-only secrets, constant-time password digest comparison and an eight-hour HMAC-signed HttpOnly/SameSite=Strict cookie. Secret values are not source, config, build artifact or evidence.
+
+## 2026-08-28 — Light is the intentional first-visit brand default
+
+- An absent theme preference resolves to light regardless of operating-system preference. Dark mode is still fully supported and persists only after the visitor explicitly chooses it.
+- Editorial depth comes from controlled photography, paper texture, soft gradients and restrained motion; it does not require an always-dark canvas or copied competitor composition.
+- The visible Home portrait no longer carries a “representative image” badge or defensive copy. Accessibility remains in concise alt text without interrupting the customer journey.
+
+## 2026-08-28 — Worker E2E isolates a confirmed Wrangler local regression
+
+- Project build and deployment remain on the current Wrangler. Only the localhost Playwright Worker server is pinned to Wrangler 4.113.0 and its last supported local compatibility date because 4.114+ can terminate the Miniflare proxy between requests with `Network connection lost`.
+- This test-only pin carries disposable bindings and does not change the Cloudflare runtime, application compatibility date or deployment artifact.

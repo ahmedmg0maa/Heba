@@ -1,21 +1,26 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import { DEFAULT_HOME_CONTENT, type PathwaysContent } from '@/lib/home/sections'
 
 const visuals = [
   {
     number: '٠١',
+    image: '/images/experience/editorial-reflection-studio.webp',
     icon: <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5ZM4 5.5v15M20 18v3H6.5" strokeLinecap="round" strokeLinejoin="round" />,
   },
   {
     number: '٠٢',
+    image: '/images/experience/course-clarity-journey.webp',
     icon: <path d="M4 6h16v11H4zM8 21h8M12 17v4M8 9.5h8M8 12.5h5" strokeLinecap="round" strokeLinejoin="round" />,
   },
   {
     number: '٠٣',
+    image: '/images/experience/journey-landscape.webp',
     icon: <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm-7 9c0-3.9 3.1-7 7-7s7 3.1 7 7" strokeLinecap="round" strokeLinejoin="round" />,
   },
   {
     number: '٠٤',
+    image: '/images/experience/book-listen-inward.webp',
     icon: <><path d="M5 4h14v16H5z" /><path d="M8 2v4M16 2v4M8 10h8M8 14h5" strokeLinecap="round" /></>,
   },
 ]
@@ -45,16 +50,18 @@ export function ServiceCards({ content = DEFAULT_HOME_CONTENT.pathways as Pathwa
                     : 'border-antique-gold/30 bg-surface-raised lg:col-span-3 lg:min-h-[230px]'
               }`}
             >
+              <Image src={visuals[index]?.image ?? visuals[0].image} alt="" fill unoptimized sizes={index === 0 ? '(min-width: 1024px) 50vw, 100vw' : '(min-width: 1024px) 25vw, 50vw'} className={`object-cover transition duration-1000 group-hover:scale-[1.045] ${index === 0 ? 'opacity-70' : 'opacity-24 dark:opacity-18'}`} />
+              <span className={`absolute inset-0 ${index === 0 ? 'bg-linear-to-t from-deep-teal via-deep-teal/78 to-deep-teal/20' : 'bg-linear-to-t from-surface-raised via-surface-raised/90 to-surface-raised/58'}`} aria-hidden />
               <span className="absolute -end-14 -top-14 h-40 w-40 rounded-full border border-antique-gold/20 transition-transform duration-500 group-hover:scale-110" aria-hidden />
-              <div className="flex items-start justify-between">
+              <div className="relative z-10 flex items-start justify-between">
                 <span className={`font-heading text-sm ${index === 0 ? 'text-aqua' : 'text-antique-gold'}`}>{visuals[index]?.number}</span>
                 <span className={`flex h-13 w-13 items-center justify-center rounded-full border transition-colors ${index === 0 ? 'border-on-dark/20 text-aqua group-hover:bg-aqua group-hover:text-deep-teal' : 'border-antique-gold/30 text-deep-teal group-hover:bg-deep-teal group-hover:text-on-dark'}`} aria-hidden>
                   <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.5">{visuals[index]?.icon}</svg>
                 </span>
               </div>
-              <h3 className={`mt-8 font-bold ${index === 0 ? 'text-4xl text-on-dark sm:text-5xl lg:mt-auto' : 'text-2xl text-deep-teal'}`}>{service.title}</h3>
-              <p className={`mt-3 flex-1 leading-loose ${index === 0 ? 'max-w-md text-base text-on-dark/70 lg:flex-none' : 'text-sm text-text-soft'}`}>{service.text}</p>
-              <span className={`mt-6 inline-flex items-center gap-2 text-sm font-bold ${index === 0 ? 'text-aqua' : 'text-burgundy'}`}>
+              <h3 className={`relative z-10 mt-8 font-bold ${index === 0 ? 'text-4xl text-on-dark sm:text-5xl lg:mt-auto' : 'text-2xl text-deep-teal'}`}>{service.title}</h3>
+              <p className={`relative z-10 mt-3 flex-1 leading-loose ${index === 0 ? 'max-w-md text-base text-on-dark/78 lg:flex-none' : 'text-sm text-text-soft'}`}>{service.text}</p>
+              <span className={`relative z-10 mt-6 inline-flex items-center gap-2 text-sm font-bold ${index === 0 ? 'text-aqua' : 'text-burgundy'}`}>
                 {service.cta}
                 <span className="transition-transform group-hover:-translate-x-1" aria-hidden>←</span>
               </span>

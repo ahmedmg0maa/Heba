@@ -216,7 +216,7 @@ test.describe('public experience', () => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await visit(page, '/')
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
-    const motion = await page.locator('.animate-fade-up').first().evaluate((node) => getComputedStyle(node).animationName)
+    const motion = await page.getByRole('heading', { level: 1 }).evaluate((node) => getComputedStyle(node).animationName)
     expect(motion).toBe('none')
   })
 

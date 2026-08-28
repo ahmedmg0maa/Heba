@@ -24,7 +24,7 @@ export function ThemeToggle({ compact = false, className }: { compact?: boolean;
       aria-label="تبديل الوضع الفاتح والداكن"
       title="تبديل المظهر"
       className={cn(
-        'inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-line px-3 text-sm font-semibold text-deep-teal transition-colors hover:border-antique-gold hover:bg-antique-gold/10',
+        'inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-line bg-surface-raised px-3 text-sm font-semibold text-deep-teal transition-colors hover:border-aqua hover:bg-aqua/8 dark:border-on-dark/18 dark:bg-on-dark/6 dark:text-on-dark dark:hover:text-aqua',
         compact && 'h-10 w-10 px-0',
         className,
       )}

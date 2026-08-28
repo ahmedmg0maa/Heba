@@ -475,3 +475,11 @@ Last session: 2026-08-28 | Current program: Code X development-first execution |
 1. Run full build, public E2E (including keyboard start journey and search), security and catalog audits.
 2. Audit Phases 6–9 against existing booking/commerce/dashboard/Admin implementations and close all remaining source-level gaps that do not need provider writes.
 3. Prepare recovery/schema/runtime evidence as `unverified`, then stop only at the single external recovery/Staging credential gate.
+
+## 2026-08-28 — Visual customer experience delivery sprint
+
+- **Owner defects closed locally:** the separate utility strip and the two rejected image/copy labels are removed; the Home headline now uses bounded natural Arabic wrapping with a geometry regression test; a first visit is light; an explicit dark choice changes the computed palette and persists.
+- **Visual system expanded:** one original 1600px editorial image was generated and optimized to 104 KB. Page introductions, pathways, articles, resources and the final CTA now combine real imagery, warm paper surfaces, gradients, texture, depth and motion with a reduced-motion fallback.
+- **Admin review path implemented:** `/preview-admin` is a noindex, password-protected read-only review surface. Its Cloudflare-only password and HMAC session key are absent from Git, and its signed cookie is HttpOnly/SameSite=Strict. The operational `/admin` remains unchanged behind Supabase AAL2/RBAC; there are no fake write controls.
+- **Local acceptance:** TypeScript, targeted ESLint, Next Preview build, Vinext Worker build, security/archive/UX/color audits, Local Preview E2E 9/9 and local Worker E2E 9/9 pass. The public suite produced 68 passing results before a legacy reduced-motion test selector was corrected; both affected desktop/mobile cases then pass targeted.
+- **Current boundary:** Cloudflare Preview secrets are configured without exposing their values. Public Worker deployment and remote smoke are the remaining steps in this sprint; Production, DNS and Supabase remain untouched.

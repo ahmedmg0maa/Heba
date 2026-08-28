@@ -21,8 +21,10 @@ const tones = {
 export function Section({ id, eyebrow, title, lead, align = 'center', tone = 'ivory', className, children }: SectionProps) {
   const centered = align === 'center'
   return (
-    <section id={id} className={cn('heritage-paper px-6 py-14 md:py-18', tones[tone], className)}>
-      <div className="mx-auto max-w-7xl">
+    <section id={id} className={cn('heritage-paper section-atmosphere relative isolate overflow-hidden px-6 py-14 md:py-18', tones[tone], className)}>
+      <span className="pointer-events-none absolute -end-24 -top-28 h-72 w-72 rounded-full bg-aqua/6 blur-3xl" aria-hidden />
+      <span className="pointer-events-none absolute -start-32 bottom-[-9rem] h-80 w-80 rounded-full bg-antique-gold/10 blur-3xl" aria-hidden />
+      <div className="relative mx-auto max-w-7xl">
         {(eyebrow || title || lead) && (
           <header className={cn('mb-9 md:mb-11', centered ? 'text-center' : 'text-start')}>
             {eyebrow && (

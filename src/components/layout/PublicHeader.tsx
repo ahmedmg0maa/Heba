@@ -34,27 +34,13 @@ export function PublicHeader({ flags = {}, items = [] }: { flags?: Record<string
   const nav = (items.length ? items : allNav).filter((item) => !('flag' in item) || !item.flag || flags[item.flag] !== false)
 
   return (
-    <header className="sticky top-0 z-50 border-b border-on-dark/10 bg-deep-teal/96 text-on-dark shadow-[0_16px_40px_rgb(7_28_35_/_0.2)] backdrop-blur-xl">
-      <div className="hidden border-b border-antique-gold/16 bg-[#102F39] text-on-dark lg:block">
-        <div className="mx-auto flex h-9 max-w-[1440px] items-center justify-between px-8 text-[11px] font-medium tracking-wide">
-          <p className="flex items-center gap-2 text-on-dark/76">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-aqua" aria-hidden />
-            مساحة عربية هادئة للفهم والتعلّم والاختيار الواعي
-          </p>
-          <div className="flex items-center gap-5">
-            <Link href="/about" className="text-on-dark/65 transition-colors hover:text-aqua">عن هبة</Link>
-            <Link href="/faq" className="text-on-dark/65 transition-colors hover:text-aqua">الأسئلة الشائعة</Link>
-            <Link href="/contact" className="text-on-dark/65 transition-colors hover:text-aqua">تواصلي معنا</Link>
-          </div>
-        </div>
-      </div>
-
-      <div className="mx-auto grid min-h-[76px] max-w-[1440px] grid-cols-[1fr_auto] items-center gap-3 px-4 sm:px-6 lg:min-h-[86px] lg:grid-cols-[auto_1fr_auto] lg:px-8">
+    <header className="sticky top-0 z-50 border-b border-line/80 bg-surface-raised/92 text-ink shadow-[0_12px_34px_rgb(38_56_61_/_0.08)] backdrop-blur-xl dark:border-on-dark/10 dark:bg-[#0B2B35]/94 dark:text-on-dark dark:shadow-[0_16px_40px_rgb(0_0_0_/_0.22)]">
+      <div className="mx-auto grid min-h-[76px] max-w-[1540px] grid-cols-[1fr_auto] items-center gap-3 px-4 sm:px-6 lg:min-h-[82px] lg:grid-cols-[auto_1fr_auto] lg:px-8">
         <div className="flex min-w-0 items-center gap-3">
-          <BrandLogo className="h-12 w-12 rounded-[1.1rem] lg:h-14 lg:w-14" />
+          <BrandLogo className="h-11 w-11 rounded-[1rem] shadow-card lg:h-13 lg:w-13" />
           <Link href="/" className="min-w-0 leading-none focus-visible:rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-deep-teal" aria-label="هبة الشريف — الصفحة الرئيسية">
-            <span className="block truncate font-heading text-[1.35rem] font-bold text-on-dark lg:text-2xl">هبة الشريف</span>
-            <span className="mt-1.5 block truncate text-[8px] font-bold tracking-[0.26em] text-aqua sm:text-[9px]" dir="ltr">HEBA ELSHERIF</span>
+            <span className="block truncate font-heading text-[1.35rem] font-bold text-deep-teal dark:text-on-dark lg:text-[1.65rem]">هبة الشريف</span>
+            <span className="mt-1.5 block truncate text-[8px] font-bold tracking-[0.26em] text-aqua-deep dark:text-aqua sm:text-[9px]" dir="ltr">HEBA ELSHERIF</span>
           </Link>
         </div>
 
@@ -68,10 +54,10 @@ export function PublicHeader({ flags = {}, items = [] }: { flags?: Record<string
                     href={item.href}
                     aria-current={active ? 'page' : undefined}
                     className={cn(
-                      'relative rounded-full px-3 py-2.5 text-[13px] transition duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep-teal xl:px-3.5 xl:text-sm',
+                      'relative rounded-full px-2.5 py-2.5 text-[12px] transition duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep-teal xl:px-3.5 xl:text-sm',
                       active
-                        ? 'bg-on-dark/8 font-bold text-on-dark after:absolute after:inset-x-5 after:bottom-1 after:h-px after:bg-aqua'
-                        : 'font-semibold text-on-dark/62 hover:bg-on-dark/7 hover:text-on-dark',
+                        ? 'bg-aqua/12 font-bold text-deep-teal after:absolute after:inset-x-5 after:bottom-1 after:h-px after:bg-aqua-deep dark:bg-on-dark/8 dark:text-on-dark dark:after:bg-aqua'
+                        : 'font-semibold text-text-soft hover:bg-aqua/8 hover:text-deep-teal dark:text-on-dark/68 dark:hover:bg-on-dark/7 dark:hover:text-on-dark',
                     )}
                   >
                     {item.label}
@@ -85,20 +71,20 @@ export function PublicHeader({ flags = {}, items = [] }: { flags?: Record<string
         <div className="flex items-center justify-self-end">
           <div className="hidden items-center gap-1.5 lg:flex">
             <ThemeToggle compact />
-            <Link href="/search" aria-label="البحث في الموقع" aria-current={pathname === '/search' ? 'page' : undefined} className="flex h-10 w-10 items-center justify-center rounded-full border border-on-dark/16 bg-on-dark/6 text-on-dark transition hover:-translate-y-0.5 hover:border-aqua hover:text-aqua focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-aqua">
+            <Link href="/search" aria-label="البحث في الموقع" title="البحث" aria-current={pathname === '/search' ? 'page' : undefined} className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface-raised text-deep-teal transition hover:-translate-y-0.5 hover:border-aqua hover:bg-aqua/8 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-aqua dark:border-on-dark/16 dark:bg-on-dark/6 dark:text-on-dark dark:hover:text-aqua">
               <SearchIcon />
             </Link>
-            <Link href="/auth/login" aria-label="دخول الحساب" className="flex h-10 w-10 items-center justify-center rounded-full border border-on-dark/16 bg-on-dark/6 text-on-dark transition hover:-translate-y-0.5 hover:border-aqua hover:text-aqua focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-aqua">
+            <Link href="/auth/login" aria-label="دخول الحساب" title="حسابي" className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface-raised text-deep-teal transition hover:-translate-y-0.5 hover:border-aqua hover:bg-aqua/8 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-aqua dark:border-on-dark/16 dark:bg-on-dark/6 dark:text-on-dark dark:hover:text-aqua">
               <UserIcon />
             </Link>
-            <Link href="/booking" className="ms-1 inline-flex min-h-11 items-center justify-center rounded-full bg-aqua px-5 text-sm font-bold text-deep-teal shadow-card transition hover:-translate-y-0.5 hover:bg-on-dark hover:shadow-card-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-aqua">
+            <Link href="/booking" className="ms-1 inline-flex min-h-11 items-center justify-center rounded-full bg-deep-teal px-5 text-sm font-bold text-on-dark shadow-card transition hover:-translate-y-0.5 hover:bg-teal-hover hover:shadow-card-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-aqua dark:bg-aqua dark:text-deep-teal dark:hover:bg-on-dark">
               احجزي جلستك
             </Link>
           </div>
 
           <div className="flex items-center gap-1 sm:gap-2 lg:hidden">
-            <Link href="/search" aria-label="البحث في الموقع" className="flex h-11 w-11 items-center justify-center rounded-full text-on-dark focus-visible:outline-2 focus-visible:outline-aqua"><SearchIcon /></Link>
-            <Link href="/auth/login" aria-label="دخول الحساب" className="hidden h-11 w-11 items-center justify-center rounded-full text-on-dark focus-visible:outline-2 focus-visible:outline-aqua sm:flex"><UserIcon /></Link>
+            <Link href="/search" aria-label="البحث في الموقع" className="flex h-11 w-11 items-center justify-center rounded-full text-deep-teal dark:text-on-dark focus-visible:outline-2 focus-visible:outline-aqua"><SearchIcon /></Link>
+            <Link href="/auth/login" aria-label="دخول الحساب" className="hidden h-11 w-11 items-center justify-center rounded-full text-deep-teal dark:text-on-dark focus-visible:outline-2 focus-visible:outline-aqua sm:flex"><UserIcon /></Link>
             <button
               type="button"
               onClick={() => setOpen((value) => !value)}
@@ -106,7 +92,7 @@ export function PublicHeader({ flags = {}, items = [] }: { flags?: Record<string
               aria-expanded={open}
               aria-controls="public-mobile-navigation"
               aria-label={open ? 'إغلاق القائمة' : 'فتح القائمة'}
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-on-dark/18 bg-on-dark/6 text-on-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-aqua"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-line bg-surface-raised text-deep-teal dark:border-on-dark/18 dark:bg-on-dark/6 dark:text-on-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-aqua"
             >
               <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden>
                 {open ? <path d="M6 6l12 12M18 6 6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
@@ -117,8 +103,8 @@ export function PublicHeader({ flags = {}, items = [] }: { flags?: Record<string
       </div>
 
       {open && (
-        <nav id="public-mobile-navigation" className="animate-drawer border-t border-on-dark/12 bg-deep-teal px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 shadow-card lg:hidden" aria-label="التنقل الرئيسي">
-          <div className="mb-4 flex items-center justify-between rounded-2xl border border-on-dark/12 bg-on-dark/6 px-4 py-3 text-on-dark">
+        <nav id="public-mobile-navigation" className="animate-drawer border-t border-line bg-surface-raised px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 shadow-card dark:border-on-dark/12 dark:bg-deep-teal lg:hidden" aria-label="التنقل الرئيسي">
+          <div className="mb-4 flex items-center justify-between rounded-2xl border border-line bg-ivory/70 px-4 py-3 text-deep-teal dark:border-on-dark/12 dark:bg-on-dark/6 dark:text-on-dark">
             <p className="text-sm font-bold">أين تحبين أن تبدئي؟</p>
             <ThemeToggle compact className="border-on-dark/20 text-on-dark" />
           </div>
@@ -131,7 +117,7 @@ export function PublicHeader({ flags = {}, items = [] }: { flags?: Record<string
                     href={item.href}
                     onClick={() => setOpen(false)}
                     aria-current={active ? 'page' : undefined}
-                    className={cn('flex min-h-12 items-center rounded-xl border px-4 py-3 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-aqua', active ? 'border-aqua bg-aqua/12 text-aqua' : 'border-on-dark/12 bg-on-dark/5 text-on-dark/72')}
+                    className={cn('flex min-h-12 items-center rounded-xl border px-4 py-3 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-aqua', active ? 'border-aqua bg-aqua/12 text-deep-teal dark:text-aqua' : 'border-line bg-ivory/55 text-text-soft dark:border-on-dark/12 dark:bg-on-dark/5 dark:text-on-dark/72')}
                   >
                     {item.label}
                   </Link>
@@ -139,9 +125,9 @@ export function PublicHeader({ flags = {}, items = [] }: { flags?: Record<string
               )
             })}
           </ul>
-          <div className="mt-4 grid grid-cols-2 gap-2 border-t border-on-dark/12 pt-4">
-            <Link href="/auth/login" onClick={() => setOpen(false)} className="inline-flex min-h-12 items-center justify-center rounded-full border border-on-dark/24 font-bold text-on-dark">دخول الحساب</Link>
-            <Link href="/booking" onClick={() => setOpen(false)} className="inline-flex min-h-12 items-center justify-center rounded-full bg-aqua font-bold text-deep-teal">احجزي جلسة</Link>
+          <div className="mt-4 grid grid-cols-2 gap-2 border-t border-line pt-4 dark:border-on-dark/12">
+            <Link href="/auth/login" onClick={() => setOpen(false)} className="inline-flex min-h-12 items-center justify-center rounded-full border border-line font-bold text-deep-teal dark:border-on-dark/24 dark:text-on-dark">دخول الحساب</Link>
+            <Link href="/booking" onClick={() => setOpen(false)} className="inline-flex min-h-12 items-center justify-center rounded-full bg-deep-teal font-bold text-on-dark dark:bg-aqua dark:text-deep-teal">احجزي جلسة</Link>
           </div>
         </nav>
       )}

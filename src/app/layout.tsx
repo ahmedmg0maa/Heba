@@ -57,7 +57,10 @@ export default function RootLayout({
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var s=localStorage.getItem('heba-theme');var d=s==='dark'||(!s&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d);document.documentElement.style.colorScheme=d?'dark':'light'}catch(e){}})()`,
+            // A first visit is deliberately light. The device preference must
+            // not silently turn the whole brand experience dark; only an
+            // explicit choice made with the theme control is persisted.
+            __html: `(function(){try{var d=localStorage.getItem('heba-theme')==='dark';document.documentElement.classList.toggle('dark',d);document.documentElement.style.colorScheme=d?'dark':'light'}catch(e){document.documentElement.classList.remove('dark');document.documentElement.style.colorScheme='light'}})()`,
           }}
         />
       </head>
