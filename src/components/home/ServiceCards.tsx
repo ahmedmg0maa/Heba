@@ -22,31 +22,39 @@ const visuals = [
 
 export function ServiceCards({ content = DEFAULT_HOME_CONTENT.pathways as PathwaysContent }: { content?: PathwaysContent }) {
   return (
-    <section className="heritage-paper border-b border-line bg-ivory px-5 py-14 sm:px-8 md:py-20" aria-labelledby="service-gates-title">
+    <section className="heritage-paper border-b border-line bg-ivory px-5 py-16 sm:px-8 md:py-24" aria-labelledby="service-gates-title">
       <div className="mx-auto max-w-7xl">
-        <header className="mx-auto mb-10 max-w-2xl text-center">
-          <p className="text-xs font-bold tracking-[.18em] text-antique-gold">{content.eyebrow}</p>
-          <h2 id="service-gates-title" className="mt-3 text-3xl font-bold text-deep-teal sm:text-4xl">{content.heading}</h2>
-          <p className="mt-3 leading-loose text-text-soft">{content.lead}</p>
+        <header className="mb-12 grid gap-5 lg:grid-cols-[.75fr_1.25fr] lg:items-end">
+          <div>
+            <p className="text-xs font-bold tracking-[.18em] text-antique-gold">{content.eyebrow}</p>
+            <h2 id="service-gates-title" className="mt-3 max-w-xl text-4xl font-bold leading-tight text-deep-teal sm:text-5xl">{content.heading}</h2>
+          </div>
+          <p className="max-w-xl text-base leading-loose text-text-soft lg:justify-self-end lg:text-lg">{content.lead}</p>
         </header>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid auto-rows-fr gap-4 sm:grid-cols-2 lg:grid-cols-12">
           {content.items.map((service, index) => (
             <Link
               key={service.href}
               href={service.href}
-              className="group relative flex min-h-64 flex-col overflow-hidden rounded-xl border border-antique-gold/30 bg-surface-raised p-6 shadow-card transition duration-300 hover:-translate-y-1 hover:border-antique-gold/60 hover:shadow-card-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-deep-teal"
+              className={`group relative flex min-h-64 flex-col overflow-hidden rounded-[1.75rem] border p-6 shadow-card transition duration-300 hover:-translate-y-1 hover:shadow-card-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-deep-teal sm:p-7 ${
+                index === 0
+                  ? 'border-deep-teal bg-deep-teal text-on-dark sm:col-span-2 lg:col-span-6 lg:row-span-2 lg:min-h-[480px] lg:p-10'
+                  : index === 1
+                    ? 'border-antique-gold/35 bg-sand/25 sm:col-span-2 lg:col-span-6 lg:min-h-[230px]'
+                    : 'border-antique-gold/30 bg-surface-raised lg:col-span-3 lg:min-h-[230px]'
+              }`}
             >
-              <span className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-transparent via-antique-gold/65 to-transparent" />
+              <span className="absolute -end-14 -top-14 h-40 w-40 rounded-full border border-antique-gold/20 transition-transform duration-500 group-hover:scale-110" aria-hidden />
               <div className="flex items-start justify-between">
-                <span className="font-heading text-sm text-antique-gold">{visuals[index]?.number}</span>
-                <span className="flex h-13 w-13 items-center justify-center rounded-full border border-antique-gold/30 text-deep-teal transition-colors group-hover:bg-deep-teal group-hover:text-on-dark" aria-hidden>
+                <span className={`font-heading text-sm ${index === 0 ? 'text-aqua' : 'text-antique-gold'}`}>{visuals[index]?.number}</span>
+                <span className={`flex h-13 w-13 items-center justify-center rounded-full border transition-colors ${index === 0 ? 'border-on-dark/20 text-aqua group-hover:bg-aqua group-hover:text-deep-teal' : 'border-antique-gold/30 text-deep-teal group-hover:bg-deep-teal group-hover:text-on-dark'}`} aria-hidden>
                   <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.5">{visuals[index]?.icon}</svg>
                 </span>
               </div>
-              <h3 className="mt-8 text-2xl font-bold text-deep-teal">{service.title}</h3>
-              <p className="mt-3 flex-1 text-sm leading-loose text-text-soft">{service.text}</p>
-              <span className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-burgundy">
+              <h3 className={`mt-8 font-bold ${index === 0 ? 'text-4xl text-on-dark sm:text-5xl lg:mt-auto' : 'text-2xl text-deep-teal'}`}>{service.title}</h3>
+              <p className={`mt-3 flex-1 leading-loose ${index === 0 ? 'max-w-md text-base text-on-dark/70 lg:flex-none' : 'text-sm text-text-soft'}`}>{service.text}</p>
+              <span className={`mt-6 inline-flex items-center gap-2 text-sm font-bold ${index === 0 ? 'text-aqua' : 'text-burgundy'}`}>
                 {service.cta}
                 <span className="transition-transform group-hover:-translate-x-1" aria-hidden>←</span>
               </span>

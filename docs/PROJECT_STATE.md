@@ -1,6 +1,13 @@
 # PROJECT STATE
 Last session: 2026-08-28 | Current program: Code X development-first execution | LOCAL DEVELOPMENT IN PROGRESS — STAGING EXTERNAL GATE remains for recovery, provider migration and live acceptance only
 
+## Visual Customer Experience Delivery Sprint — Phase 1 slice — 2026-08-28
+- Development switched to a bounded visual-delivery sprint. No migration, provider write, backup/restore, Production action, DNS change, push or open-ended audit is part of this slice.
+- Header, mobile navigation, Home hero, pathway composition and Footer were visibly rebuilt while retaining Arabic/RTL, the owner brand, dark mode and the labelled niqabi audience illustration. The default visible promise is now «افهمي نفسك… اختاري حياة تشبهك» and remains editable through the existing Home CMS controls.
+- Local isolated preview: `http://127.0.0.1:3102`. Before/after desktop and after-390px evidence is stored under `docs/evidence/visual-customer-experience/phase-1/` and indexed by `docs/VISUAL_CUSTOMER_EXPERIENCE_DELIVERY_SPRINT_2026-08-28.md`.
+- Targeted evidence only: isolated type-check, focused lint, 69-page isolated build, desktop/390 smoke, menu/theme/overflow checks and seven real navigation clicks passed. `check:deploy` and the 70-test suites were intentionally not rerun.
+- Exact next visual task: unify public Loading/Error/Empty/404 states, then proceed through the customer-facing route group. Do not open another backend vertical slice before this visual delivery is reviewed.
+
 ## Public Cloudflare preview checkpoint — 2026-08-28
 - Source commit `a10449efdc9b128691ff07af64c31e075cb54a03` from `codex/master-merge-2026-08-27` is pushed to GitHub and deployed as the separate Worker `heba-elsherif-platform-public-preview` at `https://heba-elsherif-platform-public-preview.heba-elsherif-platform.workers.dev`.
 - This is an intentionally provider-unconfigured public preview: no Supabase, Resend, Sentry, production database, DNS or customer-data secret was added. It proves the Cloudflare/Vinext public runtime and truthful empty states; it does not accept login, booking, payment, Admin or other persisted writes.

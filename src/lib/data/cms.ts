@@ -41,10 +41,10 @@ export type HomeCopy = {
 }
 
 export const defaultHomeCopy: HomeCopy = {
-  eyebrow: 'كتب ودورات وجلسات وورش في مكان واحد', headlineStart: 'اختاري', headlineAccent: 'خطوتك',
-  headlineMiddle: 'بوضوح', headlinePath: 'وبإيقاعك', headlineEnd: 'وابنيها',
-  headlineAwareness: 'على مهل', lead: 'تصفّحي المسارات المتاحة، واقرئي تفاصيل كل تجربة، ثم ابدئي من الباب الأقرب إليكِ الآن.',
-  primaryCta: 'ابدئي من هنا', secondaryCta: 'تصفّحي المسارات', imageTitle: 'صورة تعبيرية',
+  eyebrow: 'مساحة عربية للفهم والتعلّم والاختيار الواعي', headlineStart: 'افهمي', headlineAccent: 'نفسك…',
+  headlineMiddle: 'اختاري', headlinePath: 'حياة', headlineEnd: 'تشبهك',
+  headlineAwareness: 'أنتِ', lead: 'دورات وكتب وورش وجلسات تساعدك على فهم ما تحتاجينه، ثم تحويل هذا الفهم إلى خطوة واضحة تناسب إيقاعك وحياتك.',
+  primaryCta: 'ابدئي رحلتك', secondaryCta: 'استكشفي المسارات', imageTitle: 'صورة تعبيرية',
   imageLead: 'تمثل جمهور المنصة ولا تمثل المالكة',
 }
 

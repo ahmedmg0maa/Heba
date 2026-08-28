@@ -691,3 +691,9 @@
 - The owner-requested public view is a separate Cloudflare Worker with no Supabase, Resend, Sentry, database or customer-data secrets. It exercises the same isolated Vinext artifact and displays truthful unconfigured states.
 - The protected Staging Worker remains unchanged. No DNS, nameserver, canonical domain, provider project or Production migration is changed merely to make the interface publicly inspectable.
 - A green public preview proves anonymous Cloudflare runtime, presentation and guard behavior only. Login, persisted Admin, booking, payment, protected delivery, email, monitoring and database security require the independent Staging recovery/migration/provider acceptance gate before any customer-ready judgment.
+
+## 2026-08-28 — Visual delivery is reviewed as an experience, not line count
+
+- Header, Home and Footer form one bounded visual composition. Typography, layout and ornament remain in source, while owner-facing words, section order/visibility and navigation remain attached to the existing CMS/Admin controls.
+- The labelled niqabi audience illustration remains the Home focal image; no testimonial, press mention, statistic or customer fact is invented to make an unconfigured preview look populated.
+- Visual slices use targeted type/lint/browser checks while iterating. The full deployment and Worker suites run only at a major phase boundary, not after each visual adjustment.
