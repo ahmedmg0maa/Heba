@@ -672,3 +672,10 @@
 - **Owner scheduling is Cairo wall time.** The browser renders stored UTC as `Africa/Cairo`; the Server Action converts the submitted wall time back to an exact UTC instant and rejects nonexistent DST local times or past schedules.
 - **Scheduler publication is observable.** Every page or article actually made public by the service-only scheduler receives a metadata-only System audit in the same transaction.
 - **077 remains source-only.** SQL compilation/rollback, cron execution, legacy compatibility, role denial, concurrent scheduling and public persistence remain within `STAGING EXTERNAL GATE`.
+
+## 2026-08-28 — Article deletion preserves editorial history
+
+- Article content, managed-cover usage, revision and audit form one transaction; publication additionally requires `content.publish` and rights-backed completeness.
+- Scheduled publication repeats readiness. Owner wall time is Cairo, not deployment-runtime local time.
+- Delete in the organized editor means audited archival. Hard deletion is not used to erase revisions or editorial evidence.
+- **078 remains source-only.** SQL/RLS/concurrency/media and cron persistence remain within `STAGING EXTERNAL GATE`.

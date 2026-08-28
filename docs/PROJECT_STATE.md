@@ -1,6 +1,12 @@
 # PROJECT STATE
 Last session: 2026-08-28 | Current program: Code X development-first execution | LOCAL DEVELOPMENT IN PROGRESS — STAGING EXTERNAL GATE remains for recovery, provider migration and live acceptance only
 
+## P0 atomic article-lifecycle checkpoint — 2026-08-28
+- Migration 078 routes article create/edit/publish/schedule/archive through one service-only aggregate transaction with action-specific permissions, prior revision, managed-cover usage and metadata-only audit. Browser-direct writes and the generic publication bypass are removed.
+- Publication requires substantive excerpt/content and any configured cover must be an active public image with governed rights. The scheduler repeats readiness; owner scheduling round-trips through Cairo time. “Delete” now archives and preserves editorial history.
+- Targeted contract is passing. Migration 078 remains source-only; exact SQL/RLS/concurrency/scheduler/media persistence remains `STAGING EXTERNAL GATE`.
+- Exact next local task: govern site settings/feature flags, run the consolidated full Next/Worker gate, and commit each closed slice.
+
 ## P0 atomic CMS page-lifecycle checkpoint — 2026-08-28
 - Forward-only local migration 077 revokes browser-direct page writes and makes page creation, SEO updates and full lifecycle saves service-only transactions with prior revision and metadata-only audit. Public/scheduled state additionally rechecks `content.publish` inside PostgreSQL.
 - The generic page publish toggle was removed: one organized editor now enforces legal approval/version/effective date and visible Home `hero`/`pathways`/`cta` readiness for both immediate and scheduled publication. The scheduler repeats those gates and writes a System audit for every page/article it actually publishes.

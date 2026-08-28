@@ -179,4 +179,8 @@ The 2026-08-28 navigation phase gate passed `pnpm check:deploy`, including the 6
 
 The 2026-08-28 page-lifecycle phase gate passed `pnpm check:deploy`, including the 69-page Next build, every local contract/audit and **70/70** public desktop/mobile tests. The isolated vinext/Workers artifact then passed the same **70/70** suite serially; provider SQL/cron and deployed Worker smoke/tail remain separate acceptance evidence.
 
+## Atomic article-lifecycle contract
+
+`pnpm verify:article-lifecycle-local` proves migration 078 makes content, managed-cover usage, revision, lifecycle and audit one action-permissioned transaction. It requires rights-backed publication completeness, Cairo scheduling, scheduler revalidation, removal of the generic publish bypass, matching bounded Admin controls and history-preserving archival. SQL/RLS/concurrency/media/cron persistence require controlled Staging.
+
 The 2026-08-28 phase gate passed `pnpm check:deploy` including the 69-page Next build and **70/70** public desktop/mobile tests. The same isolated Worker artifact passed **70/70** under `playwright.cloudflare.config.ts --workers=1`. A preceding two-worker run passed 42 tests before Wrangler 4.126.0 reported `Network connection lost`; the remaining failures were only `ERR_CONNECTION_REFUSED`. No source assertion failed, and the unchanged artifact completed serially. Treat this as transparent local Proxy stability evidence; a deployed Worker smoke/tail remains required before public acceptance.

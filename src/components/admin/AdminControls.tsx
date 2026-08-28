@@ -95,11 +95,11 @@ export function ArticleForm() {
       className="grid gap-4"
     >
       <div className="grid gap-4 sm:grid-cols-2">
-        <FormField label="العنوان" name="title" required />
-        <FormField label="الرابط (slug)" name="slug" required dir="ltr" hint="مثال: quiet-no" />
+        <FormField label="العنوان" name="title" required minLength={3} maxLength={160} />
+        <FormField label="الرابط (slug)" name="slug" required minLength={3} maxLength={80} pattern="[a-z0-9]+(?:-[a-z0-9]+)*" dir="ltr" hint="مثال: quiet-no" />
       </div>
-      <FormField label="المقتطف" name="excerpt" required />
-      <FormTextarea label="المحتوى" name="content" rows={8} required />
+      <FormField label="المقتطف" name="excerpt" required maxLength={500} />
+      <FormTextarea label="المحتوى" name="content" rows={8} required maxLength={100000} />
       {error && (
         <p className="rounded-xl bg-burgundy/10 px-4 py-3 text-sm font-medium text-burgundy" role="alert">
           {error}

@@ -506,25 +506,14 @@ export async function deleteSubscription(id:string):Promise<AdminActionResult>{
 export async function saveArticle(articleId: string, form: FormData): Promise<AdminActionResult> {
   const admin = await requireAdminUser('content.manage')
   if (!admin) return { ok: false, error: 'هذه العملية تتطلب صلاحية إدارية.' }
-  const service = getServiceClient()
-  const { data: previous } = await service.from('articles').select('*').eq('id', articleId).maybeSingle()
-  if (!previous) return { ok: false, error: 'المقال غير موجود.' }
-  await revision(admin.id, 'article', articleId, previous)
   const title = text(form, 'title')
   const slug = text(form, 'slug').toLowerCase()
-  if (title.length < 3 || !/^[a-z0-9-]{3,80}$/.test(slug)) return { ok: false, error: 'راجعي العنوان والرابط.' }
-  const { error } = await service.from('articles').update({
-    title, slug,
-    excerpt: text(form, 'excerpt'),
-    content: text(form, 'content'),
-    cover_url: text(form, 'cover_url') || null,
-    seo_title: text(form, 'seo_title') || null,
-    seo_description: text(form, 'seo_description') || null,
-  }).eq('id', articleId)
-  if (error) return { ok: false, error: message(error) }
-  await syncMediaUsage(admin.id, text(form, 'cover_asset_id'), 'article', articleId, 'cover_url')
-  await audit(admin.id, 'article.updated', 'article', articleId, { title, slug })
+  const excerpt=text(form,'excerpt'),content=text(form,'content'),coverUrl=text(form,'cover_url'),coverAssetId=text(form,'cover_asset_id'),seoTitle=text(form,'seo_title'),seoDescription=text(form,'seo_description')
+  if(title.length<3||title.length>160||slug.length<3||slug.length>80||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)||excerpt.length>500||content.length>100000||seoTitle.length>70||seoDescription.length>180||coverUrl.length>500||(coverUrl&&!/^https:\/\/[^\s]+$/i.test(coverUrl)))return{ok:false,error:'راجعي حدود العنوان والرابط والمحتوى وحقول SEO والغلاف.'}
+  const {data,error}=await getServiceClient().rpc('manage_article',{p_actor_id:admin.id,p_action:'content_update',p_article_id:articleId,p_title:title,p_slug:slug,p_excerpt:excerpt,p_content:content,p_cover_url:coverUrl||null,p_cover_asset_id:coverAssetId||null,p_seo_title:seoTitle||null,p_seo_description:seoDescription||null,p_status:null,p_publish_at:null})
+  if(error||!data?.id)return{ok:false,error:error?.message.includes('content_publish_required')?'تعديل مقال منشور أو مجدول يتطلب صلاحية النشر.':error?.message.includes('article_publication_incomplete')?'لا يمكن إبقاء المقال منشورًا بمحتوى ناقص أو غلاف غير موثق الحقوق.':'تعذّر حفظ المقال.'}
   revalidatePath('/admin/articles')
+  if(typeof data.previousSlug==='string')revalidatePath(`/articles/${data.previousSlug}`)
   revalidatePath(`/articles/${slug}`)
   return { ok: true, id: articleId }
 }
@@ -532,16 +521,11 @@ export async function saveArticle(articleId: string, form: FormData): Promise<Ad
 export async function deleteArticle(articleId: string): Promise<AdminActionResult> {
   const admin = await requireAdminUser('content.delete')
   if (!admin) return { ok: false, error: 'هذه العملية تتطلب صلاحية إدارية.' }
-  const service = getServiceClient()
-  const { data: previous } = await service.from('articles').select('*').eq('id', articleId).maybeSingle()
-  if (!previous) return { ok: false, error: 'المقال غير موجود.' }
-  await revision(admin.id, 'article', articleId, previous)
-  await service.from('media_usages').delete().eq('entity_type', 'article').eq('entity_id', articleId)
-  const { error } = await service.from('articles').delete().eq('id', articleId)
-  if (error) return { ok: false, error: message(error) }
-  await audit(admin.id, 'article.deleted', 'article', articleId, { title: previous.title })
+  const {data,error}=await getServiceClient().rpc('manage_article',{p_actor_id:admin.id,p_action:'archive',p_article_id:articleId,p_title:null,p_slug:null,p_excerpt:null,p_content:null,p_cover_url:null,p_cover_asset_id:null,p_seo_title:null,p_seo_description:null,p_status:null,p_publish_at:null})
+  if(error||!data?.id)return{ok:false,error:'تعذّر أرشفة المقال.'}
   revalidatePath('/admin/articles')
   revalidatePath('/articles')
+  if(typeof data.articleSlug==='string')revalidatePath(`/articles/${data.articleSlug}`)
   return { ok: true }
 }
 

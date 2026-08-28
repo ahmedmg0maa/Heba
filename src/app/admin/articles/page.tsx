@@ -4,7 +4,7 @@ import { Card, CardTitle } from '@/components/ui/Card'
 import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table'
 import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { ArticleForm, PublishToggle } from '@/components/admin/AdminControls'
+import { ArticleForm } from '@/components/admin/AdminControls'
 import { ArticleEditor } from '@/components/admin/ArticleEditor'
 import { PreviewButton } from '@/components/admin/PreviewButton'
 import { ArticleScheduleControl } from '@/components/admin/ArticleScheduleControl'
@@ -57,7 +57,7 @@ export default async function AdminArticlesPage() {
                   <Badge tone={a.is_published ? 'success' : 'sand'}>{a.is_published ? 'منشور' : 'مسودة'}</Badge>
                 </TD>
                 <TD>
-                  <div className="flex flex-wrap items-start gap-2"><PublishToggle table="articles" id={a.id} published={a.is_published} isArticle /><PreviewButton type="article" id={a.id}/><ArticleScheduleControl id={a.id} status={a.status} publishAt={a.publish_at}/><ArticleEditor media={media} article={{ id: a.id, title: a.title, slug: a.slug, excerpt: a.excerpt, content: a.content, coverUrl: a.cover_url, seoTitle: a.seo_title, seoDescription: a.seo_description }} /></div>
+                  <div className="flex flex-wrap items-start gap-2"><PreviewButton type="article" id={a.id}/><ArticleScheduleControl id={a.id} status={a.status} publishAt={a.publish_at}/><ArticleEditor media={media} article={{ id: a.id, title: a.title, slug: a.slug, excerpt: a.excerpt, content: a.content, coverUrl: a.cover_url, seoTitle: a.seo_title, seoDescription: a.seo_description }} /></div>
                 </TD>
               </TR>
             ))}
