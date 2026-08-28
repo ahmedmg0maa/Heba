@@ -60,12 +60,20 @@ test('internal public journeys have real editorial imagery instead of flat page 
   }
 })
 
-test('password-protected admin preview creates an HttpOnly read-only session', async ({ page, context }) => {
+test('credential-protected admin preview rejects invalid identity and creates an HttpOnly read-only session', async ({ page, context }) => {
+  const email = process.env.HEBA_PREVIEW_ADMIN_EMAIL
   const password = process.env.HEBA_PREVIEW_ADMIN_PASSWORD
-  test.skip(!password, 'Preview admin password is intentionally supplied outside Git.')
+  test.skip(!email || !password, 'Preview admin credentials are intentionally supplied outside Git.')
   await visit(page, '/preview-admin')
   await expect(page.getByRole('heading', { name: 'معاينة لوحة الإدارة' })).toBeVisible()
-  await page.getByLabel('كلمة مرور معاينة الإدارة').fill(password!)
+  await page.getByLabel('البريد الإلكتروني للإدارة').fill('wrong-preview-admin@example.test')
+  await page.getByLabel('كلمة مرور الإدارة').fill(password!)
+  await page.getByRole('button', { name: 'دخول مساحة المراجعة' }).click()
+  await expect(page.getByRole('alert')).toContainText('تعذّر الدخول')
+  await expect(page.getByRole('heading', { name: 'مركز تشغيل هبة الشريف' })).toHaveCount(0)
+
+  await page.getByLabel('البريد الإلكتروني للإدارة').fill(email!)
+  await page.getByLabel('كلمة مرور الإدارة').fill(password!)
   await page.getByRole('button', { name: 'دخول مساحة المراجعة' }).click()
   await expect(page.getByRole('heading', { name: 'مركز تشغيل هبة الشريف' })).toBeVisible()
   await expect(page.getByText('وضع مراجعة آمن')).toBeVisible()

@@ -710,7 +710,7 @@
 
 - `/admin` remains the only operational control plane and keeps Supabase identity, AAL2 MFA, RBAC, server validation and audit requirements. A public Preview password is never accepted as an operational administrator identity.
 - `/preview-admin` is a separate read-only visual map enabled only when `HEBA_DEPLOYMENT_ENV=preview`. It exposes no customer/provider data and has no mutation controls, so it cannot create a false persistence claim.
-- Preview access uses deployment-only secrets, constant-time password digest comparison and an eight-hour HMAC-signed HttpOnly/SameSite=Strict cookie. Secret values are not source, config, build artifact or evidence.
+- Preview access uses deployment-only email/password secrets, fixed-length digest comparisons for both fields and an eight-hour HMAC-signed HttpOnly/SameSite=Strict cookie. Authentication errors stay generic. Secret values are not source, config, build artifact or evidence.
 
 ## 2026-08-28 — Light is the intentional first-visit brand default
 

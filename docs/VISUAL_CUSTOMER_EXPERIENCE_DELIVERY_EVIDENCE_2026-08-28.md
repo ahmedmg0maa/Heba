@@ -12,7 +12,7 @@ Scope: public Preview only; no Supabase write, Production migration, DNS or name
 | Unprofessional image labels/copy | The visible “صورة تعبيرية” and “لستِ مطالبة بمعرفة كل الإجابات” copy was removed. The portrait has a concise accessible alt and one factual value line. | Automated absence assertions |
 | Flat backgrounds and missing images | A new original editorial image was generated and self-hosted. Internal PageHero, pathways, article/resource treatments and the final CTA now use varied editorial imagery, gradients, texture and depth. | Seven-route image-load contract |
 | Dark mode does not change colors and opens first | A first visit now always starts light. Only an explicit saved choice starts dark. The switch changes computed page colors and persists after navigation. | Theme E2E contract |
-| Admin cannot be reviewed | `/preview-admin` is a password-protected, noindex, read-only visual operations map with an HMAC-signed HttpOnly/SameSite=Strict session. It does not expose customer data or fake mutations. Real `/admin` remains behind Supabase, AAL2 MFA, RBAC and server authorization. | Admin session E2E contract |
+| Admin cannot be reviewed | `/preview-admin` is an email-and-password-protected, noindex, read-only visual operations map with an HMAC-signed HttpOnly/SameSite=Strict session. It does not expose customer data or fake mutations. Real `/admin` remains behind Supabase, AAL2 MFA, RBAC and server authorization. | Admin credential/session E2E contract |
 
 ## Visual evidence
 
@@ -41,7 +41,7 @@ The first Worker E2E run was interrupted after one passing test because Wrangler
 
 ## Security boundary
 
-- The Preview Admin password and session signing key exist only as Cloudflare Preview secrets; neither value is committed, logged or included in the build artifact.
+- The Preview Admin email, password and session signing key exist only as Cloudflare Preview secrets; no value is committed, logged or included in the build artifact. The live contract rejects an incorrect identity before accepting the owner-supplied credential pair.
 - The Preview Admin surface is deliberately read-only. Adding non-persistent edit controls would violate the repository’s no-fake-admin rule.
 - `/admin` remains the operational control plane and is not weakened by this Preview route.
 - Production, DNS, Supabase, Resend and Sentry were not changed by this sprint.

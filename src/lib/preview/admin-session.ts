@@ -48,14 +48,26 @@ async function sign(payload: string) {
 
 export function isPreviewAdminConfigured() {
   return process.env.HEBA_DEPLOYMENT_ENV === 'preview'
+    && Boolean(process.env.HEBA_PREVIEW_ADMIN_EMAIL)
     && Boolean(process.env.HEBA_PREVIEW_ADMIN_PASSWORD)
     && (process.env.HEBA_PREVIEW_ADMIN_SESSION_SECRET?.length ?? 0) >= 32
 }
 
-export async function verifyPreviewAdminPassword(candidate: string) {
-  const expected = process.env.HEBA_PREVIEW_ADMIN_PASSWORD
-  if (!isPreviewAdminConfigured() || !expected || !candidate) return false
-  return sameBytes(await digest(candidate), await digest(expected))
+export async function verifyPreviewAdminCredentials(candidateEmail: string, candidatePassword: string) {
+  const expectedEmail = process.env.HEBA_PREVIEW_ADMIN_EMAIL
+  const expectedPassword = process.env.HEBA_PREVIEW_ADMIN_PASSWORD
+  if (!isPreviewAdminConfigured() || !expectedEmail || !expectedPassword || !candidateEmail || !candidatePassword) return false
+
+  const [candidateEmailDigest, expectedEmailDigest, candidatePasswordDigest, expectedPasswordDigest] = await Promise.all([
+    digest(candidateEmail.trim().toLowerCase()),
+    digest(expectedEmail.trim().toLowerCase()),
+    digest(candidatePassword),
+    digest(expectedPassword),
+  ])
+
+  const emailMatches = sameBytes(candidateEmailDigest, expectedEmailDigest)
+  const passwordMatches = sameBytes(candidatePasswordDigest, expectedPasswordDigest)
+  return emailMatches && passwordMatches
 }
 
 export async function establishPreviewAdminSession() {
