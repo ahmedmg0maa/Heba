@@ -685,3 +685,9 @@
 - Only existing non-typed keys may be edited through the advanced JSON surface. Secret-like keys/fields and payloads above 32 KiB fail closed.
 - The previous setting value is retained privately, and setting/flag transition plus audit commits atomically.
 - **079 remains source-only.** SQL/RLS/concurrency/persistence remain `STAGING EXTERNAL GATE`.
+
+## 2026-08-28 — A public preview is not accepted Staging or Production
+
+- The owner-requested public view is a separate Cloudflare Worker with no Supabase, Resend, Sentry, database or customer-data secrets. It exercises the same isolated Vinext artifact and displays truthful unconfigured states.
+- The protected Staging Worker remains unchanged. No DNS, nameserver, canonical domain, provider project or Production migration is changed merely to make the interface publicly inspectable.
+- A green public preview proves anonymous Cloudflare runtime, presentation and guard behavior only. Login, persisted Admin, booking, payment, protected delivery, email, monitoring and database security require the independent Staging recovery/migration/provider acceptance gate before any customer-ready judgment.

@@ -75,3 +75,28 @@ wrangler deploy --config dist/server/wrangler.json --keep-vars
 ## بوابات Production المتبقية
 
 لا يزال Production محظورًا حتى ينجح قبول Staging، واعتماد المحتوى والقانونيات، ونسخة احتياطية منطقية حديثة مع Restore Drill، وتفويض مستقل للمigrations Production. لم تُطبّق migrations 044–047 على أي بيئة في هذه المرحلة.
+
+## ملحق المعاينة العامة المنفصلة — 2026-08-28
+
+بناءً على طلب المالكة إتاحة الموقع للعرض العام، نُشر **Worker جديد منفصل** لا يستبدل Staging المحمي ولا Production:
+
+- الفرع: `codex/master-merge-2026-08-27`
+- commit المصدر: `a10449efdc9b128691ff07af64c31e075cb54a03`
+- Worker: `heba-elsherif-platform-public-preview`
+- الرابط: `https://heba-elsherif-platform-public-preview.heba-elsherif-platform.workers.dev`
+- أمر النشر الفعلي: `pnpm exec wrangler deploy --config dist/server/wrangler.json --name heba-elsherif-platform-public-preview --var HEBA_DEPLOYMENT_ENV:preview`
+
+لم تُضف إلى Worker أي قيمة Supabase أو Resend أو Sentry أو قاعدة بيانات أو سر Production. لذلك يعرض الموقع حالات عدم التهيئة الصادقة، ولا يمكن اعتماده لاختبار رحلة كتابة أو كبيئة تستقبل عميلات.
+
+| فحص المعاينة الحية | النتيجة |
+| --- | --- |
+| الصفحة الرئيسية | `200` وعنوان عربي صحيح |
+| المسارات العامة | 15/15 على desktop و15/15 على 390px، بلا أخطاء 5xx أو overflow |
+| حراسة Dashboard/Admin | التحويل إلى `/auth/login` و`/auth/admin` ناجح |
+| رؤوس الحماية | CSP وHSTS و`X-Frame-Options: DENY` و`nosniff` وReferrer Policy موجودة |
+| فحص HTML و4 حزم JavaScript لأنماط الأسرار | صفر نتائج للأنماط المحددة |
+| source map probe | `404` |
+| Worker tail القصير | الطلبات المرصودة ناجحة بلا حدث error |
+| DNS / Production / migrations | لم تُمس |
+
+هذه النتيجة هي **`PUBLIC PREVIEW LIVE — PROVIDERS UNCONFIGURED`**. يظل الحكم الحاكم لهذا المستند **`STAGING BLOCKED`** إلى أن تُنفذ بوابة Staging الخارجية كاملة.

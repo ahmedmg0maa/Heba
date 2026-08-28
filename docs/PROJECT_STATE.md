@@ -1,6 +1,13 @@
 # PROJECT STATE
 Last session: 2026-08-28 | Current program: Code X development-first execution | LOCAL DEVELOPMENT IN PROGRESS — STAGING EXTERNAL GATE remains for recovery, provider migration and live acceptance only
 
+## Public Cloudflare preview checkpoint — 2026-08-28
+- Source commit `a10449efdc9b128691ff07af64c31e075cb54a03` from `codex/master-merge-2026-08-27` is pushed to GitHub and deployed as the separate Worker `heba-elsherif-platform-public-preview` at `https://heba-elsherif-platform-public-preview.heba-elsherif-platform.workers.dev`.
+- This is an intentionally provider-unconfigured public preview: no Supabase, Resend, Sentry, production database, DNS or customer-data secret was added. It proves the Cloudflare/Vinext public runtime and truthful empty states; it does not accept login, booking, payment, Admin or other persisted writes.
+- Live evidence passed: home `200`; 15/15 public routes on desktop and 15/15 at 390px without horizontal overflow; anonymous Dashboard/Admin guards redirect to `/auth/login` and `/auth/admin`; CSP, HSTS, `DENY`, `nosniff` and referrer policy are present; four emitted JavaScript assets plus HTML contained zero configured secret-name/connection-string patterns; a source-map probe returned `404`; a short Worker tail observed only successful invocations.
+- The public preview permits indexing and its sitemap retains the production canonical host. This is acceptable only for the temporary public demonstration requested by the owner and must not be confused with Staging acceptance or the canonical Production launch.
+- Detailed evaluation: `docs/CODE_X_FINAL_LOCAL_RELEASE_AND_PUBLIC_PREVIEW_EVALUATION_2026-08-28.md`. Exact next gate remains `STAGING EXTERNAL GATE`: isolated restore evidence, independent Supabase Staging configuration, forward-only migration application `044–079`, and live provider/Auth/commerce/Admin acceptance.
+
 ## P0 governed advanced-settings/flags checkpoint — 2026-08-28
 - Migration 079 revokes browser writes and makes existing advanced-setting changes revisioned/audited atomically; arbitrary new keys, typed settings, secret-like keys/fields and payloads above 32 KiB are denied. Feature-flag changes lock the existing flag and audit the transition in the same transaction.
 - Targeted contract and the consolidated `pnpm check:deploy` gate passed: 69-page Next build, all audits and public E2E **70/70**. The isolated vinext/Workers build and serial Cloudflare suite also passed **70/70**. Migration 079 remains source-only and provider persistence is `STAGING EXTERNAL GATE`.
