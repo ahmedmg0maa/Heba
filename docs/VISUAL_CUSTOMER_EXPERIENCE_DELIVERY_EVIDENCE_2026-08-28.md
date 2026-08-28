@@ -50,5 +50,6 @@ The first Worker E2E run was interrupted after one passing test because Wrangler
 
 - Worker: `heba-elsherif-platform-public-preview`
 - URL: `https://heba-elsherif-platform-public-preview.heba-elsherif-platform.workers.dev`
-- Deployment version: to be recorded after the accepted artifact is deployed.
-- Judgment before remote smoke test: `LOCAL + WORKER BUILD ACCEPTED; PUBLIC PREVIEW DEPLOYMENT PENDING`.
+- Deployment version: `dd8a6fb4-2be9-41d6-81a5-7ed8f5b0d32a`.
+- Remote acceptance: Live Preview E2E 9/9 passed. Home returned 200; four emitted JavaScript assets contained zero high-risk secret-pattern matches; source-map probes exposed zero maps; CSP, HSTS and frame denial are present; rejected copy is absent.
+- Judgment: `PUBLIC PREVIEW ACCEPTED — SAFE FOR OWNER VISUAL REVIEW`.
