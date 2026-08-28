@@ -1,6 +1,14 @@
 # PROJECT STATE
 Last session: 2026-08-28 | Current program: Code X development-first execution | LOCAL DEVELOPMENT IN PROGRESS — STAGING EXTERNAL GATE remains for recovery, provider migration and live acceptance only
 
+## P0 atomic CMS page-lifecycle checkpoint — 2026-08-28
+- Forward-only local migration 077 revokes browser-direct page writes and makes page creation, SEO updates and full lifecycle saves service-only transactions with prior revision and metadata-only audit. Public/scheduled state additionally rechecks `content.publish` inside PostgreSQL.
+- The generic page publish toggle was removed: one organized editor now enforces legal approval/version/effective date and visible Home `hero`/`pathways`/`cta` readiness for both immediate and scheduled publication. The scheduler repeats those gates and writes a System audit for every page/article it actually publishes.
+- Schedule inputs and stored timestamps now round-trip explicitly through `Africa/Cairo`, including DST, while canonical and social-image URLs are HTTPS-only and all copy/URL/status fields are bounded across UI, Server Action and database.
+- The targeted lifecycle/Home contracts, isolated type-check, lint, database audit and CMS audit passed. The full `pnpm check:deploy` gate passed the 69-page Next production build, every security/operations audit and public Playwright **70/70**; the isolated vinext/Workers build and serial Cloudflare desktop/mobile suite also passed **70/70**.
+- Migration 077 is source-only; SQL parsing/rollback, legacy-row compatibility, cron execution, role denial, concurrent save/scheduler behavior and live public reload remain `STAGING EXTERNAL GATE`.
+- Exact next local task: commit this slice, then govern article and settings mutation groups.
+
 ## P0 atomic Navigation checkpoint — 2026-08-28
 - Forward-only local migration 076 removes browser-direct navigation writes and routes create/update/delete through one service-only transaction. PostgreSQL repeats `settings.manage`, serializes the aggregate, bounds the four menus, count, label, internal path and order, and commits metadata-only audit with the mutation.
 - New database constraints protect future writes even outside the organized editor. Existing parent relationships are preserved; moving a child across menus is denied and deleting a parent with children fails instead of invoking the historical cascade.

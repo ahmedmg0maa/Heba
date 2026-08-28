@@ -664,3 +664,11 @@
 - **Internal destinations stay internal at every boundary.** Database constraints, the RPC, the Server Action and the Admin form bound labels/order and accept only single-slash internal paths without whitespace or backslashes.
 - **The hidden hierarchy cannot cascade through a flat editor.** Existing parent links are preserved, but an item cannot move away from its parent's menu and a parent cannot be deleted while children exist. The owner must resolve the visible relationship explicitly.
 - **076 remains source-only.** Legacy-row constraint compatibility, SQL rollback, role denial, concurrent ordering and Admin-to-public persistence remain within `STAGING EXTERNAL GATE`.
+
+## 2026-08-28 — A CMS page has one lifecycle authority
+
+- **The page editor, not a generic boolean toggle, controls publication.** Page saves couple prior revision, bounded content/SEO, lifecycle state and metadata-only audit. Scheduled or public states require both content management and publication permission.
+- **Legal and Home readiness applies to now and later.** Immediate saves, scheduled saves and the due-content scheduler all deny an unapproved legal page or a Home page missing visible `hero`, `pathways` or `cta`.
+- **Owner scheduling is Cairo wall time.** The browser renders stored UTC as `Africa/Cairo`; the Server Action converts the submitted wall time back to an exact UTC instant and rejects nonexistent DST local times or past schedules.
+- **Scheduler publication is observable.** Every page or article actually made public by the service-only scheduler receives a metadata-only System audit in the same transaction.
+- **077 remains source-only.** SQL compilation/rollback, cron execution, legacy compatibility, role denial, concurrent scheduling and public persistence remain within `STAGING EXTERNAL GATE`.

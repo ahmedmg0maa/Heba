@@ -173,4 +173,10 @@ Run `pnpm verify:sentry-monitoring-local` whenever monitoring, Worker entry, ins
 
 The 2026-08-28 navigation phase gate passed `pnpm check:deploy`, including the 69-page Next build, every local contract/audit and **70/70** public desktop/mobile tests. The isolated vinext/Workers artifact then passed the same **70/70** suite serially under `playwright.cloudflare.config.ts`; deployed Worker smoke/tail and provider-backed behavior remain separate acceptance evidence.
 
+## Atomic CMS page-lifecycle contract
+
+`pnpm verify:cms-page-lifecycle-local` proves migration 077 revokes browser-direct page writes, distinguishes `content.manage` from public-state `content.publish`, locks updates, bounds page count/copy/SEO/HTTPS URLs and commits prior revision, mutation and metadata-only audit atomically. It requires legal/Home readiness for immediate and scheduled publication, removes the generic publish bypass, proves Cairo wall-time conversion in winter and summer, and verifies the scheduler repeats readiness and audits each actual page/article publication. SQL execution/rollback, cron, legacy-row compatibility, role denial, concurrency and live public reload require controlled Staging.
+
+The 2026-08-28 page-lifecycle phase gate passed `pnpm check:deploy`, including the 69-page Next build, every local contract/audit and **70/70** public desktop/mobile tests. The isolated vinext/Workers artifact then passed the same **70/70** suite serially; provider SQL/cron and deployed Worker smoke/tail remain separate acceptance evidence.
+
 The 2026-08-28 phase gate passed `pnpm check:deploy` including the 69-page Next build and **70/70** public desktop/mobile tests. The same isolated Worker artifact passed **70/70** under `playwright.cloudflare.config.ts --workers=1`. A preceding two-worker run passed 42 tests before Wrangler 4.126.0 reported `Network connection lost`; the remaining failures were only `ERR_CONNECTION_REFUSED`. No source assertion failed, and the unchanged artifact completed serially. Treat this as transparent local Proxy stability evidence; a deployed Worker smoke/tail remains required before public acceptance.

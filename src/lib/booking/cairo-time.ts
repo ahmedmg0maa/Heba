@@ -28,6 +28,11 @@ function localValue(instant: Date) {
   return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`
 }
 
+export function formatCairoLocalDateTime(value: string | Date) {
+  const instant = value instanceof Date ? value : new Date(value)
+  return Number.isNaN(instant.getTime()) ? null : localValue(instant)
+}
+
 export function parseCairoLocalDateTime(value: string) {
   const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(value)
   if (!match) return null

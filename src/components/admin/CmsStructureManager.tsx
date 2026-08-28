@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { createCmsPage, deleteNavigationItem, deletePageSection, saveCmsPage, saveNavigationItem, savePageSection } from '@/lib/actions/cms'
 import { Button } from '@/components/ui/Button'
+import { formatCairoLocalDateTime } from '@/lib/booking/cairo-time'
 
 const input = 'min-h-10 w-full rounded-xl border border-line bg-surface-raised px-3 py-2 text-sm text-ink'
 const sectionKinds = [
@@ -47,11 +48,11 @@ export function CmsPageEditor({ page }: { page: { id: string; title: string; sta
   }}>
     <input name="title" required minLength={3} maxLength={160} defaultValue={page.title} className={input} />
     <Status value={page.status} />
-    <input name="publish_at" type="datetime-local" defaultValue={page.publish_at?.slice(0, 16) ?? ''} className={input} />
-    <input name="canonical_url" maxLength={500} defaultValue={page.canonical_url ?? ''} placeholder="Canonical URL" dir="ltr" className={input} />
+    <label className="text-xs font-semibold text-deep-teal">موعد النشر بتوقيت القاهرة<input name="publish_at" type="datetime-local" defaultValue={page.publish_at ? formatCairoLocalDateTime(page.publish_at) ?? '' : ''} className={input} /></label>
+    <input name="canonical_url" maxLength={500} pattern="https://.*" defaultValue={page.canonical_url ?? ''} placeholder="Canonical URL (HTTPS)" dir="ltr" className={input} />
     <input name="seo_title" maxLength={70} defaultValue={page.seo_title ?? ''} placeholder="عنوان SEO" className={input} />
     <input name="seo_description" maxLength={180} defaultValue={page.seo_description ?? ''} placeholder="وصف SEO" className={input} />
-    <input name="og_image_url" maxLength={500} defaultValue={page.og_image_url ?? ''} placeholder="صورة المشاركة" dir="ltr" className={`${input} md:col-span-2`} />
+    <input name="og_image_url" maxLength={500} pattern="https://.*" defaultValue={page.og_image_url ?? ''} placeholder="صورة المشاركة (HTTPS)" dir="ltr" className={`${input} md:col-span-2`} />
     <select name="legal_review_status" defaultValue={page.legal_review_status} className={input}><option value="not_applicable">ليست صفحة قانونية</option><option value="draft">مسودة قانونية</option><option value="pending">بانتظار المراجعة</option><option value="approved">معتمدة</option></select>
     <input name="legal_version" maxLength={40} defaultValue={page.legal_version ?? ''} placeholder="إصدار السياسة" className={input} />
     <label className="text-xs font-semibold text-deep-teal md:col-span-2">تاريخ السريان<input name="effective_at" type="date" defaultValue={page.effective_at ?? ''} className={input} /></label>

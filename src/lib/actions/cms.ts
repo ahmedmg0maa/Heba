@@ -8,6 +8,7 @@ import { hasSupabasePublicConfig } from '@/lib/supabase/public-key'
 import { defaultHomeContent, HOME_SECTION_KINDS, isHomeSectionKind, normalizeHomeContent, type HomeSectionKind } from '@/lib/home/sections'
 import { normalizeStartHereContent } from '@/lib/start-here/content'
 import { catalogPublicationReadiness, type CatalogPublicationKind } from '@/lib/catalog/publication-readiness'
+import { parseCairoLocalDateTime } from '@/lib/booking/cairo-time'
 
 type ActionResult = { ok: true } | { ok: false; error: string }
 
@@ -49,7 +50,6 @@ const FIELD_WHITELIST: Record<string, { fields: string[]; path: string; permissi
   courses: { fields: ['is_published'], path: '/admin/courses', permission: 'catalog.publish' },
   workshops: { fields: ['is_published'], path: '/admin/workshops', permission: 'catalog.publish' },
   articles: { fields: ['is_published'], path: '/admin/articles', permission: 'content.publish' },
-  pages: { fields: ['is_published'], path: '/admin/pages', permission: 'content.publish' },
 }
 
 export async function adminSetField(table: string, id: string, field: string, value: boolean): Promise<ActionResult> {
@@ -295,19 +295,23 @@ export async function addLesson(moduleId: string, courseId: string, formData: Fo
 }
 
 export async function updatePageSeo(pageId: string, formData: FormData): Promise<ActionResult> {
-  if (!hasEnv()) return { ok: false, error: NO_ENV }
   const admin = await requireAdminUser('content.manage')
   if (!admin) return { ok: false, error: NOT_ADMIN }
-  const { error } = await getServiceClient()
-    .from('pages')
-    .update({
-      seo_title: String(formData.get('seo_title') ?? '').trim() || null,
-      seo_description: String(formData.get('seo_description') ?? '').trim() || null,
-    })
-    .eq('id', pageId)
-  if (error) return { ok: false, error: GENERIC }
-  await audit(admin.user.id, 'page.seo_updated', 'page', pageId)
+  const seoTitle = String(formData.get('seo_title') ?? '').trim()
+  const seoDescription = String(formData.get('seo_description') ?? '').trim()
+  if (seoTitle.length > 70 || seoDescription.length > 180 || /[\u0000-\u001f\u007f]/.test(`${seoTitle}${seoDescription}`)) {
+    return { ok: false, error: 'عنوان SEO بحد أقصى 70 حرفًا والوصف 180 حرفًا.' }
+  }
+  const { data, error } = await getServiceClient().rpc('manage_cms_page', {
+    p_actor_id: admin.user.id, p_action: 'seo_update', p_page_id: pageId,
+    p_title: null, p_slug: null, p_seo_title: seoTitle || null,
+    p_seo_description: seoDescription || null, p_canonical_url: null,
+    p_og_image_url: null, p_status: null, p_publish_at: null,
+    p_legal_review_status: null, p_legal_version: null, p_effective_at: null,
+  })
+  if (error || !data?.id) return { ok: false, error: GENERIC }
   revalidatePath('/admin/pages')
+  if (typeof data.pageSlug === 'string') revalidatePath(`/${data.pageSlug}`)
   return { ok: true }
 }
 
@@ -317,11 +321,14 @@ export async function createCmsPage(formData: FormData): Promise<ActionResult> {
   const title = String(formData.get('title') ?? '').trim()
   const slug = String(formData.get('slug') ?? '').trim().toLowerCase()
   if (title.length < 3) return { ok: false, error: 'اكتبي عنوانًا واضحًا للصفحة.' }
-  if (!/^[a-z0-9-]{2,80}$/.test(slug)) return { ok: false, error: 'الرابط يتكوّن من أحرف لاتينية صغيرة وأرقام وشرطات.' }
-  const service = getServiceClient()
-  const { data, error } = await service.from('pages').insert({ title, slug, status: 'draft', is_published: false }).select('id').single()
+  if (slug.length < 3 || slug.length > 80 || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) return { ok: false, error: 'الرابط يتكوّن من أحرف لاتينية صغيرة وأرقام وشرطات.' }
+  const { data, error } = await getServiceClient().rpc('manage_cms_page', {
+    p_actor_id: admin.user.id, p_action: 'create', p_page_id: null,
+    p_title: title, p_slug: slug, p_seo_title: null, p_seo_description: null,
+    p_canonical_url: null, p_og_image_url: null, p_status: null, p_publish_at: null,
+    p_legal_review_status: null, p_legal_version: null, p_effective_at: null,
+  })
   if (error || !data) return { ok: false, error: error?.code === '23505' ? 'هذا الرابط مستخدم بالفعل.' : GENERIC }
-  await audit(admin.user.id, 'page.created', 'page', data.id, { slug })
   revalidatePath('/admin/pages')
   return { ok: true }
 }
@@ -424,26 +431,44 @@ export async function saveCmsPage(pageId: string, formData: FormData): Promise<A
   const admin = await requireAdminUser('content.manage')
   if (!admin) return { ok: false, error: NOT_ADMIN }
   const status = String(formData.get('status') ?? 'draft')
-  const publishAt = String(formData.get('publish_at') ?? '') || null
+  const publishAtInput = String(formData.get('publish_at') ?? '').trim()
+  const publishAtDate = status === 'scheduled' ? parseCairoLocalDateTime(publishAtInput) : null
+  const publishAt = publishAtDate?.toISOString() ?? null
   const legalReviewStatus = String(formData.get('legal_review_status') ?? 'not_applicable')
   const legalVersion = String(formData.get('legal_version') ?? '').trim() || null
   const effectiveAt = String(formData.get('effective_at') ?? '').trim() || null
-  if (!['draft','scheduled','published','archived'].includes(status) || (status === 'scheduled' && !publishAt)) return { ok: false, error: 'حددي حالة نشر وموعدًا صحيحًا.' }
-  if (!['not_applicable','draft','pending','approved'].includes(legalReviewStatus)) return { ok: false, error: 'حالة المراجعة القانونية غير صحيحة.' }
-  const service = getServiceClient()
-  const { data: previous } = await service.from('pages').select('*').eq('id', pageId).maybeSingle()
-  if (!previous) return { ok: false, error: 'الصفحة غير موجودة.' }
-  if (['privacy','terms','refund','disclaimer','session-policy'].includes(previous.slug) && status === 'published' && (legalReviewStatus !== 'approved' || !legalVersion || !effectiveAt)) return { ok: false, error: 'لا يمكن نشر صفحة قانونية قبل الاعتماد وتحديد الإصدار وتاريخ السريان.' }
-  if (previous.slug === 'home' && status === 'published') {
-    const { data: sections, error: sectionsError } = await service.from('page_sections').select('kind').eq('page_id', pageId).eq('is_visible', true)
-    const kinds = new Set((sections ?? []).map((section) => section.kind))
-    if (sectionsError || !['hero','pathways','cta'].every((kind) => kinds.has(kind))) return { ok: false, error: 'لا يمكن نشر الصفحة الرئيسية قبل وجود Hero والمسارات والدعوة الختامية كأقسام ظاهرة.' }
+  const title = String(formData.get('title') ?? '').trim()
+  const seoTitle = String(formData.get('seo_title') ?? '').trim()
+  const seoDescription = String(formData.get('seo_description') ?? '').trim()
+  const canonicalUrl = String(formData.get('canonical_url') ?? '').trim()
+  const ogImageUrl = String(formData.get('og_image_url') ?? '').trim()
+  if (!['draft','scheduled','published','archived'].includes(status)
+      || (status === 'scheduled' && (!publishAtDate || publishAtDate <= new Date()))) return { ok: false, error: 'حددي حالة نشر وموعدًا مستقبليًا صحيحًا بتوقيت القاهرة.' }
+  if (title.length < 3 || title.length > 160 || /[\u0000-\u001f\u007f]/.test(title)
+      || seoTitle.length > 70 || seoDescription.length > 180
+      || canonicalUrl.length > 500 || (canonicalUrl && (!/^https:\/\/[^\s]+$/i.test(canonicalUrl)))
+      || ogImageUrl.length > 500 || (ogImageUrl && (!/^https:\/\/[^\s]+$/i.test(ogImageUrl)))) {
+    return { ok: false, error: 'راجعي العنوان وحقول SEO وروابط HTTPS.' }
   }
-  await service.from('content_revisions').insert({ entity_type: 'page', entity_id: pageId, snapshot: previous, created_by: admin.user.id })
-  const { error } = await service.from('pages').update({ title: String(formData.get('title') ?? '').trim(), seo_title: String(formData.get('seo_title') ?? '').trim() || null, seo_description: String(formData.get('seo_description') ?? '').trim() || null, canonical_url: String(formData.get('canonical_url') ?? '').trim() || null, og_image_url: String(formData.get('og_image_url') ?? '').trim() || null, status, publish_at: publishAt, is_published: status === 'published', legal_review_status: legalReviewStatus, legal_version: legalVersion, effective_at: effectiveAt, revision: Number(previous.revision ?? 1) + 1 }).eq('id', pageId)
-  if (error) return { ok: false, error: GENERIC }
-  await audit(admin.user.id, 'page.saved', 'page', pageId, { status, publishAt, legalReviewStatus, legalVersion, effectiveAt })
-  revalidatePath('/admin/pages'); revalidatePath('/'); revalidatePath(`/${previous.slug}`); return { ok: true }
+  if (!['not_applicable','draft','pending','approved'].includes(legalReviewStatus)) return { ok: false, error: 'حالة المراجعة القانونية غير صحيحة.' }
+  if (legalVersion && (legalVersion.length > 40 || /[\u0000-\u001f\u007f]/.test(legalVersion))) return { ok: false, error: 'إصدار السياسة أطول من المسموح.' }
+  const { data, error } = await getServiceClient().rpc('manage_cms_page', {
+    p_actor_id: admin.user.id, p_action: 'update', p_page_id: pageId,
+    p_title: title, p_slug: null, p_seo_title: seoTitle || null,
+    p_seo_description: seoDescription || null, p_canonical_url: canonicalUrl || null,
+    p_og_image_url: ogImageUrl || null, p_status: status, p_publish_at: publishAt,
+    p_legal_review_status: legalReviewStatus, p_legal_version: legalVersion,
+    p_effective_at: effectiveAt,
+  })
+  if (error || !data?.id) {
+    if (error?.message.includes('content_publish_required')) return { ok: false, error: 'تعديل صفحة منشورة أو مجدولة يتطلب صلاحية النشر.' }
+    if (error?.message.includes('legal_page_approval_required')) return { ok: false, error: 'لا يمكن نشر أو جدولة صفحة قانونية قبل اعتمادها وتحديد الإصدار وتاريخ السريان.' }
+    if (error?.message.includes('home_page_required_sections')) return { ok: false, error: 'لا يمكن نشر أو جدولة الصفحة الرئيسية قبل وجود Hero والمسارات والدعوة الختامية كأقسام ظاهرة.' }
+    return { ok: false, error: GENERIC }
+  }
+  revalidatePath('/admin/pages'); revalidatePath('/')
+  if (typeof data.pageSlug === 'string') revalidatePath(`/${data.pageSlug}`)
+  return { ok: true }
 }
 export async function savePageSection(pageId: string, sectionId: string | null, formData: FormData): Promise<ActionResult> {
   const admin = await requireAdminUser('content.manage')

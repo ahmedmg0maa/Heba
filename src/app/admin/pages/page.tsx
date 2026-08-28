@@ -3,7 +3,6 @@ import { adminList } from '@/lib/data/cms'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { PublishToggle } from '@/components/admin/AdminControls'
 import { CmsPageCreator, CmsPageEditor, CmsSectionEditor, NavigationEditor } from '@/components/admin/CmsStructureManager'
 import { PreviewButton } from '@/components/admin/PreviewButton'
 import { HomeSectionManager } from '@/components/admin/HomeSectionManager'
@@ -65,7 +64,6 @@ export default async function AdminPagesPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <Badge tone={p.is_published ? 'success' : 'sand'}>{p.is_published ? 'منشورة' : 'مخفية'}</Badge>
-                  <PublishToggle table="pages" id={p.id} published={p.is_published} />
                   <PreviewButton type="page" id={p.id}/>
                 </div>
               </div>
