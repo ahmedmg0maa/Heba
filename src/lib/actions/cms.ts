@@ -163,11 +163,10 @@ export async function updateSetting(key: string, jsonText: string): Promise<Acti
   } catch {
     return { ok: false, error: 'صيغة JSON غير صحيحة.' }
   }
-  const { error } = await getServiceClient()
-    .from('site_settings')
-    .upsert({ key, value, updated_by: admin.user.id }, { onConflict: 'key' })
-  if (error) return { ok: false, error: GENERIC }
-  await audit(admin.user.id, 'setting.updated', 'site_setting', key)
+  const serialized=JSON.stringify(value)
+  if(serialized.length>32768||/(secret|token|password|api[_-]?key|service[_-]?role|private[_-]?key)/i.test(key)||/"[^"]*(secret|token|password|api[_-]?key|service[_-]?role|private[_-]?key)[^"]*"\s*:/i.test(serialized))return{ok:false,error:'لا تحفظي أسرارًا أو قيمة أكبر من 32 كيلوبايت داخل إعدادات المحتوى.'}
+  const {data,error}=await getServiceClient().rpc('manage_advanced_setting',{p_actor_id:admin.user.id,p_key:key,p_value:value})
+  if(error||!data?.updated)return{ok:false,error:error?.message.includes('advanced_setting_not_found')?'يمكن تعديل المفاتيح الموجودة فقط.':GENERIC}
   revalidatePath('/admin/settings')
   return { ok: true }
 }
@@ -176,11 +175,8 @@ export async function toggleFlag(key: string, enabled: boolean): Promise<ActionR
   if (!hasEnv()) return { ok: false, error: NO_ENV }
   const admin = await requireAdminUser('feature_flags.manage')
   if (!admin) return { ok: false, error: NOT_ADMIN }
-  const { error } = await getServiceClient()
-    .from('feature_flags')
-    .upsert({ key, is_enabled: enabled }, { onConflict: 'key' })
-  if (error) return { ok: false, error: GENERIC }
-  await audit(admin.user.id, enabled ? 'flag.enabled' : 'flag.disabled', 'feature_flag', key)
+  const {data,error}=await getServiceClient().rpc('manage_feature_flag',{p_actor_id:admin.user.id,p_key:key,p_enabled:enabled})
+  if(error||data?.enabled!==enabled)return{ok:false,error:GENERIC}
   revalidatePath('/admin/settings')
   revalidatePath('/')
   return { ok: true }

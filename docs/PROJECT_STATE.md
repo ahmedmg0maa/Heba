@@ -1,6 +1,11 @@
 # PROJECT STATE
 Last session: 2026-08-28 | Current program: Code X development-first execution | LOCAL DEVELOPMENT IN PROGRESS — STAGING EXTERNAL GATE remains for recovery, provider migration and live acceptance only
 
+## P0 governed advanced-settings/flags checkpoint — 2026-08-28
+- Migration 079 revokes browser writes and makes existing advanced-setting changes revisioned/audited atomically; arbitrary new keys, typed settings, secret-like keys/fields and payloads above 32 KiB are denied. Feature-flag changes lock the existing flag and audit the transition in the same transaction.
+- Targeted contract and the consolidated `pnpm check:deploy` gate passed: 69-page Next build, all audits and public E2E **70/70**. The isolated vinext/Workers build and serial Cloudflare suite also passed **70/70**. Migration 079 remains source-only and provider persistence is `STAGING EXTERNAL GATE`.
+- Exact next task: commit this slice, run source/secret/repository preflight, push the current branch and deploy the provider-unconfigured public Worker preview; do not claim database-backed Staging acceptance.
+
 ## P0 atomic article-lifecycle checkpoint — 2026-08-28
 - Migration 078 routes article create/edit/publish/schedule/archive through one service-only aggregate transaction with action-specific permissions, prior revision, managed-cover usage and metadata-only audit. Browser-direct writes and the generic publication bypass are removed.
 - Publication requires substantive excerpt/content and any configured cover must be an active public image with governed rights. The scheduler repeats readiness; owner scheduling round-trips through Cairo time. “Delete” now archives and preserves editorial history.

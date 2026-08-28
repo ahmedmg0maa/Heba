@@ -4,7 +4,7 @@
 
 **`BLOCKED`**
 
-> تحديث مصدر محلي في 2026-08-28: تطور التسلسل المحلي إلى `000–078` (79 ملفًا). بقيت Production عند `000–043` فقط، ولم تُطبق `044–078` على مزود؛ تُشغّل بالترتيب داخل Staging بعد Recovery Point وschema fingerprint. تجعل 075–078 أقسام CMS والقوائم ودورتي الصفحة والمقال معاملات ذرّية مدققة، وما زالت `unverified` حيًا.
+> تحديث مصدر محلي في 2026-08-28: تطور التسلسل المحلي إلى `000–079` (80 ملفًا). بقيت Production عند `000–043` فقط، ولم تُطبق `044–079` على مزود؛ تُشغّل بالترتيب داخل Staging بعد Recovery Point وschema fingerprint. تجعل 075–079 CMS والإعدادات معاملات محكومة، وما زالت `unverified` حيًا.
 
 لم تبدأ أي عملية Backup أو Restore أو migration أو Auth/Storage/Production write. المانع الخارجي الوحيد هو غياب متغير الاتصال الآمن الخاص بـProduction من بيئة التنفيذ: `HEBA_LAUNCH_PRODUCTION_DATABASE_URL`. لم يُطلب أو يُطبع connection string أو كلمة مرور.
 

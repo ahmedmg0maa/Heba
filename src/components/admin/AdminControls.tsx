@@ -129,6 +129,7 @@ export function SettingEditor({ settingKey, initialValue }: { settingKey: string
           setSaved(false)
         }}
         rows={3}
+        maxLength={32768}
         dir="ltr"
         className="w-full rounded-xl border border-line bg-ivory/50 px-4 py-3 font-mono text-xs text-ink focus:border-deep-teal focus:outline-2 focus:outline-deep-teal/20"
       />
@@ -144,15 +145,15 @@ export function SettingEditor({ settingKey, initialValue }: { settingKey: string
         >
           حفظ
         </Button>
-        {saved && <span className="text-xs text-deep-teal">حُفظ ✓</span>}
-        {error && <span className="text-xs text-burgundy">{error}</span>}
+        {saved && <span role="status" aria-live="polite" className="text-xs text-deep-teal">حُفظ مع نسخة استعادة ✓</span>}
+        {error && <span role="alert" aria-live="polite" className="text-xs text-burgundy">{error}</span>}
       </div>
     </div>
   )
 }
 
 export function FlagToggle({ flagKey, enabled, description }: { flagKey: string; enabled: boolean; description: string }) {
-  const { busy, run } = useBusy()
+  const { busy, error, run } = useBusy()
   return (
     <div className="flex items-center justify-between gap-4 rounded-xl bg-ivory/60 px-4 py-3">
       <div>
@@ -164,6 +165,7 @@ export function FlagToggle({ flagKey, enabled, description }: { flagKey: string;
       <Button size="sm" variant={enabled ? 'secondary' : 'primary'} disabled={busy} onClick={() => run(() => toggleFlag(flagKey, !enabled))}>
         {enabled ? 'تعطيل' : 'تفعيل'}
       </Button>
+      {error && <p role="alert" aria-live="polite" className="text-xs text-burgundy">{error}</p>}
     </div>
   )
 }

@@ -679,3 +679,9 @@
 - Scheduled publication repeats readiness. Owner wall time is Cairo, not deployment-runtime local time.
 - Delete in the organized editor means audited archival. Hard deletion is not used to erase revisions or editorial evidence.
 - **078 remains source-only.** SQL/RLS/concurrency/media and cron persistence remain within `STAGING EXTERNAL GATE`.
+
+## 2026-08-28 — Advanced settings cannot become a secret store
+
+- Only existing non-typed keys may be edited through the advanced JSON surface. Secret-like keys/fields and payloads above 32 KiB fail closed.
+- The previous setting value is retained privately, and setting/flag transition plus audit commits atomically.
+- **079 remains source-only.** SQL/RLS/concurrency/persistence remain `STAGING EXTERNAL GATE`.
