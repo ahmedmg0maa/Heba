@@ -178,6 +178,10 @@ test.describe('public experience', () => {
     await expect(page.locator('input[type="password"]')).toHaveCount(1)
     await expect(page.locator('header')).toHaveCount(0)
     await expect(page.locator('footer')).toHaveCount(0)
+    await visit(page, '/auth/update-password')
+    await expect(page.getByRole('heading', { name: 'عيّني كلمة مرور جديدة' })).toBeVisible()
+    await expect(page.locator('input[type="password"]')).toHaveCount(2)
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/)
   })
 
   test('anonymous dashboard and admin access are guarded', async ({ page }) => {

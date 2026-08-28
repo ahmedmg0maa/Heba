@@ -593,3 +593,11 @@
 - **Read state is operational state with a truthful result.** Mark-all-read changes only the actor's unread notifications, returns the durable affected count and writes one count-only audit record. A retry with nothing left is a successful idempotent no-op rather than a duplicate audit.
 - **Customer content is excluded from audit.** Profile names, phone numbers, notification titles and bodies never enter audit metadata; evidence records only changed-field booleans or an affected-row count.
 - **067 remains source-only.** SQL parsing, RLS denial, concurrent execution and reload persistence stay under the recovery-controlled `STAGING EXTERNAL GATE`.
+
+## 2026-08-28 — Password changes require proof appropriate to their flow
+
+- **An ordinary authenticated session is not recent credential proof.** Dashboard changes submit the current password through Supabase Auth's supported `current_password` field and require a distinct, confirmed new password. Recovery is separate and accepted only from a verified JWT whose AMR contains `recovery`.
+- **Email links terminate in one SSR PKCE exchange.** Recovery and signup use `/auth/callback`, which exchanges the one-time code into HttpOnly-cookie session state and redirects only to a fixed internal set. Callback responses are private/no-store and never reflect an arbitrary `next` destination.
+- **The provider/database boundary is represented truthfully, not called atomic.** Migration 068 creates a pending, rate-limited, content-free operation before invoking Auth and finalizes it to succeeded/failed afterward. If finalization is unavailable, the durable pending fact remains instead of fabricating a database-confirmed outcome.
+- **Successful password changes end the active trust period.** All sessions are closed and the customer signs in again with the new credential. Access-token expiry behavior remains a provider configuration/acceptance fact, not a local guarantee.
+- **068 is source-only and redirects are environmental.** SQL execution, real PKCE recovery, SMTP receipt, AMR, session invalidation and the exact Staging/Production redirect allowlists require the controlled `STAGING EXTERNAL GATE`.

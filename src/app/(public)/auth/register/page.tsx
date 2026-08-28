@@ -6,6 +6,7 @@ import { AuthShell, AuthLink } from '@/components/auth/AuthShell'
 import { PasswordField } from '@/components/auth/PasswordField'
 import { FormField } from '@/components/ui/FormField'
 import { Button } from '@/components/ui/Button'
+import { PASSWORD_HINT, PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH, validateNewPassword } from '@/lib/auth/password-policy'
 
 export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null)
@@ -18,8 +19,9 @@ export default function RegisterPage() {
     setError(null)
     const form = new FormData(e.currentTarget)
     const password = String(form.get('password'))
-    if (password.length < 8) {
-      setError('كلمة المرور يجب ألا تقل عن ٨ أحرف.')
+    const passwordError = validateNewPassword(password, password)
+    if (passwordError) {
+      setError(passwordError)
       setLoading(false)
       return
     }
@@ -28,7 +30,7 @@ export default function RegisterPage() {
       password,
       options: {
         data: { full_name: String(form.get('full_name')) },
-        emailRedirectTo: `${window.location.origin}/auth/login`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
       },
     })
     if (error) {
@@ -60,7 +62,14 @@ export default function RegisterPage() {
         <form onSubmit={onSubmit} className="space-y-5">
           <FormField label="الاسم الكامل" name="full_name" autoComplete="name" required />
           <FormField label="البريد الإلكتروني" name="email" type="email" autoComplete="email" required dir="ltr" />
-          <PasswordField label="كلمة المرور" name="password" autoComplete="new-password" hint="٨ أحرف على الأقل" />
+          <PasswordField
+            label="كلمة المرور"
+            name="password"
+            autoComplete="new-password"
+            hint={PASSWORD_HINT}
+            minLength={PASSWORD_MIN_LENGTH}
+            maxLength={PASSWORD_MAX_LENGTH}
+          />
           {error && (
             <p className="rounded-xl bg-burgundy/10 px-4 py-3 text-sm font-medium text-burgundy" role="alert">
               {error}

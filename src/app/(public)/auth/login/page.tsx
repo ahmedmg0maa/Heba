@@ -17,6 +17,8 @@ function LoginForm() {
   const params = useSearchParams()
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const passwordChanged = params.get('password') === 'changed'
+  const callbackFailed = params.get('error') === 'callback'
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -38,6 +40,16 @@ function LoginForm() {
 
   return (
     <form onSubmit={onSubmit} className="space-y-5">
+      {passwordChanged && (
+        <p className="rounded-xl bg-deep-teal/8 px-4 py-3 text-sm font-medium text-deep-teal" role="status">
+          تم حفظ كلمة المرور. سجّلي الدخول مجددًا بها.
+        </p>
+      )}
+      {callbackFailed && (
+        <p className="rounded-xl bg-burgundy/10 px-4 py-3 text-sm font-medium text-burgundy" role="alert">
+          الرابط غير صالح أو انتهت صلاحيته. اطلبي رابطًا جديدًا إذا كنتِ تستعيدين الحساب.
+        </p>
+      )}
       <FormField label="البريد الإلكتروني" name="email" type="email" autoComplete="email" required dir="ltr" />
       <PasswordField label="كلمة المرور" name="password" autoComplete="current-password" />
       {error && <p className="rounded-xl bg-burgundy/10 px-4 py-3 text-sm font-medium text-burgundy" role="alert">{error}</p>}

@@ -15,7 +15,7 @@ export default function ResetPasswordPage() {
     setLoading(true)
     const form = new FormData(e.currentTarget)
     await getBrowserClient().auth.resetPasswordForEmail(String(form.get('email')), {
-      redirectTo: `${window.location.origin}/auth/login`,
+      redirectTo: `${window.location.origin}/auth/callback?next=/auth/update-password`,
     })
     // Always show success — never reveal whether an email is registered.
     setDone(true)

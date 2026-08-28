@@ -134,3 +134,7 @@ Run `pnpm verify:sentry-monitoring-local` whenever monitoring, Worker entry, ins
 ## Atomic customer account-governance contract
 
 `pnpm verify:customer-account-governance-local` proves migration 067 removes authenticated direct UPDATE access to profiles and notifications, then replaces those paths with service-only RPCs bound to the Server Action's verified user. It checks profile field normalization/bounds, per-customer serialization, idempotent outcomes, read-state ownership and metadata-only audit ordering. The verifier also rejects direct table writes in the account actions and requires matching form bounds plus accessible durable-result handling. SQL compilation, RLS denial, concurrent retry, persisted audit rows and reload behavior require the controlled `STAGING EXTERNAL GATE`.
+
+## Governed customer password-lifecycle contract
+
+`pnpm verify:customer-password-lifecycle-local` proves Dashboard changes pass `current_password` to the installed Supabase Auth contract, recovery completion requires the verified `recovery` AMR, both flows share bounded password/confirmation validation, and success closes all sessions before the customer logs in again. It also verifies the private SSR PKCE code exchange, fixed callback destinations, real recovery/update route, and migration 068's locked five-per-hour two-phase operation evidence without credential, token, email, network or device data. Provider email/code exchange, Auth redirect allowlists, session revocation and live PostgreSQL evidence require controlled Staging.

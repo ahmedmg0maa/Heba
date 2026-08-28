@@ -1,10 +1,13 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { updateProfile, changePassword } from '@/lib/actions/account'
 import { FormField } from '@/components/ui/FormField'
 import { Button } from '@/components/ui/Button'
+import { PasswordField } from '@/components/auth/PasswordField'
 import type { MyProfile } from '@/lib/data/dashboard'
+import { PASSWORD_HINT, PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from '@/lib/auth/password-policy'
 
 function Feedback({ state }: { state: { ok: boolean; msg: string } | null }) {
   if (!state) return null
@@ -60,27 +63,45 @@ export function ProfileForm({ profile }: { profile: MyProfile | null }) {
 export function PasswordForm() {
   const [state, setState] = useState<{ ok: boolean; msg: string } | null>(null)
   const [busy, setBusy] = useState(false)
+  const router = useRouter()
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const form = e.currentTarget
     setBusy(true)
     const res = await changePassword(new FormData(form))
-    setState(res.ok ? { ok: true, msg: 'تم تغيير كلمة المرور بنجاح.' } : { ok: false, msg: res.error })
-    if (res.ok) form.reset()
+    if (res.ok) {
+      form.reset()
+      router.replace('/auth/login?password=changed')
+      router.refresh()
+      return
+    }
+    setState({ ok: false, msg: res.error })
     setBusy(false)
   }
 
   return (
     <form onSubmit={onSubmit} className="space-y-5">
-      <FormField
+      <PasswordField
+        label="كلمة المرور الحالية"
+        name="current_password"
+        autoComplete="current-password"
+        maxLength={PASSWORD_MAX_LENGTH}
+      />
+      <PasswordField
         label="كلمة المرور الجديدة"
         name="password"
-        type="password"
         autoComplete="new-password"
-        hint="٨ أحرف على الأقل"
-        required
-        dir="ltr"
+        hint={PASSWORD_HINT}
+        minLength={PASSWORD_MIN_LENGTH}
+        maxLength={PASSWORD_MAX_LENGTH}
+      />
+      <PasswordField
+        label="تأكيد كلمة المرور الجديدة"
+        name="password_confirmation"
+        autoComplete="new-password"
+        minLength={PASSWORD_MIN_LENGTH}
+        maxLength={PASSWORD_MAX_LENGTH}
       />
       <Feedback state={state} />
       <Button type="submit" variant="secondary" disabled={busy}>

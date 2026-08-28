@@ -8,11 +8,15 @@ export function PasswordField({
   name,
   autoComplete,
   hint,
+  minLength,
+  maxLength,
 }: {
   label: string
   name: string
   autoComplete: string
   hint?: string
+  minLength?: number
+  maxLength?: number
 }) {
   const [visible, setVisible] = useState(false)
 
@@ -28,6 +32,8 @@ export function PasswordField({
           name={name}
           type={visible ? 'text' : 'password'}
           autoComplete={autoComplete}
+          minLength={minLength}
+          maxLength={maxLength}
           required
           dir="ltr"
           className="w-full rounded-xl border border-line bg-surface-raised px-4 py-2.5 pe-12 text-ink transition-colors focus:border-deep-teal focus:outline-2 focus:outline-offset-0 focus:outline-deep-teal/20"

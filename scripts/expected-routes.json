@@ -31,7 +31,8 @@
     "/auth/login",
     "/auth/admin",
     "/auth/register",
-    "/auth/reset-password"
+    "/auth/reset-password",
+    "/auth/update-password"
     ,"/preview/[type]/[id]",
     "/unsubscribe/[token]"
   ],
