@@ -482,8 +482,42 @@ export async function deletePageSection(pageId: string, sectionId: string): Prom
   if (typeof data.pageSlug === 'string') revalidatePath(`/${data.pageSlug}`)
   return { ok: true }
 }
-export async function saveNavigationItem(id:string|null,formData:FormData):Promise<ActionResult>{const admin=await requireAdminUser('settings.manage');if(!admin)return{ok:false,error:NOT_ADMIN};const menu=String(formData.get('menu')??'header'),label=String(formData.get('label')??'').trim(),href=String(formData.get('href')??'').trim();if(!['header','footer_platform','footer_about','footer_legal'].includes(menu)||label.length<2||!href.startsWith('/'))return{ok:false,error:'راجعي القائمة والعنوان والرابط الداخلي.'};const payload={menu,label,href,sort:Math.max(0,Number(formData.get('sort')??0)),is_visible:formData.get('is_visible')==='on'};const service=getServiceClient(),result=id?await service.from('navigation_items').update(payload).eq('id',id):await service.from('navigation_items').insert(payload);if(result.error)return{ok:false,error:GENERIC};await audit(admin.user.id,id?'navigation.updated':'navigation.created','navigation_item',id??href,payload);revalidatePath('/admin/pages');revalidatePath('/');return{ok:true}}
-export async function deleteNavigationItem(id:string):Promise<ActionResult>{const admin=await requireAdminUser('settings.manage');if(!admin)return{ok:false,error:NOT_ADMIN};const{error}=await getServiceClient().from('navigation_items').delete().eq('id',id);if(error)return{ok:false,error:GENERIC};await audit(admin.user.id,'navigation.deleted','navigation_item',id);revalidatePath('/admin/pages');revalidatePath('/');return{ok:true}}
+export async function saveNavigationItem(id: string | null, formData: FormData): Promise<ActionResult> {
+  const admin = await requireAdminUser('settings.manage')
+  if (!admin) return { ok: false, error: NOT_ADMIN }
+  const menu = String(formData.get('menu') ?? 'header')
+  const label = String(formData.get('label') ?? '').trim()
+  const href = String(formData.get('href') ?? '').trim()
+  const sort = Number(formData.get('sort') ?? 0)
+  if (!['header','footer_platform','footer_about','footer_legal'].includes(menu)
+      || label.length < 2 || label.length > 80 || /[\u0000-\u001f\u007f]/.test(label)
+      || href.length < 1 || href.length > 180 || !href.startsWith('/') || href.startsWith('//') || /[\s\\]/.test(href)
+      || !Number.isInteger(sort) || sort < 0 || sort > 1000) {
+    return { ok: false, error: 'راجعي القائمة والعنوان والرابط الداخلي والترتيب.' }
+  }
+  const { data, error } = await getServiceClient().rpc('manage_navigation_item', {
+    p_actor_id: admin.user.id, p_action: id ? 'update' : 'create', p_item_id: id,
+    p_menu: menu, p_label: label, p_href: href, p_sort: sort,
+    p_is_visible: formData.get('is_visible') === 'on',
+  })
+  if (error || !data?.id) return { ok: false, error: error?.message.includes('navigation_parent_menu_mismatch') ? 'لا يمكن نقل عنصر فرعي إلى قائمة مختلفة عن العنصر الأب.' : GENERIC }
+  revalidatePath('/admin/pages')
+  revalidatePath('/')
+  return { ok: true }
+}
+
+export async function deleteNavigationItem(id: string): Promise<ActionResult> {
+  const admin = await requireAdminUser('settings.manage')
+  if (!admin) return { ok: false, error: NOT_ADMIN }
+  const { data, error } = await getServiceClient().rpc('manage_navigation_item', {
+    p_actor_id: admin.user.id, p_action: 'delete', p_item_id: id,
+    p_menu: null, p_label: null, p_href: null, p_sort: null, p_is_visible: false,
+  })
+  if (error || !data?.id) return { ok: false, error: error?.message.includes('navigation_item_has_children') ? 'احذفي العناصر الفرعية أولًا حتى لا تختفي روابط غير مقصودة.' : GENERIC }
+  revalidatePath('/admin/pages')
+  revalidatePath('/')
+  return { ok: true }
+}
 export async function saveOwnerProfile(formData:FormData):Promise<ActionResult>{const admin=await requireAdminUser('content.manage');if(!admin)return{ok:false,error:NOT_ADMIN};const values=[0,1,2].map(index=>({title:String(formData.get(`value_title_${index}`)??'').trim(),text:String(formData.get(`value_text_${index}`)??'').trim()})).filter(value=>value.title&&value.text);const value={eyebrow:String(formData.get('eyebrow')??'').trim(),title:String(formData.get('title')??'').trim(),lead:String(formData.get('lead')??'').trim(),method:String(formData.get('method')??'').trim(),values};if(value.title.length<3||value.lead.length<10)return{ok:false,error:'اكتبي تعريفًا واضحًا قبل الحفظ.'};const service=getServiceClient(),{data:previous}=await service.from('site_settings').select('value').eq('key','owner_profile').maybeSingle();if(previous)await service.from('content_revisions').insert({entity_type:'owner_profile',entity_id:'00000000-0000-0000-0000-000000000001',snapshot:previous.value,created_by:admin.user.id});const{error}=await service.from('site_settings').upsert({key:'owner_profile',value,is_public:true,updated_by:admin.user.id},{onConflict:'key'});if(error)return{ok:false,error:GENERIC};await audit(admin.user.id,'owner_profile.updated','site_settings','owner_profile');revalidatePath('/about');revalidatePath('/admin/settings');return{ok:true}}
 
 export async function saveStartHereExperience(formData: FormData): Promise<ActionResult> {

@@ -1,6 +1,14 @@
 # PROJECT STATE
 Last session: 2026-08-28 | Current program: Code X development-first execution | LOCAL DEVELOPMENT IN PROGRESS — STAGING EXTERNAL GATE remains for recovery, provider migration and live acceptance only
 
+## P0 atomic Navigation checkpoint — 2026-08-28
+- Forward-only local migration 076 removes browser-direct navigation writes and routes create/update/delete through one service-only transaction. PostgreSQL repeats `settings.manage`, serializes the aggregate, bounds the four menus, count, label, internal path and order, and commits metadata-only audit with the mutation.
+- New database constraints protect future writes even outside the organized editor. Existing parent relationships are preserved; moving a child across menus is denied and deleting a parent with children fails instead of invoking the historical cascade.
+- Server and Admin validation mirror the same limits, destructive controls require confirmation, and accessible durable feedback remains wired to the public header/footer consumer after revalidation.
+- The targeted navigation contract, isolated type-check, lint and database audit passed. The full `pnpm check:deploy` gate passed the 69-page Next production build, every security/operations audit and public Playwright **70/70**; the isolated vinext/Workers build and serial Cloudflare desktop/mobile suite also passed **70/70**.
+- Migration 076 is source-only; SQL constraint compatibility, transaction rollback, role denial, concurrent ordering and Admin-to-public reload remain `STAGING EXTERNAL GATE`.
+- Exact next local task: commit this slice, then govern the remaining page/article/settings mutation groups.
+
 ## P0 atomic CMS page-section checkpoint — 2026-08-28
 - Forward-only local migration 075 revokes browser-direct section/revision writes and routes homepage plus general page-section create/update/delete through one service-only aggregate transaction. PostgreSQL repeats `content.manage` or `content.delete`, locks the page, bounds count/name/kind/order/JSON size, creates the prior revision and commits the mutation with metadata-only audit.
 - A published homepage cannot lose or hide its visible `hero`, `pathways` or `cta` section. Home section kinds remain unique and immutable through the organized editor, while unsupported historical records remain preserved.

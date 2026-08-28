@@ -657,3 +657,10 @@
 - **A published homepage keeps a viable public journey.** Visible `hero`, `pathways` and `cta` cannot be hidden or deleted while the page is published. The owner must first move the page to a non-public state rather than accidentally breaking the live journey.
 - **The browser gets operational truth, not transaction parts.** Admin sends validated content and opaque IDs to one action, confirms deletion, and receives an accessible durable outcome; revision rows and audit metadata never become browser-controlled writes.
 - **075 remains source-only.** SQL parsing/rollback, role denial, concurrent editors, revision persistence and Admin-to-public parity remain within `STAGING EXTERNAL GATE`.
+
+## 2026-08-28 — Navigation is a governed aggregate, not independent links
+
+- **One settings permission protects one atomic fact.** Create, update and delete repeat `settings.manage` inside a service-only transaction and commit a metadata-only audit under the same aggregate lock.
+- **Internal destinations stay internal at every boundary.** Database constraints, the RPC, the Server Action and the Admin form bound labels/order and accept only single-slash internal paths without whitespace or backslashes.
+- **The hidden hierarchy cannot cascade through a flat editor.** Existing parent links are preserved, but an item cannot move away from its parent's menu and a parent cannot be deleted while children exist. The owner must resolve the visible relationship explicitly.
+- **076 remains source-only.** Legacy-row constraint compatibility, SQL rollback, role denial, concurrent ordering and Admin-to-public persistence remain within `STAGING EXTERNAL GATE`.
