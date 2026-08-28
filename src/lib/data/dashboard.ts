@@ -195,8 +195,8 @@ export async function getMyWorkshops(): Promise<MyWorkshop[]> {
     const [deliveryResponse, resourceResponse, recordingResponse] = workshopIds.length > 0
       ? await Promise.all([
         supabase.from('workshop_delivery').select('workshop_id, meeting_url').in('workshop_id', workshopIds).limit(100),
-        supabase.from('workshop_resources').select('id, workshop_id, title, kind').in('workshop_id', workshopIds).limit(500),
-        supabase.from('workshop_recordings').select('id, workshop_id, title, published_at').in('workshop_id', workshopIds).not('published_at', 'is', null).limit(500),
+        supabase.from('workshop_resources').select('id, workshop_id, title, kind').in('workshop_id', workshopIds).is('archived_at', null).limit(500),
+        supabase.from('workshop_recordings').select('id, workshop_id, title, published_at').in('workshop_id', workshopIds).is('archived_at', null).not('published_at', 'is', null).limit(500),
       ])
       : [
         { data: [], error: null },

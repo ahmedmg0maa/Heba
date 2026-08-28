@@ -11,6 +11,14 @@ type Result<T> = { ok: true; data: T } | { ok: false; error: string }
 type Inspection = { mime?: string; size?: number }
 type BindingResult = { id?: string; outcome?: string; replacedPath?: string | null }
 type UploadAuthorization = { authorized?: boolean; outcome?: string; id?: string; declaredMime?: string; declaredSize?: number }
+type ArchiveBindingResult = {
+  outcome?: string
+  recordId?: string
+  bucket?: string
+  storagePath?: string
+  pathHash?: string
+  storageCleanupEligible?: boolean
+}
 
 const UUID = '[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}'
 
@@ -175,4 +183,57 @@ export async function finalizeProtectedUpload(kind: Kind, entityId: string, inpu
   revalidatePath('/admin/books'); revalidatePath('/admin/workshops'); revalidatePath('/admin/courses')
   revalidatePath('/dashboard/books'); revalidatePath('/dashboard/workshops')
   return { ok: true, data: { id: bound.id } }
+}
+
+export async function archiveProtectedDelivery(
+  kind: Kind,
+  entityId: string,
+  recordId: string,
+): Promise<Result<{ storageOutcome: 'removed' | 'not_managed' | 'failed'; evidenceRecorded: boolean }>> {
+  const admin = await requirePermission('learning.manage')
+  if (!admin?.userId) return { ok: false, error: 'لا تملكين صلاحية إزالة ملفات التسليم.' }
+  const uuid = new RegExp(`^${UUID}$`, 'i')
+  const rule = getUploadRule(kind)
+  if (!rule || !uuid.test(entityId) || !uuid.test(recordId)) return { ok: false, error: 'مرجع ملف التسليم غير صالح.' }
+
+  const service = getServiceClient()
+  const archived = await service.rpc('archive_protected_delivery_binding', {
+    p_actor_id: admin.userId,
+    p_delivery_kind: kind,
+    p_entity_id: entityId,
+    p_record_id: recordId,
+  })
+  const binding = archived.data as ArchiveBindingResult | null
+  if (archived.error || binding?.outcome !== 'archived' || binding.recordId !== recordId
+      || typeof binding.storagePath !== 'string' || typeof binding.pathHash !== 'string') {
+    return { ok: false, error: 'تعذّر أرشفة ملف التسليم بأمان.' }
+  }
+
+  const safePath = /^[A-Za-z0-9][A-Za-z0-9._/-]{0,1023}$/.test(binding.storagePath)
+    && !/(^|\/)\.\.(\/|$)/.test(binding.storagePath)
+  const authorityMatches = binding.bucket === rule.bucket
+    && /^[0-9a-f]{64}$/.test(binding.pathHash)
+    && sha256(binding.storagePath) === binding.pathHash
+  let storageOutcome: 'removed' | 'not_managed' | 'failed' = 'not_managed'
+  if (binding.storageCleanupEligible === true) {
+    storageOutcome = safePath && authorityMatches && await removePrivateObject(rule.bucket, binding.storagePath)
+      ? 'removed'
+      : 'failed'
+  }
+
+  const evidence = await service.rpc('record_protected_delivery_cleanup_result', {
+    p_actor_id: admin.userId,
+    p_delivery_kind: kind,
+    p_entity_id: entityId,
+    p_record_id: recordId,
+    p_path_hash: binding.pathHash,
+    p_outcome: storageOutcome,
+  })
+  revalidatePath('/admin/books')
+  revalidatePath('/admin/workshops')
+  revalidatePath('/admin/courses', 'layout')
+  revalidatePath('/dashboard/books')
+  revalidatePath('/dashboard/workshops')
+  revalidatePath('/dashboard/courses')
+  return { ok: true, data: { storageOutcome, evidenceRecorded: !evidence.error } }
 }

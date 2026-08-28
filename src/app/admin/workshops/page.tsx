@@ -7,6 +7,7 @@ import { PublishToggle } from '@/components/admin/AdminControls'
 import { CatalogCreatePanel, CatalogEditPanel } from '@/components/admin/CatalogManager'
 import { ProtectedDeliveryUpload } from '@/components/admin/ProtectedDeliveryUpload'
 import { WorkshopRegistrationControl } from '@/components/admin/WorkshopRegistrationControl'
+import { ProtectedDeliveryItems } from '@/components/admin/ProtectedDeliveryItems'
 
 export const metadata: Metadata = { title: 'ورش العمل — الإدارة' }
 
@@ -25,6 +26,8 @@ type Row = {
   location_text: string | null
   meeting_url: string | null
   workshop_delivery: { meeting_url: string | null }[]
+  workshop_resources: { id: string; title: string; kind: string; archived_at: string | null }[]
+  workshop_recordings: { id: string; title: string; published_at: string | null; archived_at: string | null }[]
   cover_url: string | null
   products: { price: number; compare_at_price: number | null; currency: string; subtitle: string | null; sort: number } | { price: number; compare_at_price: number | null; currency: string; subtitle: string | null; sort: number }[]
 }
@@ -35,7 +38,7 @@ export default async function AdminWorkshopsPage() {
   const media = await getPublicMediaOptions()
   const workshops = await adminList<Row>(
     'workshops',
-    'id, title, slug, description, starts_at, ends_at, seats_total, seats_reserved, location_kind, location_text, meeting_url, workshop_delivery(meeting_url), cover_url, is_published, products(price, compare_at_price, currency, subtitle, sort), workshop_registrations(id,user_id,status,workshop_attendance(minutes))',
+    'id, title, slug, description, starts_at, ends_at, seats_total, seats_reserved, location_kind, location_text, meeting_url, workshop_delivery(meeting_url), workshop_resources(id,title,kind,archived_at), workshop_recordings(id,title,published_at,archived_at), cover_url, is_published, products(price, compare_at_price, currency, subtitle, sort), workshop_registrations(id,user_id,status,workshop_attendance(minutes))',
     { orderBy: 'starts_at', ascending: true },
   )
   const profileRows=await adminList<{id:string;full_name:string;email:string}>('profiles','id,full_name,email',{limit:1000})
@@ -93,6 +96,20 @@ export default async function AdminWorkshopsPage() {
                     })()} />
                   </div>
                   <div className="mt-3 grid min-w-72 gap-2"><ProtectedDeliveryUpload kind="workshop-resource" entityId={w.id} label="إضافة مورد للمسجلات" /><ProtectedDeliveryUpload kind="workshop-recording" entityId={w.id} label="رفع تسجيل الورشة" /></div>
+                  <div className="mt-2 grid min-w-72 gap-2">
+                    <ProtectedDeliveryItems
+                      kind="workshop-resource"
+                      entityId={w.id}
+                      label="موارد الورشة الحالية"
+                      items={(w.workshop_resources ?? []).filter((item) => !item.archived_at).map((item) => ({ id: item.id, title: item.title, detail: item.kind }))}
+                    />
+                    <ProtectedDeliveryItems
+                      kind="workshop-recording"
+                      entityId={w.id}
+                      label="تسجيلات الورشة الحالية"
+                      items={(w.workshop_recordings ?? []).filter((item) => !item.archived_at).map((item) => ({ id: item.id, title: item.title, detail: item.published_at ? 'منشور للمسجلات' : 'غير منشور' }))}
+                    />
+                  </div>
                   {(w.workshop_registrations??[]).length>0&&<details className="mt-3 min-w-72 rounded-xl border border-line bg-ivory/35"><summary className="cursor-pointer list-none px-3 py-2 text-sm font-bold text-deep-teal">إدارة المسجلات ({w.workshop_registrations.length.toLocaleString('ar-EG')})</summary><div className="space-y-3 border-t border-line p-3">{w.workshop_registrations.map(registration=>{const profile=profiles.get(registration.user_id);return <div key={registration.id} className="rounded-lg bg-surface-raised p-3"><p className="text-sm font-semibold text-deep-teal">{profile?.full_name||profile?.email||registration.user_id}</p><WorkshopRegistrationControl id={registration.id} status={registration.status} minutes={registration.workshop_attendance?.[0]?.minutes??0}/></div>})}</div></details>}
                 </TD>
               </TR>

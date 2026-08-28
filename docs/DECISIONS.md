@@ -641,3 +641,11 @@
 - **A text field cannot appoint a protected video.** New lessons always start without `video_path`; only the issued-intent and server-inspected protected-upload boundary may attach delivery content.
 - **Delete means safely absent, not cascade-and-hope.** A module with lessons cannot be deleted. A lesson with a protected video/resource, customer progress or private notes cannot be deleted; delivery removal and retention decisions must be explicit rather than orphaning Storage or erasing customer history.
 - **073 remains source-only.** Local contracts and builds cannot establish SQL parsing, role denial, concurrent ordering or persisted public/Admin behavior; those remain within `STAGING EXTERNAL GATE`.
+
+## 2026-08-28 — Removing protected delivery preserves history and separates Storage truth
+
+- **Removal from customer delivery is archival, not destructive cascade.** Book files and learning/workshop resources retain their opaque records and attribution so download, admission and operational history remain intact. Lesson videos clear the single binding and revoke active admissions under the same database lock.
+- **Every customer admission path denies archived content.** RLS protects direct customer reads, while Service Role book/course/workshop authorization repeats the active-record condition because elevated functions cannot rely on RLS.
+- **A database commit cannot claim a Storage deletion.** The archive transaction returns the path only to the trusted Server Action. Bucket, safe path shape and SHA-256 authority are verified again before deletion; a separate private cleanup event records `removed`, `not_managed` or `failed` after the provider result.
+- **Operational evidence is path-free.** Audit and System reconciliation contain only actor/entity/record IDs, path hashes and structural outcomes. The Admin browser receives opaque IDs and truthful split-phase feedback, never a private path.
+- **074 remains source-only.** SQL compilation, rollback, concurrent authorization/archive behavior, RLS/service-role denial, real Storage cleanup and persisted evidence remain within `STAGING EXTERNAL GATE`.

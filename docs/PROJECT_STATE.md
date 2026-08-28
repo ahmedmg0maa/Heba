@@ -1,6 +1,14 @@
 # PROJECT STATE
 Last session: 2026-08-28 | Current program: Code X development-first execution | LOCAL DEVELOPMENT IN PROGRESS — STAGING EXTERNAL GATE remains for recovery, provider migration and live acceptance only
 
+## P0 governed protected-delivery removal checkpoint — 2026-08-28
+- Forward-only local migration 074 adds attributable soft archival for book files, lesson resources, workshop resources and recordings, preserving download/customer history instead of relying on destructive cascades. Lesson-video removal clears only the governed binding and revokes every active admission session under the same lock.
+- Customer RLS, Service Role admission functions, Dashboard reads, latest-book selection and publication readiness all deny or ignore archived delivery. Admin pages list active files/resources/recordings by opaque IDs, never expose private paths, require confirmation and report durable failure states accessibly.
+- The permission-rechecked archive transaction returns a raw path only to the Server Action. That action independently verifies bucket, path safety and SHA-256 authority before private Storage removal; a separate service-only cleanup ledger records `removed`, `not_managed` or `failed`, and failure creates hash-only System reconciliation evidence.
+- `pnpm check:deploy` passed every local contract/audit, the 69-page Next production build and public Playwright **70/70**. The isolated vinext/Workers build passed and the complete Cloudflare desktop/mobile suite passed **70/70** with one worker. The first two-worker attempt lost Wrangler's local Proxy connection after 42 passes; all later failures were connection-refused, and the unchanged artifact passed fully when rerun serially. This harness event is retained as evidence rather than represented as an application failure.
+- Migration 074 is source-only; SQL parsing/rollback, RLS denial, concurrent archive/admission behavior, real Storage cleanup and persisted evidence remain `STAGING EXTERNAL GATE`.
+- Exact next local task: commit this slice, then inspect and close the smallest remaining split-write or false-success mutation in the Admin catalog/CMS surface.
+
 ## P0 atomic course-curriculum checkpoint — 2026-08-28
 - Forward-only local migration 073 revokes browser-direct module/lesson writes and routes all six create/update/delete operations through one service-only, explicit-actor transaction that rechecks `learning.manage`, locks the course scope and couples the mutation with content-minimized audit evidence.
 - Lesson creation can no longer accept a raw `video_path`; protected video/resource attachment remains exclusively behind migration 072's issued-intent, inspected upload flow. Lesson deletion fails if protected delivery, progress or private notes exist, and module deletion fails while lessons remain, preventing Storage or customer-history orphaning.

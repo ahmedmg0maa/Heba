@@ -71,7 +71,7 @@ export async function catalogPublicationReadiness(kind: CatalogPublicationKind, 
   if (kind === 'book') {
     const pages = Number(value('pagesCount', domain.pages_count ?? 0))
     if (!Number.isInteger(pages) || pages < 1) issues.push('حددي عدد صفحات صحيحًا.')
-    const { count, error } = await service.from('book_files').select('id', { count: 'exact', head: true }).eq('book_id', id)
+    const { count, error } = await service.from('book_files').select('id', { count: 'exact', head: true }).eq('book_id', id).is('archived_at', null)
     if (error || !count) issues.push('ارفعي إصدار PDF أو EPUB محميًا قبل النشر.')
   }
   if (kind === 'workshop') {

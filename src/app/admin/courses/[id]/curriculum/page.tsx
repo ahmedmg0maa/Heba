@@ -9,6 +9,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { ModuleForm, LessonForm } from '@/components/admin/CurriculumForms'
 import { ProtectedDeliveryUpload } from '@/components/admin/ProtectedDeliveryUpload'
 import { LessonEditor, ModuleEditor } from '@/components/admin/CurriculumItemEditors'
+import { ProtectedDeliveryItems } from '@/components/admin/ProtectedDeliveryItems'
 
 export const metadata: Metadata = { title: 'منشئ المنهج — الإدارة' }
 
@@ -45,7 +46,7 @@ export default async function CurriculumBuilderPage({ params }: Props) {
   const modules = modulesData ?? []
   const moduleIds = modules.map((module) => module.id)
   const lessonsResult = moduleIds.length
-    ? await supabase.from('course_lessons').select('id,module_id,title,duration_seconds,sort,is_preview,video_path').in('module_id', moduleIds).order('sort').limit(1000)
+    ? await supabase.from('course_lessons').select('id,module_id,title,duration_seconds,sort,is_preview,video_path,lesson_resources(id,title,kind,archived_at)').in('module_id', moduleIds).order('sort').limit(1000)
     : { data: [], error: null }
   if (lessonsResult.error) throw new Error('admin_curriculum_lessons_read_failed')
   const lessonsByModule = new Map<string, typeof lessonsResult.data>()
@@ -89,6 +90,20 @@ export default async function CurriculumBuilderPage({ params }: Props) {
                         </span>
                         </div>
                         <div className="grid gap-2 md:grid-cols-2"><ProtectedDeliveryUpload kind="lesson-video" entityId={l.id} label="رفع فيديو الدرس" /><ProtectedDeliveryUpload kind="lesson-resource" entityId={l.id} label="إضافة مورد للدرس" /></div>
+                        <div className="grid gap-2 md:grid-cols-2">
+                          <ProtectedDeliveryItems
+                            kind="lesson-video"
+                            entityId={l.id}
+                            label="فيديو الدرس الحالي"
+                            items={l.video_path ? [{ id: l.id, title: 'فيديو الدرس المحمي' }] : []}
+                          />
+                          <ProtectedDeliveryItems
+                            kind="lesson-resource"
+                            entityId={l.id}
+                            label="موارد الدرس الحالية"
+                            items={(l.lesson_resources ?? []).filter((item) => !item.archived_at).map((item) => ({ id: item.id, title: item.title, detail: item.kind }))}
+                          />
+                        </div>
                         <LessonEditor id={l.id} courseId={course.id} title={l.title} minutes={Math.round(l.duration_seconds/60)} sort={l.sort} preview={l.is_preview}/>
                       </li>
                     ))}

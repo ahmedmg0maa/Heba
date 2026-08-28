@@ -6,6 +6,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { PublishToggle } from '@/components/admin/AdminControls'
 import { CatalogCreatePanel, CatalogEditPanel } from '@/components/admin/CatalogManager'
 import { ProtectedDeliveryUpload } from '@/components/admin/ProtectedDeliveryUpload'
+import { ProtectedDeliveryItems } from '@/components/admin/ProtectedDeliveryItems'
 
 export const metadata: Metadata = { title: 'الكتب — الإدارة' }
 
@@ -15,7 +16,7 @@ type Row = {
   slug: string
   pages_count: number | null
   is_published: boolean
-  book_files: { id: string }[]
+  book_files: { id: string; format: string; size_bytes: number | null; created_at: string; archived_at: string | null }[]
   book_access: { id: string }[]
   description: string
   author: string
@@ -25,7 +26,7 @@ type Row = {
 
 export default async function AdminBooksPage() {
   const media = await getPublicMediaOptions()
-  const books = await adminList<Row>('books', 'id, title, slug, description, author, pages_count, cover_url, is_published, products(price, compare_at_price, currency, subtitle, sort), book_files(id), book_access(id)')
+  const books = await adminList<Row>('books', 'id, title, slug, description, author, pages_count, cover_url, is_published, products(price, compare_at_price, currency, subtitle, sort), book_files(id,format,size_bytes,created_at,archived_at), book_access(id)')
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">
@@ -58,7 +59,7 @@ export default async function AdminBooksPage() {
                   <p className="text-xs text-taupe" dir="ltr">/{b.slug}</p>
                 </TD>
                 <TD>{b.pages_count ? b.pages_count.toLocaleString('ar-EG') : '—'}</TD>
-                <TD>{(b.book_files ?? []).length.toLocaleString('ar-EG')}</TD>
+                <TD>{(b.book_files ?? []).filter((file) => !file.archived_at).length.toLocaleString('ar-EG')}</TD>
                 <TD>{(b.book_access ?? []).length.toLocaleString('ar-EG')}</TD>
                 <TD>
                   <Badge tone={b.is_published ? 'success' : 'sand'}>{b.is_published ? 'منشور' : 'مسودة'}</Badge>
@@ -78,6 +79,17 @@ export default async function AdminBooksPage() {
                     })()} />
                   </div>
                   <div className="mt-3 min-w-72"><ProtectedDeliveryUpload kind="book" entityId={b.id} label="رفع إصدار PDF أو EPUB" /></div>
+                  <div className="mt-2 min-w-72">
+                    <ProtectedDeliveryItems
+                      kind="book"
+                      entityId={b.id}
+                      items={(b.book_files ?? []).filter((file) => !file.archived_at).map((file) => ({
+                        id: file.id,
+                        title: `إصدار ${file.format.toUpperCase()}`,
+                        detail: file.size_bytes ? `${(file.size_bytes / 1024 / 1024).toLocaleString('ar-EG', { maximumFractionDigits: 1 })} م.ب` : undefined,
+                      }))}
+                    />
+                  </div>
                 </TD>
               </TR>
             ))}

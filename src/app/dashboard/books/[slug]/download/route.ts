@@ -6,7 +6,7 @@ export async function GET(_request:Request,{params}:{params:Promise<{slug:string
   if(!user)return privateRedirect(new URL('/auth/login',_request.url).toString())
   const {data:access}=await supabase.from('book_access').select('book_id,books!inner(slug)').eq('user_id',user.id).eq('books.slug',slug).maybeSingle()
   if(!access)return privateJson('ليس لديك وصول لهذا الكتاب.',403)
-  const service=getServiceClient(),{data:file}=await service.from('book_files').select('id,storage_path,format').eq('book_id',access.book_id).order('created_at',{ascending:false}).limit(1).maybeSingle()
+  const service=getServiceClient(),{data:file}=await service.from('book_files').select('id,storage_path,format').eq('book_id',access.book_id).is('archived_at',null).order('created_at',{ascending:false}).limit(1).maybeSingle()
   if(!file)return privateJson('ملف الكتاب غير متاح بعد.',404)
   const {data:admission,error:admissionError}=await service.rpc('authorize_book_download',{p_user_id:user.id,p_book_file_id:file.id,p_request_fingerprint:requestFingerprint(_request)})
   const result=Array.isArray(admission)?admission[0]:admission
