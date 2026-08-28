@@ -11,8 +11,8 @@ const outputRoot = join(root, 'dist')
 const buildEnvArgument = process.argv.find((argument) => argument.startsWith('--env='))
 const cloudflareBuildEnvironment = buildEnvArgument?.slice('--env='.length) ?? ''
 
-if (cloudflareBuildEnvironment && cloudflareBuildEnvironment !== 'staging') {
-  throw new Error('Only the isolated staging Worker build is supported by this script.')
+if (cloudflareBuildEnvironment && !['preview', 'staging'].includes(cloudflareBuildEnvironment)) {
+  throw new Error('Only isolated Preview or Staging Worker builds are supported by this script.')
 }
 const excludedRoots = new Set([
   '.git', '.next', 'dist', '.vinext', '.wrangler', '.launch-backups', '.launch-tools', '.namecheap-standalone',
@@ -50,7 +50,7 @@ const blocked = {
   SENTRY_AUTH_TOKEN: '',
   PROTECTED_UPLOAD_SCAN_URL: '',
   PROTECTED_UPLOAD_SCAN_TOKEN: '',
-  HEBA_DEPLOYMENT_ENV: '',
+  HEBA_DEPLOYMENT_ENV: cloudflareBuildEnvironment,
   STAGING_ACCESS_USER: '',
   STAGING_ACCESS_PASSWORD: '',
 }
@@ -63,7 +63,7 @@ function runPnpm(args) {
     // The Cloudflare Vite plugin consumes this value while producing its
     // generated Wrangler config. It is intentionally an explicit argument,
     // never an ambient environment value or a value from an .env file.
-    env: { ...process.env, ...blocked, CLOUDFLARE_ENV: cloudflareBuildEnvironment },
+    env: { ...process.env, ...blocked, CLOUDFLARE_ENV: cloudflareBuildEnvironment === 'staging' ? 'staging' : '' },
     stdio: 'inherit',
   })
   if (result.error) throw result.error

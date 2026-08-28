@@ -698,3 +698,10 @@
 - The labelled niqabi audience illustration remains the Home focal image; no testimonial, press mention, statistic or customer fact is invented to make an unconfigured preview look populated.
 - Visual slices use targeted type/lint/browser checks while iterating. The full deployment and Worker suites run only at a major phase boundary, not after each visual adjustment.
 - Competitive visual strength is interpreted as hierarchy, scale, contrast and motion—not copied layout or content. The Home focal composition therefore uses the existing labelled niqabi image, a dark cinematic stage, staggered Arabic type and motion with a complete reduced-motion fallback.
+
+## 2026-08-28 — Public experience fixtures are explicit, disposable and provider-free
+
+- Course, book and booking demonstrations activate only under the server-side `preview` deployment flag and only while Supabase public configuration is absent. A configured provider always disables the fixture path instead of mixing demonstration and real data.
+- Every simulated commercial step states that it creates no booking, order, payment, upload, entitlement, review or testimonial. Session-only progress is convenience state, not an operational record.
+- Preview fixtures remain code-scoped and read-only. Adding fake Admin mutations would violate operational truth; real Admin-to-public persistence is accepted only against isolated Staging with permissions, audit and the required migrations.
+- Original generated artwork may ship as compressed public Preview assets because it contains no customer data, third-party logo, competitor asset or factual claim. Paid/protected media remains in the governed private Storage delivery path.

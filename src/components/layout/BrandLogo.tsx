@@ -31,6 +31,7 @@ export function BrandLogo({
         width={1254}
         height={1254}
         priority
+        unoptimized
         sizes="56px"
         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
       />

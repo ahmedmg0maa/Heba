@@ -214,6 +214,69 @@ html {
 .hero-marquee-track { animation: hero-marquee 26s linear infinite; }
 .hero-marquee:hover .hero-marquee-track { animation-play-state: paused; }
 
+/* ——— Customer experience canvas ———
+   Original generated artwork provides depth while all text remains HTML. */
+.experience-canvas::before,
+.experience-booking-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(115deg, rgb(6 30 37 / .91), rgb(8 39 48 / .58) 48%, rgb(6 30 37 / .88)),
+    url('/images/experience/journey-landscape.webp') center / cover no-repeat;
+  opacity: .56;
+}
+.experience-booking-bg::before {
+  background:
+    linear-gradient(to bottom, color-mix(in srgb, var(--color-ivory) 82%, transparent), color-mix(in srgb, var(--color-ivory) 94%, transparent)),
+    url('/images/experience/journey-landscape.webp') center / cover no-repeat;
+  opacity: .64;
+}
+.experience-orb {
+  position: absolute;
+  width: 26rem;
+  height: 26rem;
+  border-radius: 9999px;
+  pointer-events: none;
+  filter: blur(68px);
+  opacity: .22;
+  will-change: transform, opacity;
+  animation: experience-orbit 15s ease-in-out infinite;
+}
+.experience-orb-a {
+  inset-inline-start: -9rem;
+  inset-block-start: -10rem;
+  background: var(--color-aqua);
+}
+.experience-orb-b {
+  inset-inline-end: -10rem;
+  inset-block-end: -12rem;
+  background: var(--color-antique-gold);
+  animation-delay: -7s;
+}
+.experience-panel-in {
+  animation: experience-panel-in .68s cubic-bezier(.2,.7,.2,1) both;
+}
+.experience-spotlight::after {
+  content: '';
+  position: absolute;
+  inset: -40% -120%;
+  pointer-events: none;
+  transform: translateX(35%) rotate(13deg);
+  background: linear-gradient(90deg, transparent 44%, rgb(255 255 255 / .16) 50%, transparent 56%);
+  transition: transform 1.1s cubic-bezier(.2,.7,.2,1);
+}
+.experience-spotlight:hover::after { transform: translateX(-35%) rotate(13deg); }
+@keyframes experience-panel-in {
+  from { opacity: 0; transform: translateY(18px) scale(.992); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes experience-orbit {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: .18; }
+  50% { transform: translate3d(34px, 24px, 0) scale(1.09); opacity: .3; }
+}
+
 /* Gold shimmer sweep for premium CTAs */
 @keyframes shimmer {
   from { transform: translateX(120%); }
@@ -263,9 +326,13 @@ html {
   .hero-glow,
   .hero-float-card,
   .hero-marquee-track,
+  .experience-orb,
+  .experience-panel-in,
   .shimmer::after {
     animation: none;
   }
+  .experience-panel-in { opacity: 1; transform: none; }
+  .experience-spotlight::after { display: none; }
   .hero-enter { opacity: 1; transform: none; }
   .reveal {
     opacity: 1;

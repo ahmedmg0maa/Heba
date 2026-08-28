@@ -50,6 +50,7 @@ function availableDate(service: BookingService, date: string) {
 }
 
 export function BookingWizard({ experience }: { experience: BookingExperience }) {
+  const isPreview = experience.runtime.status === 'preview'
   const [step, setStep] = useState(0)
   const [serviceId, setServiceId] = useState(experience.services[0]?.id ?? '')
   const [date, setDate] = useState('')
@@ -77,7 +78,7 @@ export function BookingWizard({ experience }: { experience: BookingExperience })
     experience.paymentSettings.wallet && { id: 'wallet' as const, label: experience.paymentSettings.wallet.provider, detail: experience.paymentSettings.wallet.number },
     experience.paymentSettings.bank && { id: 'bank_transfer' as const, label: 'تحويل بنكي', detail: experience.paymentSettings.bank.iban },
   ].filter(Boolean) as { id: PaymentMethod; label: string; detail: string }[]
-  const canCreateBooking = service?.paymentMode === 'free' || paymentMethods.length > 0 || eligibleCredits.length > 0
+  const canCreateBooking = isPreview || service?.paymentMode === 'free' || paymentMethods.length > 0 || eligibleCredits.length > 0
   const secondsRemaining = hold ? Math.max(0, Math.ceil((new Date(hold.expiresAt).getTime() - now) / 1_000)) : 0
 
   useEffect(() => {
@@ -87,7 +88,7 @@ export function BookingWizard({ experience }: { experience: BookingExperience })
   }, [hold])
 
   function chooseService(item: BookingService) {
-    if (hold) void releaseBookingHold(hold.id)
+    if (hold && !isPreview) void releaseBookingHold(hold.id)
     setHold(null)
     setServiceId(item.id ?? '')
     setDate('')
@@ -117,6 +118,12 @@ export function BookingWizard({ experience }: { experience: BookingExperience })
     }
     if (step === 3) {
       if (!service?.id) return
+      if (isPreview) {
+        setHold({ id: 'preview-hold', expiresAt: new Date(Date.now() + 10 * 60_000).toISOString() })
+        setNow(Date.now())
+        setStep(4)
+        return
+      }
       setLoading(true)
       const result = await createBookingHold({ serviceId: service.id, date, time })
       setLoading(false)
@@ -144,6 +151,13 @@ export function BookingWizard({ experience }: { experience: BookingExperience })
       setHold(null); setTime(''); setStep(2)
       return
     }
+    if (isPreview) {
+      setHold(null)
+      setOrder({ orderId: 'preview-order', total: service.price })
+      setLoading(false)
+      setStep(5)
+      return
+    }
     const bookingInput = { serviceId: service.id, date, time, fullName, phone, notes, subscriptionId: subscriptionId || undefined }
     const result = await completeBookingFromHold(bookingInput, hold.id, service.paymentMode === 'free')
     setLoading(false)
@@ -167,6 +181,11 @@ export function BookingWizard({ experience }: { experience: BookingExperience })
     setError(null)
     const file = new FormData(event.currentTarget).get('proof')
     if (!(file instanceof File)) { setLoading(false); setError('أرفقي صورة الإيصال أولًا.'); return }
+    if (isPreview) {
+      setLoading(false)
+      setComplete(true)
+      return
+    }
     const result = await uploadPaymentProofDirect(order.orderId, method, file)
     setLoading(false)
     if (!result.ok) {
@@ -190,22 +209,29 @@ export function BookingWizard({ experience }: { experience: BookingExperience })
     return (
       <div className="mx-auto max-w-2xl rounded-3xl border border-antique-gold/40 bg-surface-raised p-8 text-center shadow-card sm:p-12">
         <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-deep-teal text-2xl text-on-dark">✓</span>
-        <h2 className="mt-5 text-3xl font-bold text-deep-teal">وصل طلب حجزك بنجاح</h2>
-        <p className="mt-3 leading-relaxed text-text-soft">{packageComplete ? 'استُخدمت جلسة من رصيدك المستحق وثُبّت الطلب دون حاجة إلى إثبات دفع.' : 'طلبك قيد المراجعة؛ تظهر حالة الجلسة داخل حسابك عند تحديثها.'}</p>
-        <Button href="/dashboard/bookings" className="mt-6">متابعة حجوزاتي</Button>
+        <h2 className="mt-5 text-3xl font-bold text-deep-teal">{isPreview ? 'اكتملت محاكاة الحجز بنجاح' : 'وصل طلب حجزك بنجاح'}</h2>
+        <p className="mt-3 leading-relaxed text-text-soft">{isPreview ? 'لم يُنشأ حجز أو طلب أو دفع، ولم تُرفع الصورة المختارة إلى أي خادم. هذه هي تجربة واجهة المسار فقط.' : packageComplete ? 'استُخدمت جلسة من رصيدك المستحق وثُبّت الطلب دون حاجة إلى إثبات دفع.' : 'طلبك قيد المراجعة؛ تظهر حالة الجلسة داخل حسابك عند تحديثها.'}</p>
+        <Button href={isPreview ? '/booking' : '/dashboard/bookings'} className="mt-6">{isPreview ? 'تجربة الحجز مرة أخرى' : 'متابعة حجوزاتي'}</Button>
       </div>
     )
   }
 
   return (
     <div className="space-y-7">
+      {isPreview && (
+        <div className="relative overflow-hidden rounded-2xl border border-aqua/35 bg-deep-teal px-5 py-4 text-on-dark shadow-card" role="status">
+          <span className="absolute -end-8 -top-10 h-28 w-28 rounded-full bg-aqua/13 blur-2xl" aria-hidden />
+          <p className="relative text-sm font-bold text-aqua">تجربة عرض آمنة — لا حجز ولا دفع حقيقي</p>
+          <p className="relative mt-1 text-xs leading-relaxed text-on-dark/70">كل الخطوات التالية تعمل داخل المتصفح. لا تُحفظ بياناتك ولا تُرسل صورة الإيصال ولا يُنشأ أي سجل في Supabase.</p>
+        </div>
+      )}
       <ol className="grid gap-2 sm:grid-cols-6" aria-label="خطوات الحجز">
         {steps.map(([title, subtitle], index) => (
           <li key={title}>
             <button
               type="button"
               disabled={index > step || Boolean(order)}
-              onClick={() => { if (index < step) { if (hold && index < 4) { void releaseBookingHold(hold.id); setHold(null) }; setStep(index) } }}
+              onClick={() => { if (index < step) { if (hold && index < 4) { if (!isPreview) void releaseBookingHold(hold.id); setHold(null) }; setStep(index) } }}
               className={cn(
                 'flex min-h-20 w-full items-center gap-3 rounded-2xl border px-3 text-start transition-colors sm:block sm:text-center',
                 index === step ? 'border-antique-gold bg-surface-raised shadow-card' : index < step ? 'border-deep-teal/20 bg-deep-teal/5' : 'border-line bg-ivory/40 opacity-65',
@@ -239,7 +265,7 @@ export function BookingWizard({ experience }: { experience: BookingExperience })
                     onClick={() => chooseService(item)}
                     className={cn('rounded-2xl border p-5 text-start transition-all', item.id === service.id ? 'border-antique-gold bg-antique-gold/5 shadow-card' : 'border-line hover:border-deep-teal/30')}
                   >
-                    <span className="text-xs font-bold text-burgundy">{item.paymentMode === 'free' ? 'حجز مجاني' : 'خدمة منشورة'}</span>
+                    <span className="text-xs font-bold text-burgundy">{isPreview ? 'خدمة تجربة غير منشورة' : item.paymentMode === 'free' ? 'حجز مجاني' : 'خدمة منشورة'}</span>
                     <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div>
                         <h3 className="text-xl font-bold text-deep-teal">{item.title}</h3>
@@ -259,7 +285,7 @@ export function BookingWizard({ experience }: { experience: BookingExperience })
           {step === 1 && (
             <div className="mt-3">
               <h2 className="text-3xl font-bold text-deep-teal">اختاري تاريخ الجلسة</h2>
-              <p className="mt-1 text-text-soft">تعكس الأيام المعروضة نافذة الحجز المنشورة حاليًا حسب توقيت القاهرة.</p>
+              <p className="mt-1 text-text-soft">{isPreview ? 'مواعيد خيالية محصورة في Preview لتجربة الواجهة حسب توقيت القاهرة.' : 'تعكس الأيام المعروضة نافذة الحجز المنشورة حاليًا حسب توقيت القاهرة.'}</p>
               <div className="mt-6 grid grid-cols-3 gap-2 sm:grid-cols-5 md:grid-cols-7">
                 {experience.calendarDates.map((item) => {
                   const enabled = availableDate(service, item)
@@ -325,7 +351,7 @@ export function BookingWizard({ experience }: { experience: BookingExperience })
           {step === 4 && (
             <div className="mt-3">
               <h2 className="text-3xl font-bold text-deep-teal">راجعي الحجز قبل تثبيته</h2>
-              {hold && <p className={cn('mt-4 rounded-xl px-4 py-3 text-sm font-bold', secondsRemaining > 0 ? 'bg-aqua/10 text-deep-teal' : 'bg-burgundy/10 text-burgundy')}>تم تثبيت الموعد مؤقتًا لمدة {Math.floor(secondsRemaining / 60).toLocaleString('ar-EG')}:{String(secondsRemaining % 60).padStart(2, '0')} دقيقة. ينتهي الحجز المؤقت تلقائيًا إن لم يكتمل التأكيد.</p>}
+              {hold && <p className={cn('mt-4 rounded-xl px-4 py-3 text-sm font-bold', secondsRemaining > 0 ? 'bg-aqua/10 text-deep-teal' : 'bg-burgundy/10 text-burgundy')}>{isPreview ? 'تُحاكى مهلة تثبيت الموعد' : 'تم تثبيت الموعد مؤقتًا'} لمدة {Math.floor(secondsRemaining / 60).toLocaleString('ar-EG')}:{String(secondsRemaining % 60).padStart(2, '0')} دقيقة. {isPreview ? 'لا يوجد حجز في قاعدة البيانات.' : 'ينتهي الحجز المؤقت تلقائيًا إن لم يكتمل التأكيد.'}</p>}
               <dl className="mt-6 grid gap-3 rounded-2xl bg-ivory p-5 text-sm sm:grid-cols-2"><div><dt className="text-text-soft">الخدمة</dt><dd className="mt-1 font-bold text-deep-teal">{service.title}</dd></div><div><dt className="text-text-soft">الموعد بتوقيت القاهرة</dt><dd className="mt-1 font-bold text-deep-teal">{date ? longDateFormatter.format(new Date(`${date}T12:00:00Z`)) : ''} — {time ? timeLabel(time) : ''}</dd></div><div><dt className="text-text-soft">التواصل</dt><dd className="mt-1 font-bold text-deep-teal">{fullName} · <span dir="ltr">{phone}</span></dd></div><div><dt className="text-text-soft">آلية الحجز</dt><dd className="mt-1 font-bold text-deep-teal">{service.paymentMode === 'free' ? 'تأكيد فوري بلا دفع' : subscriptionId ? 'خصم من رصيد الباقة' : 'دفع ثم مراجعة'}</dd></div></dl>
               {service.bookingPolicyNote && <p className="mt-4 rounded-xl border border-antique-gold/30 bg-antique-gold/5 px-4 py-3 text-sm text-text-soft">{service.bookingPolicyNote}</p>}
               {!canCreateBooking && <p className="mt-4 rounded-xl bg-burgundy/10 px-4 py-3 text-sm font-semibold text-burgundy">لا توجد وسيلة دفع مهيأة لهذه الخدمة. يمكن للمالكة نشرها كحجز مجاني لاختبار الرحلة المحلية.</p>}
@@ -335,10 +361,15 @@ export function BookingWizard({ experience }: { experience: BookingExperience })
           {step === 5 && (
             <div className="mt-3">
               <h2 className="text-3xl font-bold text-deep-teal">الدفع وإرسال الإيصال</h2>
-              <p className="mt-1 text-text-soft">اختاري الطريقة، حوّلي الإجمالي، ثم ارفعي صورة الإيصال للمراجعة.</p>
+              <p className="mt-1 text-text-soft">{isPreview ? 'اختاري صورة من جهازك لمحاكاة الخطوة؛ لن تغادر الصورة المتصفح.' : 'اختاري الطريقة، حوّلي الإجمالي، ثم ارفعي صورة الإيصال للمراجعة.'}</p>
               {order ? (
                 <form onSubmit={submitProof} className="mt-6 space-y-5">
-                  <div className="grid gap-3 sm:grid-cols-3">
+                  {isPreview ? (
+                    <div className="rounded-2xl border border-aqua/30 bg-aqua/8 p-4">
+                      <strong className="block text-deep-teal">محاكاة الدفع اليدوي</strong>
+                      <span className="mt-1 block text-xs leading-relaxed text-text-soft">لا يظهر حساب تحويل ولا رقم مالي، ولا يُطلب منك إجراء تحويل في هذه التجربة.</span>
+                    </div>
+                  ) : <div className="grid gap-3 sm:grid-cols-3">
                     {paymentMethods.map((item) => (
                       <label key={item.id} className={cn('cursor-pointer rounded-2xl border p-4', method === item.id ? 'border-antique-gold bg-antique-gold/5' : 'border-line')}>
                         <input type="radio" name="payment_method" value={item.id} checked={method === item.id} onChange={() => setMethod(item.id)} className="sr-only" />
@@ -346,18 +377,18 @@ export function BookingWizard({ experience }: { experience: BookingExperience })
                         <span className="tnum mt-1 block break-all text-xs text-text-soft" dir="ltr">{item.detail}</span>
                       </label>
                     ))}
-                  </div>
+                  </div>}
                   <div className="rounded-2xl bg-deep-teal p-5 text-on-dark">
                     <span className="text-sm text-on-dark/70">المبلغ المطلوب</span>
                     <strong className="tnum mt-1 block text-3xl">{formatPrice(order.total, service.currency)}</strong>
                   </div>
                   <label className="block rounded-2xl border border-dashed border-antique-gold bg-ivory p-5 text-center">
-                    <span className="block font-bold text-deep-teal">ارفعي صورة إيصال التحويل</span>
-                    <span className="mt-1 block text-xs text-taupe">JPG أو PNG أو WebP — بحد أقصى 5MB</span>
+                    <span className="block font-bold text-deep-teal">{isPreview ? 'اختاري صورة لمحاكاة إرفاق الإيصال' : 'ارفعي صورة إيصال التحويل'}</span>
+                    <span className="mt-1 block text-xs text-taupe">JPG أو PNG أو WebP — بحد أقصى 5MB{isPreview ? ' — لا تُرفع الصورة' : ''}</span>
                     <input className="mt-4 block w-full text-sm text-text-soft file:me-3 file:rounded-full file:border-0 file:bg-deep-teal file:px-4 file:py-2 file:text-on-dark" type="file" name="proof" accept="image/png,image/jpeg,image/webp" required />
                   </label>
-                  <Button type="submit" disabled={loading || paymentMethods.length === 0} className="w-full">
-                    {loading ? 'جارٍ إرسال الإيصال…' : 'إرسال الحجز للمراجعة'}
+                  <Button type="submit" disabled={loading || (!isPreview && paymentMethods.length === 0)} className="w-full">
+                    {loading ? 'جارٍ إرسال الإيصال…' : isPreview ? 'إكمال المحاكاة بأمان' : 'إرسال الحجز للمراجعة'}
                   </Button>
                 </form>
               ) : (
@@ -375,7 +406,7 @@ export function BookingWizard({ experience }: { experience: BookingExperience })
 
           {step < 5 && (
             <div className="mt-8 flex items-center justify-between gap-3 border-t border-line pt-5">
-              <Button variant="secondary" disabled={step === 0 || loading} onClick={() => { if (step === 4 && hold) { void releaseBookingHold(hold.id); setHold(null) }; setError(null); setStep((value) => Math.max(0, value - 1)) }}>رجوع</Button>
+              <Button variant="secondary" disabled={step === 0 || loading} onClick={() => { if (step === 4 && hold) { if (!isPreview) void releaseBookingHold(hold.id); setHold(null) }; setError(null); setStep((value) => Math.max(0, value - 1)) }}>رجوع</Button>
               <Button disabled={loading} onClick={next}>{loading ? 'جارٍ تثبيت الموعد…' : step === 4 ? (service.paymentMode === 'free' || subscriptionId ? 'تأكيد الحجز' : 'تثبيت الموعد والانتقال للدفع') : 'متابعة'}</Button>
             </div>
           )}
@@ -389,13 +420,13 @@ export function BookingWizard({ experience }: { experience: BookingExperience })
             <div className="flex justify-between gap-4"><dt className="text-on-dark/60">التاريخ</dt><dd className="font-semibold">{date ? longDateFormatter.format(new Date(`${date}T12:00:00Z`)) : 'اختاري التاريخ'}</dd></div>
             <div className="flex justify-between gap-4"><dt className="text-on-dark/60">الوقت</dt><dd className="tnum font-semibold">{time ? timeLabel(time) : 'اختاري الوقت'}</dd></div>
             <div className="flex justify-between gap-4"><dt className="text-on-dark/60">المدة</dt><dd className="font-semibold">{service.durationMinutes.toLocaleString('ar-EG')} دقيقة</dd></div>
-            <div className="flex justify-between gap-4"><dt className="text-on-dark/60">الحالة</dt><dd className="font-semibold">تأكيد بعد مراجعة الدفع</dd></div>
+            <div className="flex justify-between gap-4"><dt className="text-on-dark/60">الحالة</dt><dd className="font-semibold">{isPreview ? 'محاكاة غير محفوظة' : 'تأكيد بعد مراجعة الدفع'}</dd></div>
           </dl>
           <div className="mt-5 flex items-end justify-between gap-4">
             <span className="text-sm text-on-dark/60">الإجمالي</span>
             <strong className="tnum text-2xl text-antique-gold">{formatPrice(order?.total ?? service.price, service.currency)}</strong>
           </div>
-          <p className="mt-5 rounded-xl bg-on-dark/8 p-3 text-xs leading-relaxed text-on-dark/70">لا يُعد الطلب مؤكدًا إلا بعد اكتمال شروط الحجز المنشورة وتحديث حالته.</p>
+          <p className="mt-5 rounded-xl bg-on-dark/8 p-3 text-xs leading-relaxed text-on-dark/70">{isPreview ? 'هذه المواعيد والأسعار خيالية للعرض فقط ولا تُعد توافرًا أو عرضًا تجاريًا.' : 'لا يُعد الطلب مؤكدًا إلا بعد اكتمال شروط الحجز المنشورة وتحديث حالته.'}</p>
         </aside>
       </div>
     </div>

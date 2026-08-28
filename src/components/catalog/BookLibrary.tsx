@@ -52,8 +52,10 @@ export function BookLibrary({ books }: { books: CatalogBook[] }) {
               compareAtPrice={book.compareAtPrice}
               coverKind="book"
               coverUrl={book.coverUrl}
-              badge={book.compareAtPrice ? { label: 'سعر مخفّض', tone: 'burgundy' } : undefined}
-              meta={[book.pagesCount ? `${book.pagesCount.toLocaleString('ar-EG')} صفحة` : 'كتاب رقمي', 'يظهر بعد تأكيد الدفع', 'محفوظ داخل حسابك']}
+              badge={book.isPreviewExperience ? { label: 'كتاب تجربة', tone: 'cobalt' } : book.compareAtPrice ? { label: 'سعر مخفّض', tone: 'burgundy' } : undefined}
+              meta={[book.pagesCount ? `${book.pagesCount.toLocaleString('ar-EG')} صفحة` : 'كتاب رقمي', book.isPreviewExperience ? 'خمسة فصول قابلة للقراءة' : 'يظهر بعد تأكيد الدفع', book.isPreviewExperience ? 'لا ينشئ شراءً' : 'محفوظ داخل حسابك']}
+              priceLabel={book.isPreviewExperience ? 'قراءة مجانية' : undefined}
+              ctaLabel={book.isPreviewExperience ? 'افتحي الكتاب' : undefined}
             />
           ))}
         </div>

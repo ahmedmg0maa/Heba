@@ -11,6 +11,7 @@ import { CTARibbon } from '@/components/catalog/CTARibbon'
 import { MobileBuyBar } from '@/components/catalog/MobileBuyBar'
 import { getPaymentSettings } from '@/lib/data/checkout'
 import { CatalogCoverImage } from '@/components/catalog/CatalogCoverImage'
+import { PreviewCourseExperience } from '@/components/experience/PreviewCourseExperience'
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -32,7 +33,7 @@ export default async function CourseDetailPage({ params }: Props) {
   const course = await getCourse((await params).slug)
   if (!course) notFound()
   const paymentSettings = await getPaymentSettings()
-  const orderingAvailable = Boolean(paymentSettings.instapay || paymentSettings.wallet || paymentSettings.bank)
+  const orderingAvailable = !course.isPreviewExperience && Boolean(paymentSettings.instapay || paymentSettings.wallet || paymentSettings.bank)
 
   const includes = [
     `${lessonsLabel(course.lessonsCount)} مرتبة داخل المنهج`,
@@ -47,6 +48,7 @@ export default async function CourseDetailPage({ params }: Props) {
         <div className="mx-auto grid max-w-6xl items-start gap-10 px-6 py-14 lg:grid-cols-[1.5fr_1fr]">
           <div>
             <CatalogCoverImage url={course.coverUrl} title={course.title} className="mb-7 aspect-[16/7] w-full" />
+            {course.isPreviewExperience && <Badge tone="cobalt" className="mb-4">تجربة عرض أصلية · لا شراء ولا استحقاق</Badge>}
             <p className="mb-2 text-sm font-semibold tracking-widest text-antique-gold">{course.subtitle}</p>
             <h1 className="text-4xl font-bold text-deep-teal">{course.title}</h1>
             {course.ratingCount > 0 && <Stars rating={course.rating} count={course.ratingCount} className="mt-3" />}
@@ -55,10 +57,12 @@ export default async function CourseDetailPage({ params }: Props) {
 
           <Card className="lg:sticky lg:top-24">
             <p className="flex items-baseline gap-3">
+              {course.isPreviewExperience ? <span className="text-2xl font-bold text-deep-teal">متاحة للتجربة الآن</span> : <>
               <span className="tnum text-3xl font-bold text-burgundy">{formatPrice(course.price)}</span>
               {course.compareAtPrice && (
                 <span className="tnum text-lg text-taupe line-through">{formatPrice(course.compareAtPrice)}</span>
               )}
+              </>}
             </p>
             {course.compareAtPrice && (
               <Badge tone="burgundy" className="mt-2">
@@ -75,7 +79,9 @@ export default async function CourseDetailPage({ params }: Props) {
                 </li>
               ))}
             </ul>
-            {orderingAvailable ? (
+            {course.isPreviewExperience ? (
+              <Button href="#course-preview" size="lg" className="mt-6 w-full">ابدئي الدرس الأول</Button>
+            ) : orderingAvailable ? (
               <Button href={`/checkout/course/${course.slug}`} size="lg" className="mt-6 w-full">
                 اطلبي الالتحاق
               </Button>
@@ -87,6 +93,8 @@ export default async function CourseDetailPage({ params }: Props) {
           </Card>
         </div>
       </section>
+
+      {course.isPreviewExperience && course.previewLessons && <PreviewCourseExperience lessons={course.previewLessons} />}
 
       <Section eyebrow="ماذا ستتعلمين؟" title="منهج الدورة">
         <div className="mx-auto max-w-3xl space-y-4">

@@ -8,6 +8,7 @@ import { CTARibbon } from '@/components/catalog/CTARibbon'
 import { MobileBuyBar } from '@/components/catalog/MobileBuyBar'
 import { getPaymentSettings } from '@/lib/data/checkout'
 import { CatalogCoverImage } from '@/components/catalog/CatalogCoverImage'
+import { PreviewBookReader } from '@/components/experience/PreviewBookReader'
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -22,7 +23,7 @@ export default async function BookDetailPage({ params }: Props) {
   const book = await getBook((await params).slug)
   if (!book) notFound()
   const paymentSettings = await getPaymentSettings()
-  const orderingAvailable = Boolean(paymentSettings.instapay || paymentSettings.wallet || paymentSettings.bank)
+  const orderingAvailable = !book.isPreviewExperience && Boolean(paymentSettings.instapay || paymentSettings.wallet || paymentSettings.bank)
 
   const includes = [
     book.pagesCount ? `${book.pagesCount.toLocaleString('ar-EG')} صفحة مصممة بعناية` : 'كتاب رقمي كامل',
@@ -47,17 +48,20 @@ export default async function BookDetailPage({ params }: Props) {
           </div>
 
           <div>
+            {book.isPreviewExperience && <Badge tone="cobalt" className="mb-4">كتاب تجربة أصلي · لا شراء ولا تنزيل</Badge>}
             <p className="mb-2 text-sm font-semibold tracking-widest text-antique-gold">{book.subtitle}</p>
             <h1 className="text-4xl font-bold text-deep-teal">{book.title}</h1>
             <p className="mt-5 max-w-2xl text-lg leading-loose text-text-soft">{book.description}</p>
 
             <Card className="mt-8 max-w-md">
               <p className="flex items-baseline gap-3">
+                {book.isPreviewExperience ? <span className="text-2xl font-bold text-deep-teal">اقرئي الفصول الآن</span> : <>
                 <span className="tnum text-3xl font-bold text-burgundy">{formatPrice(book.price)}</span>
                 {book.compareAtPrice && (
                   <span className="tnum text-lg text-taupe line-through">{formatPrice(book.compareAtPrice)}</span>
                 )}
                 {book.compareAtPrice && <Badge tone="burgundy">سعر مخفّض</Badge>}
+                </>}
               </p>
               <ul className="mt-5 space-y-2.5 border-t border-line pt-5 text-sm text-ink">
                 {includes.map((item) => (
@@ -69,7 +73,9 @@ export default async function BookDetailPage({ params }: Props) {
                   </li>
                 ))}
               </ul>
-              {orderingAvailable ? (
+              {book.isPreviewExperience ? (
+                <Button href="#book-preview" size="lg" className="mt-6 w-full">افتحي قارئة الكتاب</Button>
+              ) : orderingAvailable ? (
                 <Button href={`/checkout/book/${book.slug}`} size="lg" className="mt-6 w-full">
                   اطلبي النسخة
                 </Button>
@@ -82,6 +88,8 @@ export default async function BookDetailPage({ params }: Props) {
           </div>
         </div>
       </section>
+
+      {book.isPreviewExperience && book.previewChapters && <PreviewBookReader chapters={book.previewChapters} />}
 
       <CTARibbon
         title="تحبين المرافقة المعمقة؟"

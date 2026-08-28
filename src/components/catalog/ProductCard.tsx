@@ -18,6 +18,7 @@ type ProductCardProps = {
   coverKind?: 'course' | 'book' | 'workshop' | 'session' | 'program'
   ctaLabel?: string
   coverUrl?: string | null
+  priceLabel?: string
 }
 
 // One original no-person editorial still life, cropped per product kind for a
@@ -58,6 +59,7 @@ export function ProductCard({
   coverKind = 'course',
   ctaLabel = 'اعرفي التفاصيل',
   coverUrl,
+  priceLabel,
 }: ProductCardProps) {
   const art = coverArt[coverKind]
   return (
@@ -104,7 +106,7 @@ export function ProductCard({
         )}
         <div className="mt-5 flex items-center justify-between border-t border-line pt-4">
           <p className="flex items-baseline gap-2">
-            <span className="tnum text-lg font-bold text-burgundy">{formatPrice(price)}</span>
+            <span className="tnum text-lg font-bold text-burgundy">{priceLabel ?? formatPrice(price)}</span>
             {compareAtPrice && (
               <span className="tnum text-sm text-taupe line-through">{formatPrice(compareAtPrice)}</span>
             )}

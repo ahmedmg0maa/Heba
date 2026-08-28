@@ -1,5 +1,27 @@
 import { getServerClient } from '@/lib/supabase/server'
 import { hasSupabasePublicConfig } from '@/lib/supabase/public-key'
+import { isPreviewExperienceEnabled, PREVIEW_BOOK, PREVIEW_COURSE } from '@/lib/preview/experience'
+
+export type PreviewCourseLesson = {
+  id: string
+  module: string
+  title: string
+  durationMinutes: number
+  summary: string
+  body: string[]
+  prompt: string
+  practice: string[]
+}
+
+export type PreviewBookChapter = {
+  id: string
+  number: string
+  title: string
+  lead: string
+  paragraphs: string[]
+  prompt: string
+  exercise: string[]
+}
 
 export type CatalogCourse = {
   slug: string
@@ -15,6 +37,8 @@ export type CatalogCourse = {
   ratingCount: number
   coverUrl: string | null
   modules: { title: string; lessons: { title: string; durationSeconds: number; isPreview: boolean }[] }[]
+  isPreviewExperience?: boolean
+  previewLessons?: PreviewCourseLesson[]
 }
 
 export type CatalogBook = {
@@ -26,6 +50,8 @@ export type CatalogBook = {
   compareAtPrice: number | null
   pagesCount: number | null
   coverUrl: string | null
+  isPreviewExperience?: boolean
+  previewChapters?: PreviewBookChapter[]
 }
 
 export type CatalogWorkshop = {
@@ -67,7 +93,7 @@ const hasEnv = hasSupabasePublicConfig
 // ——— Published catalog queries ———
 
 export async function listCourses(): Promise<CatalogCourse[]> {
-  if (!hasEnv()) return []
+  if (!hasEnv()) return isPreviewExperienceEnabled() ? [PREVIEW_COURSE] : []
   try {
     const supabase = await getServerClient()
     const { data } = await supabase
@@ -115,7 +141,7 @@ export async function getCourse(slug: string): Promise<CatalogCourse | null> {
 }
 
 export async function listBooks(): Promise<CatalogBook[]> {
-  if (!hasEnv()) return []
+  if (!hasEnv()) return isPreviewExperienceEnabled() ? [PREVIEW_BOOK] : []
   try {
     const supabase = await getServerClient()
     const { data } = await supabase

@@ -2,6 +2,7 @@ import { getServerClient, getServiceClient, hasSupabaseServerSecret } from '@/li
 import { getPaymentSettings, type PaymentSettings } from './checkout'
 import { arabicDigits } from '@/lib/format'
 import { hasSupabasePublicConfig } from '@/lib/supabase/public-key'
+import { createPreviewBookingExperience, isPreviewExperienceEnabled } from '@/lib/preview/experience'
 
 export type BookingRule = {
   weekday: number
@@ -42,7 +43,7 @@ export type BookingExperience = {
   calendarDates: string[]
   credits: { subscriptionId: string; planTitle: string; balance: number; endsAt: string; eligibleServiceIds: string[] }[]
   policy: { slotInterval: number; bufferBefore: number; bufferAfter: number; minimumNotice: number; horizonDays: number }
-  runtime: { status: 'ready' | 'unconfigured' | 'migration-required' | 'unknown'; detail: string }
+  runtime: { status: 'ready' | 'preview' | 'unconfigured' | 'migration-required' | 'unknown'; detail: string }
 }
 
 const defaultPolicy = { slotInterval: 30, bufferBefore: 0, bufferAfter: 0, minimumNotice: 30, horizonDays: 30 }
@@ -75,7 +76,10 @@ export async function getBookingExperience(): Promise<BookingExperience> {
       day: '2-digit',
     }).format(date)
   })
-  if (!hasPublicEnv()) return { services: [], paymentSettings, calendarDates, credits: [], policy, runtime: { status: 'unconfigured', detail: 'لم تُهيأ قراءة Supabase في هذه البيئة.' } }
+  if (!hasPublicEnv()) {
+    if (isPreviewExperienceEnabled()) return createPreviewBookingExperience(calendarDates, policy)
+    return { services: [], paymentSettings, calendarDates, credits: [], policy, runtime: { status: 'unconfigured', detail: 'لم تُهيأ قراءة Supabase في هذه البيئة.' } }
+  }
 
   try {
     const supabase = await getServerClient()

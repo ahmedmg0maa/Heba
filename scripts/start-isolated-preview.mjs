@@ -11,7 +11,7 @@ const blocked = {
   NEXT_PUBLIC_SITE_URL: `http://${host}:${port}`,
   SUPABASE_SECRET_KEY: '',
   SUPABASE_SERVICE_ROLE_KEY: '',
-  HEBA_DEPLOYMENT_ENV: '',
+  HEBA_DEPLOYMENT_ENV: 'preview',
   STAGING_ACCESS_USER: '',
   STAGING_ACCESS_PASSWORD: '',
   ADMIN_LOGIN_EMAIL: 'codex-admin-qa@example.com',

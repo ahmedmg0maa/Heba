@@ -27,7 +27,7 @@ export function Hero({ copy }: { copy: HomeCopy }) {
               {copy.eyebrow}
             </p>
 
-            <h1 id="home-hero-title" className="hero-enter hero-enter-2 mt-7 font-heading text-[clamp(3.3rem,5.8vw,5.8rem)] leading-[1.12] font-bold tracking-[-.02em] text-on-dark">
+            <h1 id="home-hero-title" className="animate-fade-up hero-enter hero-enter-2 mt-7 font-heading text-[clamp(3.3rem,5.8vw,5.8rem)] leading-[1.12] font-bold tracking-[-.02em] text-on-dark">
               <span className="block">{copy.headlineStart} <span className="text-aqua">{copy.headlineAccent}</span></span>
               <span className="mt-1 block">{copy.headlineMiddle} <span className="text-antique-gold">{copy.headlinePath}</span></span>
               <span className="mt-1 block">{copy.headlineEnd} <span className="text-aqua">{copy.headlineAwareness}</span></span>

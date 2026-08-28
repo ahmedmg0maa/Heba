@@ -36,10 +36,11 @@ export function CourseLibrary({ courses }: { courses: CatalogCourse[] }) {
       compareAtPrice={course.compareAtPrice}
       coverKind="course"
       coverUrl={course.coverUrl}
-      badge={course.compareAtPrice ? { label: 'سعر مخفّض', tone: 'burgundy' } : undefined}
+      badge={course.isPreviewExperience ? { label: 'تجربة تفاعلية', tone: 'cobalt' } : course.compareAtPrice ? { label: 'سعر مخفّض', tone: 'burgundy' } : undefined}
       rating={{ value: course.rating, count: course.ratingCount }}
-      meta={[levelLabels[course.level] ?? course.level, lessonsLabel(course.lessonsCount), formatDuration(course.durationMinutes), 'وصول محفوظ داخل حسابك']}
+      meta={[levelLabels[course.level] ?? course.level, lessonsLabel(course.lessonsCount), formatDuration(course.durationMinutes), course.isPreviewExperience ? 'تقدّم مؤقت بلا حساب' : 'وصول محفوظ داخل حسابك']}
+      priceLabel={course.isPreviewExperience ? 'تجربة مجانية' : undefined}
+      ctaLabel={course.isPreviewExperience ? 'ابدئي الكورس' : undefined}
     />)}</div>}
   </div>
 }
-

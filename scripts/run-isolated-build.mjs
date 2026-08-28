@@ -8,6 +8,11 @@ const root = process.cwd()
 const tempRoot = mkdtempSync(join(tmpdir(), 'heba-isolated-build-'))
 const buildRoot = join(tempRoot, 'app')
 const outputRoot = join(root, '.next')
+const buildEnvArgument = process.argv.find((argument) => argument.startsWith('--env='))
+const isolatedBuildEnvironment = buildEnvArgument?.slice('--env='.length) ?? ''
+if (isolatedBuildEnvironment && isolatedBuildEnvironment !== 'preview') {
+  throw new Error('Only the isolated provider-free Preview build is supported by this script.')
+}
 const excludedRoots = new Set([
   '.git', '.next', 'dist', '.vinext', '.wrangler', '.launch-backups', '.launch-tools', '.namecheap-standalone',
   'node_modules', '.pnpm-store', 'release', 'coverage', 'playwright-report', 'test-results', 'reports', 'exports',
@@ -44,7 +49,7 @@ const blocked = {
   SENTRY_AUTH_TOKEN: '',
   PROTECTED_UPLOAD_SCAN_URL: '',
   PROTECTED_UPLOAD_SCAN_TOKEN: '',
-  HEBA_DEPLOYMENT_ENV: '',
+  HEBA_DEPLOYMENT_ENV: isolatedBuildEnvironment,
   STAGING_ACCESS_USER: '',
   STAGING_ACCESS_PASSWORD: '',
 }

@@ -21,8 +21,9 @@ export default async function BookingPage() {
         lead="تظهر الجلسات المنشورة ومواعيدها المتاحة فقط، ثم يوضّح المسار شروط الطلب والدفع الفعلية."
       />
 
-      <section className="bg-ivory px-4 py-10 sm:px-6 sm:py-14">
-        <div className="mx-auto max-w-7xl">
+      <section className="experience-booking-bg relative overflow-hidden bg-ivory px-4 py-10 sm:px-6 sm:py-14">
+        <span className="experience-orb experience-orb-a" aria-hidden />
+        <div className="relative z-10 mx-auto max-w-7xl">
           <BookingWizard experience={experience} />
         </div>
       </section>

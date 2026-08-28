@@ -14,7 +14,19 @@
   "cache": {
     "enabled": true
   },
+  "observability": {
+    "enabled": true,
+    "logs": {
+      "head_sampling_rate": 0.1
+    }
+  },
   "env": {
+    "preview": {
+      "name": "heba-elsherif-platform-public-preview",
+      "vars": {
+        "HEBA_DEPLOYMENT_ENV": "preview"
+      }
+    },
     "staging": {
       "name": "heba-elsherif-platform-staging",
       "vars": {
