@@ -146,3 +146,7 @@ Run `pnpm verify:sentry-monitoring-local` whenever monitoring, Worker entry, ins
 ## Governed customer registration-bootstrap contract
 
 `pnpm verify:customer-registration-bootstrap-local` proves migration 070 replaces the effective Auth trigger with a bounded, normalized, idempotent profile bootstrap, forward-safe row constraints and a metadata-minimized audit in the same trigger transaction. It rejects any Admin-role write or hardcoded owner identity in the effective function, requires execute revocation from browser roles, and verifies matching registration form bounds plus the fixed PKCE callback. Actual Auth trigger execution, confirmation delivery, historical constraint validation, rate limiting and persisted audit require controlled Staging.
+
+## Governed account-deletion request contract
+
+`pnpm verify:account-deletion-governance-local` proves migration 071 denies direct table writes and gives customers service-only, explicit-actor, serialized, rate-limited request/cancel/read operations. It verifies a permissioned and audited 200-row Admin queue, bounded review transitions, customer notifications, fresh-MFA approval/completion paths and the decisive no-fake-completion rule: the Auth foreign key must already be null before an execution reference can close the request. It also rejects review text/PII in audit metadata and requires truthful, accessible customer/Admin controls. Live Auth deletion, SQL/RLS/concurrency, notifications, retention policy and persisted completion evidence remain controlled external acceptance facts.

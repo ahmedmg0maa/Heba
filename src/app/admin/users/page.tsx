@@ -3,7 +3,9 @@ import { getServiceClient } from '@/lib/supabase/server'
 import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { NotifyUser } from '@/components/admin/NotifyUser'
+import { AccountDeletionQueue, type AccountDeletionQueueRow } from '@/components/admin/AccountDeletionQueue'
 import { requirePermission } from '@/lib/auth/permissions'
+import { isAccountDeletionStatus } from '@/lib/account-deletion/status'
 import Link from 'next/link'
 
 export const metadata: Metadata = { title: 'العملاء — الإدارة' }
@@ -21,13 +23,23 @@ export default async function AdminUsersPage({ searchParams }: Props) {
   const query = q?.trim() ?? ''
   if (query.length > 100 || /[\u0000-\u001f\u007f]/.test(query)) throw new Error('ADMIN_CUSTOMER_SEARCH_INVALID')
   const service = getServiceClient()
-  const [{ data, error }, sendPermission] = await Promise.all([
+  const [{ data, error }, sendPermission, managePermission, deletionResponse] = await Promise.all([
     service.rpc('search_admin_users', { p_actor_id: admin.userId, p_query: query }),
     service.rpc('has_permission', { permission_name: 'notifications.send', uid: admin.userId }),
+    service.rpc('has_permission', { permission_name: 'users.manage', uid: admin.userId }),
+    service.rpc('list_admin_account_deletion_requests', { p_actor_id: admin.userId }),
   ])
-  if (error) throw new Error('ADMIN_CUSTOMER_DIRECTORY_READ_UNAVAILABLE')
+  if (error || deletionResponse.error) throw new Error('ADMIN_CUSTOMER_DIRECTORY_READ_UNAVAILABLE')
   const users = (Array.isArray(data) ? data : []) as Row[]
   const canNotify = !sendPermission.error && sendPermission.data === true
+  const canManage = !managePermission.error && managePermission.data === true
+  const deletionRequests = (Array.isArray(deletionResponse.data) ? deletionResponse.data : [])
+    .filter((row): row is AccountDeletionQueueRow => Boolean(
+      row && typeof row === 'object' && typeof row.id === 'string'
+      && (typeof row.customer_id === 'string' || row.customer_id === null)
+      && typeof row.full_name === 'string' && typeof row.email === 'string'
+      && isAccountDeletionStatus(row.status) && typeof row.requested_at === 'string',
+    ))
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">
@@ -47,6 +59,7 @@ export default async function AdminUsersPage({ searchParams }: Props) {
             name="q"
             defaultValue={q ?? ''}
             placeholder="الاسم أو البريد…"
+            maxLength={100}
             className="w-56 rounded-full border border-line bg-surface-raised px-4 py-2 text-sm shadow-card focus:border-deep-teal focus:outline-2 focus:outline-deep-teal/20"
           />
           <button type="submit" className="rounded-full bg-deep-teal px-5 py-2 text-sm font-semibold text-on-dark">
@@ -54,6 +67,14 @@ export default async function AdminUsersPage({ searchParams }: Props) {
           </button>
         </form>
       </header>
+
+      <section className="space-y-4" aria-labelledby="account-deletion-queue-title">
+        <div>
+          <h2 id="account-deletion-queue-title" className="text-2xl font-bold text-deep-teal">طلبات حذف الحساب</h2>
+          <p className="mt-1 text-sm text-text-soft">مراجعة تشغيلية بحد أقصى ٢٠٠ طلب نشط. «معتمد» لا يعني أن الهوية حُذفت؛ لا يُسجل الاكتمال إلا بعد غيابها فعليًا.</p>
+        </div>
+        <AccountDeletionQueue rows={deletionRequests} canManage={canManage} />
+      </section>
 
       {users.length === 0 ? (
         <EmptyState

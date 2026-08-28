@@ -25,6 +25,8 @@ No draft in this document is a customer-facing policy. The current source keeps 
 - **حقوقك:** سيعرض الإصدار المعتمد طريقة ممارسة الحقوق والجهة المسؤولة ومدد الاستجابة المناسبة قانونيًا.
 - **التواصل:** لا تعرض المنصة حاليًا قناة خصوصية أو مدة استجابة معتمدة قبل تهيئة التشغيل.
 
+**تنفيذ محلي بانتظار الاعتماد:** أصبحت الإعدادات تسجل طلب حذف حساب قابلًا للتتبع وتعرض حالته وتسمح بإلغائه؛ لا تعد بمدة زمنية ولا تدّعي الحذف عند الاعتماد الإداري. يلزم أن تحدد المالكة/المراجعة القانونية مدد الاستجابة، فئات الاحتفاظ، الاستثناءات، قناة التحقق، ومن ينفذ إزالة Auth والبيانات المؤهلة قبل تفعيل العملية على Production.
+
 **Owner must approve:** controller/contact identity; categories and purposes; lawful basis; processors; retention; cross-border handling; rights process; privacy contact; complaint route; version and effective date.
 
 ### A2. Terms and conditions — current draft

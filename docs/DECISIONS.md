@@ -618,3 +618,11 @@
 - **Registration evidence excludes identity content.** The profile and registration audit commit in one trigger transaction; audit stores only the opaque user ID and structural booleans, not name, email or raw metadata.
 - **Role provisioning is separate from account creation.** Existing owner rows are preserved. New staff roles use migration 060's owner-authorized, fresh-AAL2 transaction; an environment with no owner requires a separately approved first-owner bootstrap after identity verification.
 - **070 remains source-only.** Auth trigger execution, existing-row constraint validation, email confirmation and durable audit evidence remain within `STAGING EXTERNAL GATE`.
+
+## 2026-08-28 — Account deletion is a traceable request; approval and completion are different facts
+
+- **The historical contact-only decision is superseded by migration 071.** Prior append-only history remains intact, but Dashboard settings now create and show a durable request instead of promising a seven-day outcome with no operational record.
+- **A customer controls the request, not the retention decision.** A signed-in non-Admin identity may request or cancel. Review can identify payment, booking, legal-retention or identity follow-up needs without implying that every record is immediately erasable.
+- **Review content stays operational and audit stays minimized.** Customer-facing review notes may be stored on the request and notification; audit contains status transitions and note presence/length only.
+- **Approval never means deletion.** Fresh-MFA `users.manage` approval marks the work ready for the separately controlled Auth/data operation. Completion is impossible while the `auth.users` foreign key still exists and requires a bounded external execution reference afterward.
+- **071 remains source-only.** PostgreSQL execution, RLS denial, concurrent request/review behavior, notifications and the actual provider deletion/retention procedure require the controlled Staging and owner-approved legal gates.
