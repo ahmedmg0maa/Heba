@@ -389,16 +389,14 @@ export async function createHomeSection(pageId: string, kindValue: string): Prom
   const admin = await requireAdminUser('content.manage')
   if (!admin) return { ok: false, error: NOT_ADMIN }
   if (!isHomeSectionKind(kindValue)) return { ok: false, error: 'نوع قسم الصفحة الرئيسية غير معتمد.' }
-  const service = getServiceClient()
-  const { data: page } = await service.from('pages').select('id,slug').eq('id', pageId).maybeSingle()
-  if (page?.slug !== 'home') return { ok: false, error: 'هذه الأقسام مخصصة للصفحة الرئيسية فقط.' }
-  const { data: existing } = await service.from('page_sections').select('id').eq('page_id', pageId).eq('kind', kindValue).limit(1).maybeSingle()
-  if (existing) return { ok: false, error: 'هذا النوع موجود بالفعل؛ عدّليه بدل إنشاء نسخة مكررة.' }
-  const { count } = await service.from('page_sections').select('id', { count: 'exact', head: true }).eq('page_id', pageId)
   const option = HOME_SECTION_KINDS.indexOf(kindValue)
-  const { data, error } = await service.from('page_sections').insert({ page_id: pageId, name: kindValue, kind: kindValue, sort: Math.max((count ?? 0) * 10, option * 10), is_visible: true, content: defaultHomeContent(kindValue) }).select('id').single()
-  if (error || !data) return { ok: false, error: GENERIC }
-  await audit(admin.user.id, 'home_section.created', 'page_section', data.id, { pageId, kind: kindValue })
+  const { error } = await getServiceClient().rpc('manage_cms_page_section', {
+    p_actor_id: admin.user.id, p_action: 'home_create', p_page_id: pageId,
+    p_section_id: null, p_name: kindValue, p_kind: kindValue,
+    p_sort: Math.max(0, option * 10), p_is_visible: true,
+    p_content: defaultHomeContent(kindValue),
+  })
+  if (error) return { ok: false, error: error.message.includes('home_section_kind_exists') ? 'هذا النوع موجود بالفعل؛ عدّليه بدل إنشاء نسخة مكررة.' : GENERIC }
   revalidatePath('/admin/pages'); revalidatePath('/'); return { ok: true }
 }
 
@@ -412,14 +410,13 @@ export async function saveHomeSection(pageId: string, sectionId: string, formDat
   const name = homeText(formData, 'name', 2, 100)
   const sort = Number(formData.get('sort') ?? 0)
   if (!name || !Number.isInteger(sort) || sort < 0 || sort > 1000) return { ok: false, error: 'راجعي اسم القسم وترتيبه.' }
-  const service = getServiceClient()
-  const { data: page } = await service.from('pages').select('slug').eq('id', pageId).maybeSingle()
-  const { data: previous } = await service.from('page_sections').select('*').eq('id', sectionId).eq('page_id', pageId).maybeSingle()
-  if (page?.slug !== 'home' || !previous || previous.kind !== kindValue) return { ok: false, error: 'القسم غير موجود أو لا يطابق الصفحة.' }
-  await service.from('content_revisions').insert({ entity_type: 'page_section', entity_id: sectionId, snapshot: previous, created_by: admin.user.id })
-  const { error } = await service.from('page_sections').update({ name, sort, is_visible: formData.get('is_visible') === 'on', content: normalizeHomeContent(kindValue, parsed.content), revision: Number(previous.revision ?? 1) + 1 }).eq('id', sectionId).eq('page_id', pageId)
-  if (error) return { ok: false, error: GENERIC }
-  await audit(admin.user.id, 'home_section.updated', 'page_section', sectionId, { pageId, kind: kindValue, sort, visible: formData.get('is_visible') === 'on' })
+  const { error } = await getServiceClient().rpc('manage_cms_page_section', {
+    p_actor_id: admin.user.id, p_action: 'home_update', p_page_id: pageId,
+    p_section_id: sectionId, p_name: name, p_kind: kindValue, p_sort: sort,
+    p_is_visible: formData.get('is_visible') === 'on',
+    p_content: normalizeHomeContent(kindValue, parsed.content),
+  })
+  if (error) return { ok: false, error: error.message.includes('published_home_required_section') ? 'لا يمكن إخفاء قسم أساسي والصفحة الرئيسية منشورة.' : GENERIC }
   revalidatePath('/admin/pages'); revalidatePath('/'); return { ok: true }
 }
 
@@ -448,8 +445,43 @@ export async function saveCmsPage(pageId: string, formData: FormData): Promise<A
   await audit(admin.user.id, 'page.saved', 'page', pageId, { status, publishAt, legalReviewStatus, legalVersion, effectiveAt })
   revalidatePath('/admin/pages'); revalidatePath('/'); revalidatePath(`/${previous.slug}`); return { ok: true }
 }
-export async function savePageSection(pageId:string,sectionId:string|null,formData:FormData):Promise<ActionResult>{const admin=await requireAdminUser('content.manage');if(!admin)return{ok:false,error:NOT_ADMIN};let content;try{content=JSON.parse(String(formData.get('content')??'{}'))}catch{return{ok:false,error:'محتوى القسم يجب أن يكون JSON صحيحًا.'}}const kind=String(formData.get('kind')??'rich_text').trim();if(!SECTION_KINDS.includes(kind as typeof SECTION_KINDS[number]))return{ok:false,error:'نوع القسم غير معتمد في نظام التصميم.'};const contentError=validateSectionContent(content);if(contentError)return{ok:false,error:contentError};const name=String(formData.get('name')??'').trim();if(name.length<2)return{ok:false,error:'اكتبي اسمًا واضحًا للقسم.'};const payload={page_id:pageId,name,kind,sort:Math.max(0,Number(formData.get('sort')??0)),is_visible:formData.get('is_visible')==='on',content};const service=getServiceClient();if(sectionId){const{data:previous}=await service.from('page_sections').select('*').eq('id',sectionId).maybeSingle();if(previous)await service.from('content_revisions').insert({entity_type:'page_section',entity_id:sectionId,snapshot:previous,created_by:admin.user.id})}const result=sectionId?await service.from('page_sections').update({...payload,revision:(await service.from('page_sections').select('revision').eq('id',sectionId).single()).data?.revision+1||2}).eq('id',sectionId):await service.from('page_sections').insert(payload);if(result.error)return{ok:false,error:GENERIC};await audit(admin.user.id,sectionId?'page_section.updated':'page_section.created','page',pageId,{sectionId,kind:payload.kind});revalidatePath('/admin/pages');return{ok:true}}
-export async function deletePageSection(sectionId:string):Promise<ActionResult>{const admin=await requireAdminUser('content.delete');if(!admin)return{ok:false,error:NOT_ADMIN};const service=getServiceClient(),{data:row}=await service.from('page_sections').select('*').eq('id',sectionId).maybeSingle();if(!row)return{ok:false,error:'القسم غير موجود.'};await service.from('content_revisions').insert({entity_type:'page_section',entity_id:sectionId,snapshot:row,created_by:admin.user.id});const{error}=await service.from('page_sections').delete().eq('id',sectionId);if(error)return{ok:false,error:GENERIC};await audit(admin.user.id,'page_section.deleted','page_section',sectionId);revalidatePath('/admin/pages');return{ok:true}}
+export async function savePageSection(pageId: string, sectionId: string | null, formData: FormData): Promise<ActionResult> {
+  const admin = await requireAdminUser('content.manage')
+  if (!admin) return { ok: false, error: NOT_ADMIN }
+  let content: unknown
+  try { content = JSON.parse(String(formData.get('content') ?? '{}')) }
+  catch { return { ok: false, error: 'محتوى القسم يجب أن يكون JSON صحيحًا.' } }
+  const kind = String(formData.get('kind') ?? 'rich_text').trim()
+  if (!SECTION_KINDS.includes(kind as typeof SECTION_KINDS[number])) return { ok: false, error: 'نوع القسم غير معتمد في نظام التصميم.' }
+  const contentError = validateSectionContent(content)
+  if (contentError) return { ok: false, error: contentError }
+  const name = String(formData.get('name') ?? '').trim()
+  const sort = Number(formData.get('sort') ?? 0)
+  if (name.length < 2 || name.length > 100 || !Number.isInteger(sort) || sort < 0 || sort > 1000) return { ok: false, error: 'راجعي اسم القسم وترتيبه.' }
+  const { data, error } = await getServiceClient().rpc('manage_cms_page_section', {
+    p_actor_id: admin.user.id, p_action: sectionId ? 'section_update' : 'section_create',
+    p_page_id: pageId, p_section_id: sectionId, p_name: name, p_kind: kind,
+    p_sort: sort, p_is_visible: formData.get('is_visible') === 'on', p_content: content,
+  })
+  if (error || !data?.id) return { ok: false, error: GENERIC }
+  revalidatePath('/admin/pages')
+  if (typeof data.pageSlug === 'string') revalidatePath(`/${data.pageSlug}`)
+  return { ok: true }
+}
+
+export async function deletePageSection(pageId: string, sectionId: string): Promise<ActionResult> {
+  const admin = await requireAdminUser('content.delete')
+  if (!admin) return { ok: false, error: NOT_ADMIN }
+  const { data, error } = await getServiceClient().rpc('manage_cms_page_section', {
+    p_actor_id: admin.user.id, p_action: 'section_delete', p_page_id: pageId,
+    p_section_id: sectionId, p_name: null, p_kind: null, p_sort: null,
+    p_is_visible: false, p_content: null,
+  })
+  if (error || !data?.id) return { ok: false, error: error?.message.includes('published_home_required_section') ? 'لا يمكن حذف قسم أساسي والصفحة الرئيسية منشورة.' : GENERIC }
+  revalidatePath('/admin/pages')
+  if (typeof data.pageSlug === 'string') revalidatePath(`/${data.pageSlug}`)
+  return { ok: true }
+}
 export async function saveNavigationItem(id:string|null,formData:FormData):Promise<ActionResult>{const admin=await requireAdminUser('settings.manage');if(!admin)return{ok:false,error:NOT_ADMIN};const menu=String(formData.get('menu')??'header'),label=String(formData.get('label')??'').trim(),href=String(formData.get('href')??'').trim();if(!['header','footer_platform','footer_about','footer_legal'].includes(menu)||label.length<2||!href.startsWith('/'))return{ok:false,error:'راجعي القائمة والعنوان والرابط الداخلي.'};const payload={menu,label,href,sort:Math.max(0,Number(formData.get('sort')??0)),is_visible:formData.get('is_visible')==='on'};const service=getServiceClient(),result=id?await service.from('navigation_items').update(payload).eq('id',id):await service.from('navigation_items').insert(payload);if(result.error)return{ok:false,error:GENERIC};await audit(admin.user.id,id?'navigation.updated':'navigation.created','navigation_item',id??href,payload);revalidatePath('/admin/pages');revalidatePath('/');return{ok:true}}
 export async function deleteNavigationItem(id:string):Promise<ActionResult>{const admin=await requireAdminUser('settings.manage');if(!admin)return{ok:false,error:NOT_ADMIN};const{error}=await getServiceClient().from('navigation_items').delete().eq('id',id);if(error)return{ok:false,error:GENERIC};await audit(admin.user.id,'navigation.deleted','navigation_item',id);revalidatePath('/admin/pages');revalidatePath('/');return{ok:true}}
 export async function saveOwnerProfile(formData:FormData):Promise<ActionResult>{const admin=await requireAdminUser('content.manage');if(!admin)return{ok:false,error:NOT_ADMIN};const values=[0,1,2].map(index=>({title:String(formData.get(`value_title_${index}`)??'').trim(),text:String(formData.get(`value_text_${index}`)??'').trim()})).filter(value=>value.title&&value.text);const value={eyebrow:String(formData.get('eyebrow')??'').trim(),title:String(formData.get('title')??'').trim(),lead:String(formData.get('lead')??'').trim(),method:String(formData.get('method')??'').trim(),values};if(value.title.length<3||value.lead.length<10)return{ok:false,error:'اكتبي تعريفًا واضحًا قبل الحفظ.'};const service=getServiceClient(),{data:previous}=await service.from('site_settings').select('value').eq('key','owner_profile').maybeSingle();if(previous)await service.from('content_revisions').insert({entity_type:'owner_profile',entity_id:'00000000-0000-0000-0000-000000000001',snapshot:previous.value,created_by:admin.user.id});const{error}=await service.from('site_settings').upsert({key:'owner_profile',value,is_public:true,updated_by:admin.user.id},{onConflict:'key'});if(error)return{ok:false,error:GENERIC};await audit(admin.user.id,'owner_profile.updated','site_settings','owner_profile');revalidatePath('/about');revalidatePath('/admin/settings');return{ok:true}}

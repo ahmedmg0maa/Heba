@@ -19,7 +19,7 @@ for (const action of ['createHomeSection', 'saveHomeSection']) {
   const body = actions.slice(start, next === -1 ? actions.length : next)
   assert.notEqual(start, -1, `${action} missing`)
   assert.match(body, /requireAdminUser\('content\.manage'\)/, `${action} lacks content permission`)
-  assert.match(body, /audit\(/, `${action} lacks audit`)
+  assert.match(body, /rpc\('manage_cms_page_section'/, `${action} must use the audit-atomic page-section transaction`)
   assert.match(body, /revalidatePath\('\/'\)/, `${action} does not update the public consumer`)
 }
 assert.match(actions, /\['hero','pathways','cta'\]\.every/, 'home publication completeness gate missing')

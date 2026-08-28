@@ -73,10 +73,11 @@ function SectionFields({ kind, content }: { kind: HomeSectionKind; content: unkn
 function HomeSectionEditor({ pageId, section }: { pageId: string; section: SectionRow }) {
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
+  const [failed, setFailed] = useState(false)
   const kind = section.kind as HomeSectionKind
   const label = HOME_SECTION_OPTIONS.find((option) => option.kind === kind)?.label ?? kind
   return (
-    <form className="space-y-4 rounded-2xl border border-line bg-ivory/35 p-4" onSubmit={async (event) => { event.preventDefault(); setBusy(true); const result = await saveHomeSection(pageId, section.id, new FormData(event.currentTarget)); setMessage(result.ok ? 'حُفظ القسم ونسخة المراجعة.' : result.error); setBusy(false) }}>
+    <form className="space-y-4 rounded-2xl border border-line bg-ivory/35 p-4" onSubmit={async (event) => { event.preventDefault(); setBusy(true); const result = await saveHomeSection(pageId, section.id, new FormData(event.currentTarget)); setFailed(!result.ok); setMessage(result.ok ? 'حُفظ القسم ونسخة المراجعة.' : result.error); setBusy(false) }}>
       <input type="hidden" name="kind" value={kind} />
       <div className="grid gap-2 md:grid-cols-[1fr_8rem_auto]">
         <Field label={`${label} — اسم داخلي`} name="name" value={section.name} />
@@ -86,8 +87,8 @@ function HomeSectionEditor({ pageId, section }: { pageId: string; section: Secti
       <SectionFields kind={kind} content={section.content} />
       <div className="flex flex-wrap items-center gap-2">
         <Button type="submit" size="sm" disabled={busy}>حفظ القسم</Button>
-        <Button type="button" size="sm" variant="burgundy" disabled={busy} onClick={async () => { setBusy(true); const result = await deletePageSection(section.id); setMessage(result.ok ? 'حُذف القسم مع حفظ المراجعة.' : result.error); setBusy(false) }}>حذف</Button>
-        {message && <span role="status" className="text-xs font-semibold text-deep-teal">{message}</span>}
+        <Button type="button" size="sm" variant="burgundy" disabled={busy} onClick={async () => { if (!window.confirm(`حذف قسم «${label}»؟ ستُحفظ نسخة مراجعة، ولا يمكن حذف قسم أساسي من صفحة منشورة.`)) return; setBusy(true); const result = await deletePageSection(pageId, section.id); setFailed(!result.ok); setMessage(result.ok ? 'حُذف القسم مع حفظ المراجعة.' : result.error); setBusy(false) }}>حذف</Button>
+        {message && <span role={failed ? 'alert' : 'status'} aria-live="polite" className="text-xs font-semibold text-deep-teal">{message}</span>}
       </div>
     </form>
   )
@@ -97,6 +98,7 @@ export function HomeSectionManager({ pageId, sections }: { pageId: string; secti
   const [kind, setKind] = useState<HomeSectionKind>('hero')
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
+  const [failed, setFailed] = useState(false)
   const supportedSections = sections.filter((section) => isHomeSectionKind(section.kind))
   const unsupportedCount = sections.length - supportedSections.length
   return <div className="space-y-4">
@@ -105,9 +107,9 @@ export function HomeSectionManager({ pageId, sections }: { pageId: string; secti
       <p className="mt-1 text-xs leading-loose text-text-soft">يمكن إضافة كل نوع مرة واحدة. حقول كل قسم ثابتة ومتحقق منها، ولا تقبل HTML أو مكونات عشوائية.</p>
       <div className="mt-3 flex flex-wrap gap-2">
         <select value={kind} onChange={(event) => setKind(event.target.value as HomeSectionKind)} className={input}>{HOME_SECTION_OPTIONS.map((option) => <option key={option.kind} value={option.kind}>{option.label}</option>)}</select>
-        <Button type="button" size="sm" disabled={busy} onClick={async () => { setBusy(true); const result = await createHomeSection(pageId, kind); setMessage(result.ok ? 'أُضيف القسم بقيم آمنة ويمكنك تعديله الآن.' : result.error); setBusy(false) }}>إضافة</Button>
+        <Button type="button" size="sm" disabled={busy} onClick={async () => { setBusy(true); const result = await createHomeSection(pageId, kind); setFailed(!result.ok); setMessage(result.ok ? 'أُضيف القسم بقيم آمنة ويمكنك تعديله الآن.' : result.error); setBusy(false) }}>إضافة</Button>
       </div>
-      {message && <p role="status" className="mt-2 text-xs font-semibold text-deep-teal">{message}</p>}
+      {message && <p role={failed ? 'alert' : 'status'} aria-live="polite" className="mt-2 text-xs font-semibold text-deep-teal">{message}</p>}
     </div>
     {unsupportedCount > 0 && <p role="status" className="rounded-xl border border-antique-gold/35 bg-antique-gold/10 p-3 text-xs leading-loose text-deep-teal">يوجد {unsupportedCount} قسم قديم غير مدعوم في الواجهة المنظمة. لم يُحذف أو يُعدّل حفاظًا على البيانات، ويمكن مراجعته من سجل المراجعات.</p>}
     {[...supportedSections].sort((a, b) => a.sort - b.sort).map((section) => <HomeSectionEditor key={section.id} pageId={pageId} section={section} />)}

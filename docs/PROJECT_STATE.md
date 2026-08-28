@@ -1,6 +1,14 @@
 # PROJECT STATE
 Last session: 2026-08-28 | Current program: Code X development-first execution | LOCAL DEVELOPMENT IN PROGRESS — STAGING EXTERNAL GATE remains for recovery, provider migration and live acceptance only
 
+## P0 atomic CMS page-section checkpoint — 2026-08-28
+- Forward-only local migration 075 revokes browser-direct section/revision writes and routes homepage plus general page-section create/update/delete through one service-only aggregate transaction. PostgreSQL repeats `content.manage` or `content.delete`, locks the page, bounds count/name/kind/order/JSON size, creates the prior revision and commits the mutation with metadata-only audit.
+- A published homepage cannot lose or hide its visible `hero`, `pathways` or `cta` section. Home section kinds remain unique and immutable through the organized editor, while unsupported historical records remain preserved.
+- Both Admin editors now mirror the 100-name/1,000-order/64-KiB content bounds, require confirmation before deletion, disable duplicate actions and announce durable errors as accessible alerts. Public/Admin consumers continue to reload the same persisted section rows; no private/raw HTML execution path was introduced.
+- Targeted page-section/home contracts, isolated type-check, lint, database audit and CMS audit passed. The full `pnpm check:deploy` gate passed the 69-page Next production build and public Playwright **70/70**; the isolated vinext/Workers build and serial Cloudflare desktop/mobile suite also passed **70/70**.
+- Migration 075 is source-only; SQL execution/rollback, concurrent editor ordering, RLS/role denial, revision persistence and Admin-to-public reload remain `STAGING EXTERNAL GATE`.
+- Exact next local task: commit this slice, then govern Navigation create/update/delete before proceeding to the page/article/settings mutation groups.
+
 ## P0 governed protected-delivery removal checkpoint — 2026-08-28
 - Forward-only local migration 074 adds attributable soft archival for book files, lesson resources, workshop resources and recordings, preserving download/customer history instead of relying on destructive cascades. Lesson-video removal clears only the governed binding and revokes every active admission session under the same lock.
 - Customer RLS, Service Role admission functions, Dashboard reads, latest-book selection and publication readiness all deny or ignore archived delivery. Admin pages list active files/resources/recordings by opaque IDs, never expose private paths, require confirmation and report durable failure states accessibly.

@@ -1,6 +1,6 @@
 # SUPABASE MIGRATIONS
 
-Ordered SQL lives in `supabase/migrations/`. The table below is the historical 000–018 baseline, not a claim that every current source migration is live. Read-only evidence records 000–043 on Production; 044–074 remain an ordered source-only sequence until separately authorized recovery-controlled Staging application.
+Ordered SQL lives in `supabase/migrations/`. The table below is the historical 000–018 baseline, not a claim that every current source migration is live. Read-only evidence records 000–043 on Production; 044–075 remain an ordered source-only sequence until separately authorized recovery-controlled Staging application.
 
 | # | File | Contents |
 |---|---|---|
@@ -23,7 +23,7 @@ Ordered SQL lives in `supabase/migrations/`. The table below is the historical 0
 | 016 | atomic_booking | Advisory-locked RPC creates the validated order, item, booking and events atomically |
 | 017 | durable_rate_limits | PostgreSQL-backed rate-limit buckets and authenticated consume RPC |
 | 018 | admin_control_center | Membership plans/subscriptions, content revisions, booking admin notes, and unique per-day availability/exception constraints |
-| 044–074 | forward local sequence | Booking/launch corrections followed by governed CMS/Admin/commerce/customer/security slices. Source-only; apply in exact order to recovery-controlled Staging before any Production consideration. Migrations 070–074 retire registration-based Admin grants, add traceable privacy requests, require issued protected-upload intents, make curriculum mutation/audit atomic, and add history-preserving protected-delivery removal with explicit Storage cleanup evidence. |
+| 044–075 | forward local sequence | Booking/launch corrections followed by governed CMS/Admin/commerce/customer/security slices. Source-only; apply in exact order to recovery-controlled Staging before any Production consideration. Migrations 070–075 retire registration-based Admin grants, add traceable privacy requests, govern protected delivery/curriculum, and make CMS section revision/mutation/audit atomic. |
 
 ## Conventions
 - New migrations: next 3-digit prefix + snake_case name (`audit:db` enforces).

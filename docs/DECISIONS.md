@@ -649,3 +649,11 @@
 - **A database commit cannot claim a Storage deletion.** The archive transaction returns the path only to the trusted Server Action. Bucket, safe path shape and SHA-256 authority are verified again before deletion; a separate private cleanup event records `removed`, `not_managed` or `failed` after the provider result.
 - **Operational evidence is path-free.** Audit and System reconciliation contain only actor/entity/record IDs, path hashes and structural outcomes. The Admin browser receives opaque IDs and truthful split-phase feedback, never a private path.
 - **074 remains source-only.** SQL compilation, rollback, concurrent authorization/archive behavior, RLS/service-role denial, real Storage cleanup and persisted evidence remain within `STAGING EXTERNAL GATE`.
+
+## 2026-08-28 — A CMS section edit includes its recovery point and audit
+
+- **Revision, mutation and audit are one fact.** Page-section update/delete takes the prior snapshot and commits it with the requested mutation and metadata-only audit under one page lock. A partial Service Role call sequence is no longer treated as recoverable governance.
+- **The database repeats structural bounds.** It limits a page to 100 sections, names/order/content size and fixed kinds, rejects executable URL/script markers, and distinguishes `content.manage` from `content.delete` even though the Server Action already checked the current Admin.
+- **A published homepage keeps a viable public journey.** Visible `hero`, `pathways` and `cta` cannot be hidden or deleted while the page is published. The owner must first move the page to a non-public state rather than accidentally breaking the live journey.
+- **The browser gets operational truth, not transaction parts.** Admin sends validated content and opaque IDs to one action, confirms deletion, and receives an accessible durable outcome; revision rows and audit metadata never become browser-controlled writes.
+- **075 remains source-only.** SQL parsing/rollback, role denial, concurrent editors, revision persistence and Admin-to-public parity remain within `STAGING EXTERNAL GATE`.
