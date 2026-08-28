@@ -33,14 +33,23 @@ export default async function CurriculumBuilderPage({ params }: Props) {
   }
 
   const supabase = await getServerClient()
-  const { data: course } = await supabase
+  const { data: course, error: courseError } = await supabase
     .from('courses')
-    .select('id, title, course_modules(id, title, sort, course_lessons(id, title, duration_seconds, sort, is_preview, video_path))')
+    .select('id,title')
     .eq('id', id)
     .maybeSingle()
+  if (courseError) throw new Error('admin_curriculum_course_read_failed')
   if (!course) notFound()
-
-  const modules = (course.course_modules ?? []).sort((a, b) => a.sort - b.sort)
+  const { data: modulesData, error: modulesError } = await supabase.from('course_modules').select('id,title,sort').eq('course_id', id).order('sort').limit(100)
+  if (modulesError) throw new Error('admin_curriculum_modules_read_failed')
+  const modules = modulesData ?? []
+  const moduleIds = modules.map((module) => module.id)
+  const lessonsResult = moduleIds.length
+    ? await supabase.from('course_lessons').select('id,module_id,title,duration_seconds,sort,is_preview,video_path').in('module_id', moduleIds).order('sort').limit(1000)
+    : { data: [], error: null }
+  if (lessonsResult.error) throw new Error('admin_curriculum_lessons_read_failed')
+  const lessonsByModule = new Map<string, typeof lessonsResult.data>()
+  for (const lesson of lessonsResult.data ?? []) lessonsByModule.set(lesson.module_id, [...(lessonsByModule.get(lesson.module_id) ?? []), lesson])
 
   return (
     <div className="mx-auto max-w-4xl space-y-8">
@@ -64,10 +73,9 @@ export default async function CurriculumBuilderPage({ params }: Props) {
             <Card key={m.id} className="space-y-4">
               <CardTitle>{m.title}</CardTitle>
               <ModuleEditor id={m.id} courseId={course.id} title={m.title} sort={m.sort}/>
-              {(m.course_lessons ?? []).length > 0 && (
+              {(lessonsByModule.get(m.id) ?? []).length > 0 && (
                 <ul className="divide-y divide-line/70 rounded-xl border border-line">
-                  {m.course_lessons
-                    .sort((a, b) => a.sort - b.sort)
+                  {(lessonsByModule.get(m.id) ?? [])
                     .map((l) => (
                       <li key={l.id} className="space-y-3 px-4 py-3 text-sm">
                         <div className="flex items-center justify-between gap-3">

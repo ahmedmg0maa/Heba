@@ -1,6 +1,13 @@
 # PROJECT STATE
 Last session: 2026-08-28 | Current program: Code X development-first execution | LOCAL DEVELOPMENT IN PROGRESS — STAGING EXTERNAL GATE remains for recovery, provider migration and live acceptance only
 
+## P0 atomic course-curriculum checkpoint — 2026-08-28
+- Forward-only local migration 073 revokes browser-direct module/lesson writes and routes all six create/update/delete operations through one service-only, explicit-actor transaction that rechecks `learning.manage`, locks the course scope and couples the mutation with content-minimized audit evidence.
+- Lesson creation can no longer accept a raw `video_path`; protected video/resource attachment remains exclusively behind migration 072's issued-intent, inspected upload flow. Lesson deletion fails if protected delivery, progress or private notes exist, and module deletion fails while lessons remain, preventing Storage or customer-history orphaning.
+- The Admin curriculum reader now distinguishes configured database failure from not-found and uses explicit 100-module/1,000-lesson bounds. Forms mirror title/duration/order limits, destructive controls require confirmation, and durable failures use accessible alerts.
+- `pnpm check:deploy` passed every local contract/audit, the 69-page production build and public Playwright **70/70**. The isolated vinext/Workers build and Cloudflare runtime suite also passed **70/70** with retries disabled. Migration 073 is source-only; SQL/RLS/rollback/concurrency and persisted Admin/public behavior remain `STAGING EXTERNAL GATE`.
+- Exact next local task: commit the curriculum slice, then add governed removal controls for protected book/course/workshop delivery objects before auditing the next CMS mutation group.
+
 ## P0 atomic protected-upload binding checkpoint — 2026-08-28
 - Forward-only local migration 072 removes browser-direct writes to protected learning-delivery tables and adds a private issued-intent ledger before Storage signing. Each intent binds the administrator, target, opaque path hash, MIME, size and expiry; exact intent authorization is mandatory before the server may inspect or remove the object.
 - The explicit-actor, `learning.manage`-rechecked binding RPC repeats the path/hash/MIME/size contract. The target mutation, intent finalization, upload inspection, delivery event and metadata-only audit now commit in one PostgreSQL transaction under a per-object lock. Direct-browser upload failure, rejection and quarantine close the issued intent and record whether the private object was removed; unconfirmed cleanup creates a durable System warning without exposing its path.

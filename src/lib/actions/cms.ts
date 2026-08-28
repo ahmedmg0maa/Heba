@@ -257,20 +257,22 @@ export async function addModule(courseId: string, title: string): Promise<Action
   if (!hasEnv()) return { ok: false, error: NO_ENV }
   const admin = await requireAdminUser('learning.manage')
   if (!admin) return { ok: false, error: NOT_ADMIN }
-  if (title.trim().length < 2) return { ok: false, error: 'أدخلي عنوان الوحدة.' }
-  const service = getServiceClient()
-  const { count } = await service.from('course_modules').select('id', { count: 'exact', head: true }).eq('course_id', courseId)
-  const { error } = await service.from('course_modules').insert({ course_id: courseId, title: title.trim(), sort: (count ?? 0) + 1 })
+  const normalizedTitle = title.trim()
+  if (normalizedTitle.length < 2 || normalizedTitle.length > 160) return { ok: false, error: 'عنوان الوحدة يجب أن يكون بين حرفين و160 حرفًا.' }
+  const { error } = await getServiceClient().rpc('manage_course_curriculum', {
+    p_actor_id: admin.user.id, p_action: 'module_create', p_course_id: courseId,
+    p_module_id: null, p_lesson_id: null, p_title: normalizedTitle,
+    p_sort: null, p_duration_seconds: null, p_is_preview: false,
+  })
   if (error) return { ok: false, error: GENERIC }
-  await audit(admin.user.id, 'module.created', 'course', courseId, { title })
   revalidatePath(`/admin/courses/${courseId}/curriculum`)
   return { ok: true }
 }
 
-export async function updateCourseModule(moduleId:string,courseId:string,title:string,sort:number):Promise<ActionResult>{const admin=await requireAdminUser('learning.manage');if(!admin)return{ok:false,error:NOT_ADMIN};if(title.trim().length<2||sort<1)return{ok:false,error:'راجعي عنوان الوحدة وترتيبها.'};const{error}=await getServiceClient().from('course_modules').update({title:title.trim(),sort:Math.round(sort)}).eq('id',moduleId).eq('course_id',courseId);if(error)return{ok:false,error:GENERIC};await audit(admin.user.id,'module.updated','course_module',moduleId,{title,sort});revalidatePath(`/admin/courses/${courseId}/curriculum`);return{ok:true}}
-export async function deleteCourseModule(moduleId:string,courseId:string):Promise<ActionResult>{const admin=await requireAdminUser('learning.manage');if(!admin)return{ok:false,error:NOT_ADMIN};const service=getServiceClient(),{count}=await service.from('course_lessons').select('id',{count:'exact',head:true}).eq('module_id',moduleId);if((count??0)>0)return{ok:false,error:'انقلي أو احذفي دروس الوحدة قبل حذفها.'};const{error}=await service.from('course_modules').delete().eq('id',moduleId).eq('course_id',courseId);if(error)return{ok:false,error:GENERIC};await audit(admin.user.id,'module.deleted','course_module',moduleId);revalidatePath(`/admin/courses/${courseId}/curriculum`);return{ok:true}}
-export async function updateCourseLesson(lessonId:string,courseId:string,form:FormData):Promise<ActionResult>{const admin=await requireAdminUser('learning.manage');if(!admin)return{ok:false,error:NOT_ADMIN};const title=String(form.get('title')??'').trim(),minutes=Number(form.get('minutes')??0),sort=Number(form.get('sort')??0);if(title.length<2||minutes<0||sort<1)return{ok:false,error:'راجعي بيانات الدرس.'};const{error}=await getServiceClient().from('course_lessons').update({title,duration_seconds:Math.round(minutes*60),sort:Math.round(sort),is_preview:form.get('is_preview')==='on'}).eq('id',lessonId);if(error)return{ok:false,error:GENERIC};await audit(admin.user.id,'lesson.updated','course_lesson',lessonId,{title,minutes,sort});revalidatePath(`/admin/courses/${courseId}/curriculum`);return{ok:true}}
-export async function deleteCourseLesson(lessonId:string,courseId:string):Promise<ActionResult>{const admin=await requireAdminUser('learning.manage');if(!admin)return{ok:false,error:NOT_ADMIN};const{error}=await getServiceClient().from('course_lessons').delete().eq('id',lessonId);if(error)return{ok:false,error:GENERIC};await audit(admin.user.id,'lesson.deleted','course_lesson',lessonId);revalidatePath(`/admin/courses/${courseId}/curriculum`);return{ok:true}}
+export async function updateCourseModule(moduleId:string,courseId:string,title:string,sort:number):Promise<ActionResult>{const admin=await requireAdminUser('learning.manage');if(!admin)return{ok:false,error:NOT_ADMIN};const normalized=title.trim(),order=Math.round(sort);if(normalized.length<2||normalized.length>160||!Number.isInteger(order)||order<1||order>10000)return{ok:false,error:'راجعي عنوان الوحدة وترتيبها.'};const{error}=await getServiceClient().rpc('manage_course_curriculum',{p_actor_id:admin.user.id,p_action:'module_update',p_course_id:courseId,p_module_id:moduleId,p_lesson_id:null,p_title:normalized,p_sort:order,p_duration_seconds:null,p_is_preview:false});if(error)return{ok:false,error:GENERIC};revalidatePath(`/admin/courses/${courseId}/curriculum`);return{ok:true}}
+export async function deleteCourseModule(moduleId:string,courseId:string):Promise<ActionResult>{const admin=await requireAdminUser('learning.manage');if(!admin)return{ok:false,error:NOT_ADMIN};const{error}=await getServiceClient().rpc('manage_course_curriculum',{p_actor_id:admin.user.id,p_action:'module_delete',p_course_id:courseId,p_module_id:moduleId,p_lesson_id:null,p_title:null,p_sort:null,p_duration_seconds:null,p_is_preview:false});if(error)return{ok:false,error:error.message.includes('module_has_lessons')?'احذفي الدروس الخالية من الملفات والسجل أولًا.':GENERIC};revalidatePath(`/admin/courses/${courseId}/curriculum`);return{ok:true}}
+export async function updateCourseLesson(lessonId:string,courseId:string,form:FormData):Promise<ActionResult>{const admin=await requireAdminUser('learning.manage');if(!admin)return{ok:false,error:NOT_ADMIN};const title=String(form.get('title')??'').trim(),minutes=Number(form.get('minutes')??0),sort=Math.round(Number(form.get('sort')??0)),seconds=Math.round(minutes*60);if(title.length<2||title.length>180||!Number.isFinite(minutes)||seconds<0||seconds>86400||!Number.isInteger(sort)||sort<1||sort>10000)return{ok:false,error:'راجعي بيانات الدرس.'};const{error}=await getServiceClient().rpc('manage_course_curriculum',{p_actor_id:admin.user.id,p_action:'lesson_update',p_course_id:courseId,p_module_id:null,p_lesson_id:lessonId,p_title:title,p_sort:sort,p_duration_seconds:seconds,p_is_preview:form.get('is_preview')==='on'});if(error)return{ok:false,error:GENERIC};revalidatePath(`/admin/courses/${courseId}/curriculum`);return{ok:true}}
+export async function deleteCourseLesson(lessonId:string,courseId:string):Promise<ActionResult>{const admin=await requireAdminUser('learning.manage');if(!admin)return{ok:false,error:NOT_ADMIN};const{error}=await getServiceClient().rpc('manage_course_curriculum',{p_actor_id:admin.user.id,p_action:'lesson_delete',p_course_id:courseId,p_module_id:null,p_lesson_id:lessonId,p_title:null,p_sort:null,p_duration_seconds:null,p_is_preview:false});if(error)return{ok:false,error:error.message.includes('lesson_has_delivery_or_customer_history')?'لا يمكن حذف درس مرتبط بملفات محمية أو سجل عميلة. أزيلي ملفات التسليم أولًا، واحتفظي بالدروس ذات التقدم أو الملاحظات.':GENERIC};revalidatePath(`/admin/courses/${courseId}/curriculum`);return{ok:true}}
 
 export async function addLesson(moduleId: string, courseId: string, formData: FormData): Promise<ActionResult> {
   if (!hasEnv()) return { ok: false, error: NO_ENV }
@@ -279,21 +281,15 @@ export async function addLesson(moduleId: string, courseId: string, formData: Fo
   const title = String(formData.get('title') ?? '').trim()
   const minutes = Number(formData.get('minutes') ?? 0)
   const isPreview = formData.get('is_preview') === 'on'
-  const videoPath = String(formData.get('video_path') ?? '').trim() || null
-  if (title.length < 2) return { ok: false, error: 'أدخلي عنوان الدرس.' }
+  const seconds = Math.round(minutes * 60)
+  if (title.length < 2 || title.length > 180 || !Number.isFinite(minutes) || seconds < 0 || seconds > 86400) return { ok: false, error: 'راجعي عنوان الدرس ومدته.' }
 
-  const service = getServiceClient()
-  const { count } = await service.from('course_lessons').select('id', { count: 'exact', head: true }).eq('module_id', moduleId)
-  const { error } = await service.from('course_lessons').insert({
-    module_id: moduleId,
-    title,
-    duration_seconds: Math.max(0, Math.round(minutes * 60)),
-    is_preview: isPreview,
-    video_path: videoPath,
-    sort: (count ?? 0) + 1,
+  const { error } = await getServiceClient().rpc('manage_course_curriculum', {
+    p_actor_id: admin.user.id, p_action: 'lesson_create', p_course_id: courseId,
+    p_module_id: moduleId, p_lesson_id: null, p_title: title,
+    p_sort: null, p_duration_seconds: seconds, p_is_preview: isPreview,
   })
   if (error) return { ok: false, error: GENERIC }
-  await audit(admin.user.id, 'lesson.created', 'course_module', moduleId, { title })
   revalidatePath(`/admin/courses/${courseId}/curriculum`)
   return { ok: true }
 }

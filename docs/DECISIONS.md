@@ -634,3 +634,10 @@
 - **The database repeats the trust boundary.** Service-side magic-byte inspection remains mandatory, but the RPC independently validates kind, entity, opaque path shape, a recomputed path hash, extension, MIME and size before mutation. Browser roles cannot mutate the protected delivery tables or execute the replacement RPCs directly.
 - **Storage cleanup is an explicit external effect.** Rejected/quarantined objects are removed before rejection evidence records the cleanup result. Replaced video paths are returned only to the Server Action for private deletion; any unconfirmed cleanup produces hash-only System/audit reconciliation evidence, never a raw path in logs.
 - **072 remains source-only.** Local contracts prove source ordering and the absence of split application writes. SQL compilation, transactional rollback, role denial, real Storage behavior and persisted evidence require the recovery-controlled `STAGING EXTERNAL GATE`.
+
+## 2026-08-28 — Curriculum deletion preserves protected delivery and customer history
+
+- **Curriculum is a governed aggregate.** Module and lesson create/update/delete now execute under one course-scoped lock with a repeated `learning.manage` check and metadata-only audit in the same transaction.
+- **A text field cannot appoint a protected video.** New lessons always start without `video_path`; only the issued-intent and server-inspected protected-upload boundary may attach delivery content.
+- **Delete means safely absent, not cascade-and-hope.** A module with lessons cannot be deleted. A lesson with a protected video/resource, customer progress or private notes cannot be deleted; delivery removal and retention decisions must be explicit rather than orphaning Storage or erasing customer history.
+- **073 remains source-only.** Local contracts and builds cannot establish SQL parsing, role denial, concurrent ordering or persisted public/Admin behavior; those remain within `STAGING EXTERNAL GATE`.
