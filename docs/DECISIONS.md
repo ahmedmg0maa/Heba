@@ -601,3 +601,12 @@
 - **The provider/database boundary is represented truthfully, not called atomic.** Migration 068 creates a pending, rate-limited, content-free operation before invoking Auth and finalizes it to succeeded/failed afterward. If finalization is unavailable, the durable pending fact remains instead of fabricating a database-confirmed outcome.
 - **Successful password changes end the active trust period.** All sessions are closed and the customer signs in again with the new credential. Access-token expiry behavior remains a provider configuration/acceptance fact, not a local guarantee.
 - **068 is source-only and redirects are environmental.** SQL execution, real PKCE recovery, SMTP receipt, AMR, session invalidation and the exact Staging/Production redirect allowlists require the controlled `STAGING EXTERNAL GATE`.
+
+## 2026-08-28 — Customer booking writes carry an explicit actor; Cairo wall time is not server local time
+
+- **Ownership is rechecked inside the transaction.** A Server Action verifies the current user, but cancellation and reschedule RPCs still select and lock a booking by both ID and explicit actor. Browser roles cannot execute the replacement functions or write request/event tables directly.
+- **Operational reasons and audit metadata have different privacy needs.** The bounded customer reason remains on the customer's booking/request for support. Booking events and central audit contain only presence/length, opaque IDs, times and structural effects—never the reason text.
+- **Credit restoration is observed, not promised.** Cancellation triggers the established immutable package-ledger reversal and then reports whether a reverse row exists. The UI mentions restored credit only when PostgreSQL returns that fact.
+- **`datetime-local` means Cairo in this product.** The server converts the wall time with the IANA `Africa/Cairo` rules and rejects non-round-tripping dates; it never inherits UTC or another Worker/browser locale. PostgreSQL remains authoritative for whether the resulting slot is actually available.
+- **ICS is a private representation of persisted state.** Pending bookings export as `TENTATIVE`, confirmed as `CONFIRMED`; invalid dates or query failure stop generation, and Arabic lines are escaped/folded before a private/no-store download.
+- **069 remains source-only.** Database compilation, RLS denial, trigger effects, concurrent retries and calendar-client compatibility require the recovery-controlled `STAGING EXTERNAL GATE`.
