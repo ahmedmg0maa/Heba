@@ -178,6 +178,42 @@ html {
   animation-duration: 9s;
 }
 
+/* Cinematic Home hero: motion is visible but never required for comprehension. */
+@keyframes hero-enter {
+  from { opacity: 0; transform: translateY(26px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes hero-portrait-in {
+  from { transform: scale(1.09); filter: saturate(.76) contrast(.95); }
+  to { transform: scale(1); filter: saturate(.94) contrast(1.02); }
+}
+@keyframes hero-glow-drift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: .48; }
+  50% { transform: translate3d(-36px, 28px, 0) scale(1.08); opacity: .78; }
+}
+@keyframes hero-card-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-9px); }
+}
+@keyframes hero-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.hero-enter {
+  opacity: 0;
+  animation: hero-enter .8s cubic-bezier(.2,.7,.2,1) forwards;
+}
+.hero-enter-1 { animation-delay: .08s; }
+.hero-enter-2 { animation-delay: .18s; }
+.hero-enter-3 { animation-delay: .34s; }
+.hero-enter-4 { animation-delay: .5s; }
+.hero-enter-5 { animation-delay: .64s; }
+.hero-portrait { animation: hero-portrait-in 1.8s cubic-bezier(.2,.7,.2,1) both; }
+.hero-glow { animation: hero-glow-drift 8s ease-in-out infinite; }
+.hero-float-card { animation: hero-card-float 5s ease-in-out 1.2s infinite; }
+.hero-marquee-track { animation: hero-marquee 26s linear infinite; }
+.hero-marquee:hover .hero-marquee-track { animation-play-state: paused; }
+
 /* Gold shimmer sweep for premium CTAs */
 @keyframes shimmer {
   from { transform: translateX(120%); }
@@ -222,9 +258,15 @@ html {
   .animate-fade-up,
   .animate-float,
   .hero-orbit,
+  .hero-enter,
+  .hero-portrait,
+  .hero-glow,
+  .hero-float-card,
+  .hero-marquee-track,
   .shimmer::after {
     animation: none;
   }
+  .hero-enter { opacity: 1; transform: none; }
   .reveal {
     opacity: 1;
     transform: none;

@@ -129,3 +129,29 @@
 - توحيد Loading/Error/Empty/404 بصريًا ضمن Shared public states.
 - استكمال بقية Home content sections (Articles/Resources/Verified Testimonials/Verified Press/Newsletter) عند وجود مصدر موثوق أو Preview fixtures معلّمة بوضوح.
 - المرحلة التالية المرئية هي صفحات رحلة العميلة العامة؛ لا يبدأ Backend audit جديد بينها.
+
+## تصحيح المراجعة البصرية — Hero سينمائي وحركة واضحة
+
+بعد مراجعة المالكة، عولجت مشكلتا تزاحم الكتابة وغياب الحركة داخل **نفس الشريحة** دون فتح Backend أو migration:
+
+- Header تحوّل إلى نظام داكن عالي التباين بلمسات Aqua/Gold، مع الحفاظ على Search/Account/Booking والتنقل العربي.
+- Hero أصبح تكوينًا سينمائيًا ثنائي المساحة: صورة المرأة المنقبة مهيمنة بصريًا، والنص العربي مضبوط على `line-height: 1.12` بثلاثة أسطر مستقلة.
+- أضيفت حركة دخول متدرج للنص، Ken Burns للصورة، glow بطيء، بطاقة عائمة، شريط مسارات مستمر، وDrawer متحرك للهاتف.
+- `prefers-reduced-motion` يلغي الحركات ويُبقي المحتوى ظاهرًا بالكامل.
+- لم تُنسخ صورة أو كتابة أو تخطيط من الموقع المرجعي؛ استُخدمت مبادئ القوة البصرية فقط: scale، contrast، cinematic image وmotion hierarchy.
+
+### دليل التصحيح
+
+![Cinematic desktop](evidence/visual-customer-experience/phase-1/after-cinematic-desktop-1440.png)
+
+![Cinematic mobile](evidence/visual-customer-experience/phase-1/after-cinematic-mobile-390.png)
+
+دليل الحركة: `docs/evidence/visual-customer-experience/phase-1/hero-motion-desktop.webm`.
+
+### تحقق مستهدف
+
+- Desktop و390px: `status=200` و`overflow=0` و`linesOverlap=false`.
+- أسماء الحركات المحسوبة حيًا: `hero-enter` و`hero-portrait-in` و`hero-marquee` و`slide-in-end`.
+- Reduced motion: `animation=none` والمحتوى `opacity=1`.
+- Hero Start وHero Services وHeader Booking: نقر فعلي 3/3 ناجح.
+- TypeScript وfocused ESLint والبناء المعزول 69/69 ناجحة؛ لم تُشغّل مجموعة 70/70 أو `check:deploy`.

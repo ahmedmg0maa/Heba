@@ -7,6 +7,7 @@ Last session: 2026-08-28 | Current program: Code X development-first execution |
 - Local isolated preview: `http://127.0.0.1:3102`. Before/after desktop and after-390px evidence is stored under `docs/evidence/visual-customer-experience/phase-1/` and indexed by `docs/VISUAL_CUSTOMER_EXPERIENCE_DELIVERY_SPRINT_2026-08-28.md`.
 - Targeted evidence only: isolated type-check, focused lint, 69-page isolated build, desktop/390 smoke, menu/theme/overflow checks and seven real navigation clicks passed. `check:deploy` and the 70-test suites were intentionally not rerun.
 - Exact next visual task: unify public Loading/Error/Empty/404 states, then proceed through the customer-facing route group. Do not open another backend vertical slice before this visual delivery is reviewed.
+- Owner-review correction stayed inside the same slice: typography no longer overlaps on desktop or 390px, the Header/Hero use a cinematic high-contrast composition, and actual entrance/portrait/glow/marquee/drawer motion is present with a verified reduced-motion fallback. Updated stills and a local WebM are stored with the Phase 1 evidence.
 
 ## Public Cloudflare preview checkpoint — 2026-08-28
 - Source commit `a10449efdc9b128691ff07af64c31e075cb54a03` from `codex/master-merge-2026-08-27` is pushed to GitHub and deployed as the separate Worker `heba-elsherif-platform-public-preview` at `https://heba-elsherif-platform-public-preview.heba-elsherif-platform.workers.dev`.
