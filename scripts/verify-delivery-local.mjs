@@ -34,12 +34,16 @@ assert.equal(validateObservedFile({
 const actionSource = readFileSync('src/lib/actions/delivery-admin.ts', 'utf8')
 const finalizationSource = actionSource.slice(actionSource.indexOf('export async function finalizeProtectedUpload'))
 const validationIndex = finalizationSource.indexOf('validateObservedFile(')
-const firstBindingIndex = finalizationSource.indexOf("from('book_versions')")
+const firstBindingIndex = finalizationSource.indexOf("rpc('bind_validated_protected_upload'")
 assert(validationIndex >= 0 && firstBindingIndex > validationIndex, 'finalization must call the shared validation gate before binding')
 assert.match(finalizationSource, /if \(!inspected \|\| !valid\)/, 'finalization must reject failed server inspection or magic-byte validation')
-const auditStatement = actionSource.match(/from\('audit_logs'\)\.insert\(([^\n]+)\)/)?.[1] ?? ''
-assert(auditStatement, 'delivery upload audit insert must remain present')
-assert(!/(?:storage_)?path\s*:|token\s*:|signedUrl\s*:/.test(auditStatement), 'delivery upload audit metadata must not contain raw paths or tokens')
+assert(!/from\('(book_versions|book_files|course_lessons|lesson_resources|workshop_resources|workshop_recordings|protected_upload_inspections|audit_logs)'\)\.(?:insert|update|upsert|delete)/.test(finalizationSource), 'finalization must not fall back to split direct database writes')
+
+const bindingMigration = readFileSync('supabase/migrations/072_atomic_protected_upload_binding_local_only.sql', 'utf8')
+const bindingFunction = bindingMigration.slice(bindingMigration.indexOf('create or replace function public.bind_validated_protected_upload'), bindingMigration.indexOf('create or replace function public.record_protected_upload_rejection'))
+const auditStatement = bindingFunction.match(/insert into public\.audit_logs[\s\S]*?values \([\s\S]*?\n  \);/)?.[0] ?? ''
+assert(auditStatement, 'atomic delivery binding must include the audit insert')
+assert(!/p_storage_path|replacedPath|token|signedUrl/.test(auditStatement), 'delivery upload audit metadata must not contain raw paths or tokens')
 
 const migration = readFileSync('supabase/migrations/043_protected_delivery_controls.sql', 'utf8')
 const eventTable = migration.match(/create table public\.protected_delivery_events \(([\s\S]*?)\n\);/)?.[1] ?? ''

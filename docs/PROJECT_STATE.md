@@ -1,6 +1,13 @@
 # PROJECT STATE
 Last session: 2026-08-28 | Current program: Code X development-first execution | LOCAL DEVELOPMENT IN PROGRESS — STAGING EXTERNAL GATE remains for recovery, provider migration and live acceptance only
 
+## P0 atomic protected-upload binding checkpoint — 2026-08-28
+- Forward-only local migration 072 removes browser-direct writes to protected learning-delivery tables and adds a private issued-intent ledger before Storage signing. Each intent binds the administrator, target, opaque path hash, MIME, size and expiry; exact intent authorization is mandatory before the server may inspect or remove the object.
+- The explicit-actor, `learning.manage`-rechecked binding RPC repeats the path/hash/MIME/size contract. The target mutation, intent finalization, upload inspection, delivery event and metadata-only audit now commit in one PostgreSQL transaction under a per-object lock. Direct-browser upload failure, rejection and quarantine close the issued intent and record whether the private object was removed; unconfirmed cleanup creates a durable System warning without exposing its path.
+- Replacing a lesson video returns the previous path only to the Server Action for private cleanup; the browser receives only the new opaque record ID. A failed old-object cleanup creates hash-only reconciliation evidence. Admin input bounds, busy recovery and accessible failure alerts now match the server/database contract.
+- `pnpm check:deploy` passed every local contract/audit, the 69-page production build and public Playwright **70/70**. The isolated vinext/Workers build and Cloudflare runtime suite also passed **70/70** with retries disabled. Migration 072 is source-only; SQL compilation, permission denial, atomic rollback, real Storage cleanup and persisted evidence remain `STAGING EXTERNAL GATE`.
+- Exact next local task: commit this slice, then audit the remaining Admin catalog/CMS mutation surfaces for split business/audit writes and false-success controls.
+
 ## P0 governed account-deletion request checkpoint — 2026-08-28
 - Forward-only local migration 071 replaces the contact-only deletion promise with a durable privacy-request lifecycle. A signed-in customer can create one active request idempotently, cancel it before completion, and see its real status/reviewer message; request creation is serialized, limited to three per 30 days and denied while the identity carries an Admin role.
 - Direct browser table access is revoked. Customer request/cancel, Admin queue/read/review and completion evidence are service-only explicit-actor functions. Every state transition and customer notification commits with content-minimized audit; review text remains in the operational request/notification and audit stores only presence/length.
